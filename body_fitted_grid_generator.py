@@ -268,6 +268,7 @@ def check_TDMA():
     exit()
 
 def main():
+	a = 1
     z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 5)
     z3 = get_outer_boundary(z1, magnification=10)
     z2 = get_connect_z1_to_z3(z1, z3)
