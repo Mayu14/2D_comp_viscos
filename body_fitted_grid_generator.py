@@ -1,6 +1,6 @@
 # coding: utf-8
 from scipy.sparse import lil_matrix
-from scipy.sparse.linalg import bicg
+from scipy.sparse.linalg import bicg, spsolve
 from math import floor
 import numpy as np
 from naca_4digit_test import Naca_4_digit, Naca_5_digit
@@ -87,8 +87,480 @@ def get_connect_z1_to_z3(z1, z3, resolution=None, magnification=10):
         z2[k] = z2[k-1] + delta_x[k - 1]
 
     return z2
+# 内積の総和が小さければ直交性高い
+def check_orthogonal(grid_x, grid_y):
+    pass
 
-def make_grid(z1, z2, z3):
+def make_grid_seko(z1, z2, z3, z4):
+    xi_max = z1.shape[0]  # xi方向の格子点数
+    eta_max = z2.shape[0]  # eta方向の格子点数
+    center_x = 0.25 * (np.average(np.real(z1)) + np.average(np.real(z2)) + np.average(np.real(z3)) + np.average(np.real(z4)))
+    center_y = 0.25 * (np.average(np.imag(z1)) + np.average(np.imag(z2)) + np.average(np.imag(z3)) + np.average(np.imag(z4)))
+    grid_x = np.zeros((xi_max, eta_max))  # x座標格納
+    grid_y = np.zeros((xi_max, eta_max))  # y座標格納
+    for i in range(eta_max):
+        grid_x[i, :] = np.linspace(np.real(z1[i]), np.real(z3[eta_max-1-i]), eta_max)
+        grid_y[i, :] = np.linspace(np.imag(z1[i]), np.imag(z3[eta_max-1-i]), eta_max)
+    for i in range(xi_max):
+        plt.plot(grid_x[i, :], grid_y[i, :])
+        plt.plot(grid_x[:, i], grid_y[:, i])
+
+    plt.show()
+    # 境界条件適用
+    grid_x[0, :] = np.real(z1)  # 底辺
+    grid_x[:, 0] = np.real(z2)  # 左辺
+    grid_x[xi_max - 1, :] = np.real(z3)  # 上辺
+    grid_x[:, eta_max - 1] = np.real(z4)
+
+    grid_y[0, :] = np.imag(z1)  # 底辺
+    grid_y[:, 0] = np.imag(z2)[::-1]  # 左辺
+    grid_y[xi_max - 1, :] = np.imag(z3) # 上辺
+    grid_y[:, eta_max - 1] = np.imag(z4)    # 右辺
+
+    # 以降係数は無視し，足し合わせる際に帳尻を合わせる
+    x_xi = lambda i, j: (grid_x[i + 1, j] - grid_x[i - 1, j])   # xのξ微分(の2倍)
+    x_eta = lambda i, j: (grid_x[i, j + 1] - grid_x[i, j - 1])  # xのη微分(の2倍)
+    y_xi = lambda i, j: (grid_y[i + 1, j] - grid_y[i - 1, j])   # yのξ微分(の2倍)
+    y_eta = lambda i, j:(grid_y[i, j + 1] - grid_y[i, j - 1])   # yのη微分(の2倍)
+    
+    Aij = lambda i, j: (x_eta(i, j) ** 2 + y_eta(i, j) ** 2)    # ξ2階微分の係数(の4倍)
+    Bij = lambda i, j: (x_xi(i, j) * x_eta(i, j) + y_xi(i, j) * y_eta(i, j))    # ξη交差微分の係数(の4倍)
+    Cij = lambda i, j: (x_xi(i, j) ** 2 + y_xi(i, j) ** 2)    # η2階微分の係数(の4倍)
+    
+    x_xixi = lambda i, j: grid_x[i + 1, j] - 2.0 * grid_x[i, j] + grid_x[i - 1, j]  # xのξ2階微分
+    y_xixi = lambda i, j: grid_y[i + 1, j] - 2.0 * grid_y[i, j] + grid_y[i - 1, j]  # yのξ2階微分
+    
+    x_etaeta = lambda i, j: grid_x[i, j + 1] - 2.0 * grid_x[i, j] + grid_x[i, j - 1]    # xのη2階微分
+    y_etaeta = lambda i, j: grid_y[i, j + 1] - 2.0 * grid_y[i, j] + grid_y[i, j - 1]    # yのη2階微分
+    
+    x_xieta = lambda i, j: (grid_x[i + 1, j + 1] - grid_x[i + 1, j - 1] - grid_x[i - 1, j + 1] + grid_x[i - 1, j - 1])  # xのξη交差微分(の4倍)
+    y_xieta = lambda i, j: (grid_y[i + 1, j + 1] - grid_y[i + 1, j - 1] - grid_y[i - 1, j + 1] + grid_y[i - 1, j - 1])  # yのξη交差微分(の4倍)
+
+    
+    delta_t = 0.0001  # delta-formの時間発展用
+    point_number = (xi_max - 2) * (eta_max - 2) # 未知数の総数
+    Nj = eta_max - 2    # 係数行列の列方向ブロックサイズ
+    
+    # [I,I]からdeltaだけずれた位置の成分が何個目のブロック行列に属するか返す関数
+    block_id = lambda delta: floor((I + delta) / Nj)
+    # xについての式 + yについての式
+    for iter in range(1000):
+        # matrix & rhsの準備
+        # rhs = np.zeros(2 * point_number)    # rhsベクトルの初期化
+        sol = np.zeros(2 * point_number)    # 解ベクトルの初期化
+        # matrix = lil_matrix((2 * point_number, 2 * point_number))   # 係数行列matrixの初期化
+        dij = 0
+        for I in range(point_number):
+            block = block_id(0) # 現在のブロック
+            i = I - block * Nj + 1  # 未知数の0 = 1番目の格子点(0番目の格子点は更新する必要がないため放置) # matrixの0番はgrid_xyの1番に相当
+            j = block + 1  # aij対策で+1
+            
+            aij = Aij(i, j) # I行内では常に同じ添え字ijを用いるため最初に計算しておく
+            bij = Bij(i, j)
+            cij = Cij(i, j)
+            dij = max(max(aij, bij), max(cij, dij))
+            """
+            matrix[I, I] = 1.0 - delta_t * 2.0 * (aij + cij)    # xの係数
+            matrix[I + point_number, I + point_number] = 1.0 - delta_t * 2.0 * (aij + cij)  # yの係数
+            
+            # AΔt
+            if (I > 0) and (block_id(-1) == block):  # 対角成分と同一ブロック内にないときは0
+                matrix[I, I - 1] = delta_t * aij
+                matrix[I + point_number, I + point_number - 1] = delta_t * aij
+            if (I < point_number - 1) and (block_id(1) == block):
+                matrix[I, I + 1] = delta_t * aij
+                matrix[I + point_number, I + point_number + 1] = delta_t * aij
+            
+            # CΔt
+            if I > Nj - 1:
+                matrix[I, I - Nj] = delta_t * cij
+                matrix[I + point_number, I + point_number - Nj] = delta_t * cij
+            if I < point_number - Nj:
+                matrix[I, I + Nj] = delta_t * cij
+                matrix[I + point_number, I + point_number + Nj] = delta_t * cij
+            
+            # -0.5*bij
+            if ((I > (Nj - 1)) and (block_id(-(Nj - 1)) == block - 1)):
+                matrix[I, I - (Nj - 1)] = - delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number - (Nj - 1)] = - delta_t * 0.5 * bij
+            if ((I < point_number - (Nj - 1)) and (block_id(Nj - 1) == block + 1)):
+                matrix[I, I + (Nj - 1)] = - delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number + (Nj - 1)] = - delta_t * 0.5 * bij
+            
+            # +0.5*bij
+            if ((I > (Nj + 1) - 1 and (block_id(-(Nj + 1)) == block - 1))):
+                matrix[I, I - (Nj + 1)] = delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number - (Nj + 1)] = delta_t * 0.5 * bij
+            if ((I < point_number - (Nj + 1) - 1) and (block_id(Nj + 1) == block + 1)):
+                matrix[I, I + (Nj + 1)] = delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number + (Nj + 1)] = delta_t * 0.5 * bij
+            #"""
+            # rhs[I] = - delta_t * (aij * x_xixi(i, j) - 0.5 * bij * x_xieta(i, j) + cij * x_etaeta(i, j))
+            # rhs[I + point_number] = -delta_t * (aij * y_xixi(i, j) - 0.5 * bij * y_xieta(i, j) + cij * y_etaeta(i, j))
+            sol[I] = (aij * x_xixi(i, j) - 0.5 * bij * x_xieta(i, j) + cij * x_etaeta(i, j))
+            sol[I + point_number] = (aij * y_xixi(i, j) - 0.5 * bij * y_xieta(i, j) + cij * y_etaeta(i, j))
+        
+        # delta_xy = bicg(matrix, rhs)[0]
+        # matrix = matrix.tocsr()
+        # delta_xy = spsolve(matrix, rhs)
+
+        delta_t = 1.0 / (3.0 * dij)
+        # grid_x[1:xi_max - 1, 1:eta_max - 1] += delta_xy[:point_number].reshape(xi_max - 2, -1).T
+        # grid_y[1:xi_max - 1, 1:eta_max - 1] += delta_xy[point_number:].reshape(xi_max - 2, -1).T
+        grid_x[1:xi_max - 1, 1:eta_max - 1] = delta_t * sol[:point_number].reshape(xi_max - 2, -1).T + grid_x[1:xi_max - 1, 1:eta_max - 1]
+        grid_y[1:xi_max - 1, 1:eta_max - 1] = delta_t * sol[point_number:].reshape(xi_max - 2, -1).T + grid_y[1:xi_max - 1, 1:eta_max - 1]
+        # maximum = max(np.max(np.abs(grid_x)), np.max(np.abs(grid_y)))
+        # print(maximum)
+        if iter % 50 == 0:
+            for i in range(xi_max):
+                plt.plot(grid_x[i, :], grid_y[i, :])
+                plt.plot(grid_x[:, i], grid_y[:, i])
+
+            plt.show()
+
+
+# return grid_x, grid_y
+
+
+# a, b, cからなる三重対角行列(n×n)および，n次元定数ベクトルdの連立方程式の解xを返す
+# aは2行目からb行目まで，cは1行目からn-1行まで
+def tridiagonal_matrix_algorithm(a, b, c, d, n):
+    c_prime = np.zeros(n)
+    d_prime = np.zeros(n)
+    x = np.zeros(n)
+    c_prime[0] = c[0] / b[0]
+    d_prime[0] = d[0] / b[0]
+
+    for i in range(1, n - 1):
+        c_prime[i] = c[i] / (b[i] - a[i] * c_prime[i - 1])
+        d_prime[i] = (d[i] - a[i] * d_prime[i - 1]) / (b[i] - a[i] * c_prime[i - 1])
+
+    d_prime[n-1] = (d[n-1] - a[n-1] * d_prime[n-2]) / (b[n-1] - a[n-1] * c_prime[n-2])
+
+    x[n-1] = d_prime[n-1]
+    for i in range(n-2, -1, -1):
+        x[i] = d_prime[i] - c_prime[i] * x[i + 1]
+
+    return x
+
+def check_TDMA():
+    N = 5
+    A = np.zeros((N, N))
+    A[0, 0] = 3
+    A[0, 1] = 4
+    for i in range(1, N-1):
+        A[i, i-1] = 2+i
+        A[i, i] = 3
+        A[i, i+1] = 4
+    A[N-1, N-2] = 2+N-1
+    A[N-1, N-1] = 3
+    print(A)
+
+    b = np.arange(5)
+    print(linalg.det(A))
+    print(b)
+    print(linalg.solve(A, b))
+    left = np.arange(5) + 3 - 1
+    diag = np.ones(5) * 3
+    right = np.ones(5) * 4
+
+    print(tridiagonal_matrix_algorithm(left, diag, right, b, 5))
+    exit()
+
+def main():
+    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 5)
+    z3 = get_outer_boundary(z1, magnification=10)
+    z2 = get_connect_z1_to_z3(z1, z3)
+    z4 = z2
+    """
+    box = 10
+    z1 = np.zeros(box) + 1j * np.arange(box)    #
+    z2 = np.arange(box) + 1j * np.zeros(box)
+    z3 = np.ones(box) * (box-1) + 1j * np.arange(box)
+    z4 = np.arange(box) + 1j * np.ones(box) * (box-1)
+    #"""
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(np.real(z2), np.imag(z2), "o")
+    plt.plot(np.real(z3), np.imag(z3), "x")
+    plt.plot(np.real(z4), np.imag(z4))
+    plt.show()
+    
+    make_grid_seko(z1, z2, z3, z4)
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(np.real(z2), np.imag(z2), "o")
+    plt.plot(np.real(z3), np.imag(z3), "x")
+    plt.show()
+
+    exit()
+    """
+    grid[0] = line_up_z2xy(z1[:size-1], two_rows = True)
+    
+    xy0 = line_up_z2xy(offset_surface(z1)[:size-1])
+    
+    
+    # print(xy0)
+    phi0 = np.zeros(size-1)
+    phi1 = np.zeros(size-1)
+    V0 = np.zeros(size-1) + 0.0001
+    V1 = np.zeros(size-1)
+    cM, cV = made_coefficient_matrix(xy0[0::2], grid[0, :, 0], xy0[1::2], grid[0, :, 1], phi0, phi1, V0, V1)
+
+    # print(cM)
+    xy1 = linalg.solve(cM, cV)
+    xy1_ = spla.bicg(cM, cV)[0]
+    print(xy1_)
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(xy1_[0::2], xy1_[1::2])
+    plt.show()
+    """
+if __name__ == '__main__':
+    main()
+
+"""
+def make_grid_seko(z1, z2, z3, z4):
+    xi_max = z1.shape[0]  # xi方向の格子点数
+    eta_max = z2.shape[0]  # eta方向の格子点数
+    
+    grid_x = np.zeros((xi_max, eta_max))  # x座標格納
+    grid_y = np.zeros((xi_max, eta_max))  # y座標格納
+    # 境界条件適用
+    grid_x[0, :] = np.real(z1)  # 底辺
+    grid_x[:, 0] = np.real(z2)  # 左辺
+    grid_x[xi_max - 1, :] = np.real(z3)  # 上辺
+    grid_x[:, eta_max - 1] = np.real(z4)
+
+    grid_y[0, :] = np.imag(z1)  # 底辺
+    grid_y[:, 0] = np.imag(z2)[::-1]  # 左辺
+    grid_y[xi_max - 1, :] = np.imag(z3) # 上辺
+    grid_y[:, eta_max - 1] = np.imag(z4)    # 右辺
+
+    # 以降係数は無視し，足し合わせる際に帳尻を合わせる
+    x_xi = lambda i, j: (grid_x[i + 1, j] - grid_x[i - 1, j])   # xのξ微分
+    x_eta = lambda i, j: (grid_x[i, j + 1] - grid_x[i, j - 1])  # xのη微分
+    y_xi = lambda i, j: (grid_y[i + 1, j] - grid_y[i - 1, j])   # yのξ微分
+    y_eta = lambda i, j:(grid_y[i, j + 1] - grid_y[i, j - 1])   # yのη微分
+    
+    Aij = lambda i, j: (x_eta(i, j) ** 2 + y_eta(i, j) ** 2)    # ξ2階微分の係数
+    Bij = lambda i, j: (x_xi(i, j) * x_eta(i, j) + y_xi(i, j) * y_eta(i, j))    # ξη交差微分の係数
+    Cij = lambda i, j: (x_xi(i, j) ** 2 + y_xi(i, j) ** 2)    # η2階微分の係数
+    
+    x_xixi = lambda i, j: grid_x[i + 1, j] - 2.0 * grid_x[i, j] + grid_x[i - 1, j]  # xのξ2階微分
+    y_xixi = lambda i, j: grid_y[i + 1, j] - 2.0 * grid_y[i, j] + grid_y[i - 1, j]  # yのξ2階微分
+    
+    x_etaeta = lambda i, j: grid_x[i, j + 1] - 2.0 * grid_x[i, j] + grid_x[i, j - 1]    # xのη2階微分
+    y_etaeta = lambda i, j: grid_y[i, j + 1] - 2.0 * grid_y[i, j] + grid_y[i, j - 1]    # yのη2階微分
+    
+    x_xieta = lambda i, j: (grid_x[i + 1, j + 1] - grid_x[i + 1, j - 1] - grid_x[i - 1, j + 1] + grid_x[i - 1, j - 1])  # xのξη交差微分
+    y_xieta = lambda i, j: (grid_y[i + 1, j + 1] - grid_y[i + 1, j - 1] - grid_y[i - 1, j + 1] + grid_y[i - 1, j - 1])  # yのξη交差微分
+
+    
+    delta_t = 0.1  # delta-formの時間発展用
+    point_number = (xi_max - 2) * (eta_max - 2) # 未知数の総数
+    Nj = eta_max - 2    # 係数行列の列方向ブロックサイズ
+    
+    # [I,I]からdeltaだけずれた位置の成分が何個目のブロック行列に属するか返す関数
+    block_id = lambda delta: floor((I + delta) / Nj)
+    # xについての式 + yについての式
+    for iter in range(1000):
+        # matrix & rhsの準備
+        rhs = np.zeros(2 * point_number)    # rhsベクトルの初期化
+        matrix = lil_matrix((2 * point_number, 2 * point_number))   # 係数行列matrixの初期化
+        for I in range(point_number):
+            block = block_id(0) # 現在のブロック
+            i = I - block * Nj + 1  # 未知数の0 = 1番目の格子点(0番目の格子点は更新する必要がないため放置) # matrixの0番はgrid_xyの1番に相当
+            j = block + 1  # aij対策で+1
+            
+            aij = Aij(i, j) # I行内では常に同じ添え字ijを用いるため最初に計算しておく
+            bij = Bij(i, j)
+            cij = Cij(i, j)
+            
+            matrix[I, I] = 1.0 - delta_t * 2.0 * (aij + cij)    # xの係数
+            matrix[I + point_number, I + point_number] = 1.0 - delta_t * 2.0 * (aij + cij)  # yの係数
+            
+            # AΔt
+            if (I > 0) and (block_id(-1) == block):  # 対角成分と同一ブロック内にないときは0
+                matrix[I, I - 1] = delta_t * aij
+                matrix[I + point_number, I + point_number - 1] = delta_t * aij
+            if (I < point_number - 1) and (block_id(1) == block):
+                matrix[I, I + 1] = delta_t * aij
+                matrix[I + point_number, I + point_number + 1] = delta_t * aij
+            
+            # CΔt
+            if I > Nj - 1:
+                matrix[I, I - Nj] = delta_t * cij
+                matrix[I + point_number, I + point_number - Nj] = delta_t * cij
+            if I < point_number - Nj:
+                matrix[I, I + Nj] = delta_t * cij
+                matrix[I + point_number, I + point_number + Nj] = delta_t * cij
+            
+            # -0.5*bij
+            if ((I > (Nj - 1)) and (block_id(-(Nj - 1)) == block - 1)):
+                matrix[I, I - (Nj - 1)] = - delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number - (Nj - 1)] = - delta_t * 0.5 * bij
+            if ((I < point_number - (Nj - 1)) and (block_id(Nj - 1) == block + 1)):
+                matrix[I, I + (Nj - 1)] = - delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number + (Nj - 1)] = - delta_t * 0.5 * bij
+            
+            # +0.5*bij
+            if ((I > (Nj + 1) - 1 and (block_id(-(Nj + 1)) == block - 1))):
+                matrix[I, I - (Nj + 1)] = delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number - (Nj + 1)] = delta_t * 0.5 * bij
+            if ((I < point_number - (Nj + 1) - 1) and (block_id(Nj + 1) == block + 1)):
+                matrix[I, I + (Nj + 1)] = delta_t * 0.5 * bij
+                matrix[I + point_number, I + point_number + (Nj + 1)] = delta_t * 0.5 * bij
+
+            rhs[I] = - delta_t * (aij * x_xixi(i, j) - 0.5 * bij * x_xieta(i, j) + cij * x_etaeta(i, j))
+            rhs[I + point_number] = -delta_t * (aij * y_xixi(i, j) - 0.5 * bij * y_xieta(i, j) + cij * y_etaeta(i, j))
+        
+        delta_xy = bicg(matrix, rhs)[0]
+        
+        grid_x[1:xi_max - 1, 1:eta_max - 1] += delta_xy[:point_number].reshape(xi_max - 2, -1).T
+        grid_y[1:xi_max - 1, 1:eta_max - 1] += delta_xy[point_number:].reshape(xi_max - 2, -1).T
+        maximum = max(np.max(np.abs(grid_x)), np.max(np.abs(grid_y)))
+        print(maximum)
+        if maximum < 8:
+            for i in range(xi_max):
+                plt.plot(grid_x[i, :], grid_y[i, :])
+            plt.show()
+            
+            for j in range(eta_max):
+                plt.plot(grid_x[:, j], grid_y[:, j])
+            plt.show()
+"""
+
+"""
+def make_grid_seko(z1, z2, z3):
+    # 極端に近い点を除去(内側を優先的に除去)
+    def delete_near_point(z, eps=0.0001):
+        flag = 1
+        while flag == 1:
+            flag = 0
+            len = np.abs(z[1:] - z[:z.shape[0]-1])
+            num = np.argmin(len)
+            if len[num] < eps:
+                z = np.hstack([z[:num], z[num+1:]])
+                flag = 1
+        return z
+    
+    # 終端の重複している座標点を除去
+    def deduplication(z, eps=0.0001):
+        z = delete_near_point(z)
+        flag = 1
+        while flag == 1:
+            flag = 0
+            if np.abs(z[0] - z[z.shape[0] - 1]) <= eps:
+                z = z[:z.shape[0] - 1]
+                flag = 1
+        return z
+    
+    # 終端に重複する座標点を追加
+    def add_duplicates(z, eps=0.0001):
+        if np.abs(z[0] - z[z.shape[0] - 1]) > eps:
+            z = np.hstack([z, z[0]])
+        return z
+    
+    # 中心からの角度基準で座標点を並べ替える
+    def sort_by_angle(z):
+        center = np.average(np.real(z)) + 1j * np.average(np.imag(z))
+        return z[np.argsort(np.angle(z - center))]
+    
+    def sort_for_cross_delete(z0, z1):
+        def find_intersection_line_by_line(p1, p2, p3, p4):
+            def det123(z1, z2, z3):
+                # a = np.array([[1, 1, 1], [np.real(z1), np.real(z2), np.real(z3)], [np.imag(z1), np.imag(z2), np.imag(z3)]])
+                return np.linalg.det(np.array(
+                    [[1, 1, 1], [np.real(z1), np.real(z2), np.real(z3)], [np.imag(z1), np.imag(z2), np.imag(z3)]]))
+            
+            if det123(p1, p2, p3) * det123(p1, p2, p4) < 0:
+                if det123(p3, p4, p1) * det123(p3, p4, p2) < 0:
+                    return True
+            
+            return False
+        
+        def swap_a_b(a, b):
+            return b, a
+        
+        def half_length(dz, z):
+            return 0.5 * (dz + z)
+        
+        size = z0.shape[0]
+        flag = 1
+        while flag == 1:
+            flag = 0
+            for i in range(size-1):
+                if find_intersection_line_by_line(z0[i], z0[i+1], z1[i], z1[i+1]):
+                    # z1[i], z1[i + 1] = swap_a_b(z1[i], z1[i+1])
+                    z1[i] = half_length(z1[i], z0[i])
+                    z1[i+1] = half_length(z1[i+1], z0[i+1])
+                    flag = 1
+            if find_intersection_line_by_line(z0[size-1], z0[0], z1[size-1], z1[0]):
+                # z1[size-1], z1[0] = swap_a_b(z1[size-1], z1[0])
+                z1[size-1] = half_length(z1[size-1], z0[0])
+                z1[0] = half_length(z1[0], z0[size-1])
+                flag = 1
+                
+        return z1
+        
+    # 物体表面を押し出す
+    def offset_surface(z):
+        def get_angle(z2, z1, z0):
+            # if (np.imag(z2 - z1) >= 0) and (np.imag(z1 - z0)):
+            az21 = np.angle(z2 - z1)
+            az01 = np.angle(z0 - z1)
+            print(az21, az01)
+            #if az21 < 0:
+            #    return 0.5 * (az21 + az01) + np.pi
+            return 0.5 * (az21 + az01)
+
+        size = z.shape[0]
+        
+        delta = np.zeros(size, dtype = complex)
+        delta[0] = z[1] - z[size -1]
+        for i in range(1, size-1):
+            delta[i] = z[i + 1] - z[i - 1]
+        delta[size - 1] = z[0] - z[size - 2]
+
+        normal = -1j * delta / np.abs(delta)
+        incremental = np.min(np.abs(delta))
+        dz = z + normal * incremental
+        center = np.average(np.real(z)) + 1j * np.average(np.imag(z))
+        # np.argsort(dz - center)
+        dz = sort_for_cross_delete(z, dz)
+        return z + normal * incremental, incremental
+    
+    z1 = deduplication(z1)
+    # z1 = sort_by_angle(z1)
+    
+    size = z1.shape[0]
+    z = np.zeros((size, size), dtype = complex)
+    z[:, 0] = z1
+    distance = 0
+    plt.plot(np.real(z[:, 0]), np.imag(z[:, 0]))
+    for j in range(1, size):
+        z[:, j], incremental = offset_surface(z[:, j - 1])
+        distance += incremental
+        # plt.plot(np.real(z[:, j]), np.imag(z[:, j]))
+        
+    # for i in range(size):
+        # plt.plot(np.real(z[i, :]), np.imag(z[i, :]))
+    
+    
+    print(distance)
+    # plt.show()
+
+    for i in range(int(size / 7)):
+        plt.plot(np.real(z[i, :]), np.imag(z[i, :]))
+        plt.plot(np.real(z[:, i]), np.imag(z[:, i]))
+    xbot = 0.8
+    xtop = 1.0
+    ybot = 0.3
+    ytop = 0.5
+    plt.xlim(xbot, xtop)
+    plt.ylim(ybot, ytop)
+    plt.show()
+    exit()
+"""
+"""
     xi_max = z1.shape[0]    # xi方向の格子点数
     eta_max = z2.shape[0]   # eta方向の格子点数
 
@@ -218,90 +690,7 @@ def make_grid(z1, z2, z3):
         plt.show()
 
     # return grid_x, grid_y
-
-
-# a, b, cからなる三重対角行列(n×n)および，n次元定数ベクトルdの連立方程式の解xを返す
-# aは2行目からb行目まで，cは1行目からn-1行まで
-def tridiagonal_matrix_algorithm(a, b, c, d, n):
-    c_prime = np.zeros(n)
-    d_prime = np.zeros(n)
-    x = np.zeros(n)
-    c_prime[0] = c[0] / b[0]
-    d_prime[0] = d[0] / b[0]
-
-    for i in range(1, n - 1):
-        c_prime[i] = c[i] / (b[i] - a[i] * c_prime[i - 1])
-        d_prime[i] = (d[i] - a[i] * d_prime[i - 1]) / (b[i] - a[i] * c_prime[i - 1])
-
-    d_prime[n-1] = (d[n-1] - a[n-1] * d_prime[n-2]) / (b[n-1] - a[n-1] * c_prime[n-2])
-
-    x[n-1] = d_prime[n-1]
-    for i in range(n-2, -1, -1):
-        x[i] = d_prime[i] - c_prime[i] * x[i + 1]
-
-    return x
-
-def check_TDMA():
-    N = 5
-    A = np.zeros((N, N))
-    A[0, 0] = 3
-    A[0, 1] = 4
-    for i in range(1, N-1):
-        A[i, i-1] = 2+i
-        A[i, i] = 3
-        A[i, i+1] = 4
-    A[N-1, N-2] = 2+N-1
-    A[N-1, N-1] = 3
-    print(A)
-
-    b = np.arange(5)
-    print(linalg.det(A))
-    print(b)
-    print(linalg.solve(A, b))
-    left = np.arange(5) + 3 - 1
-    diag = np.ones(5) * 3
-    right = np.ones(5) * 4
-
-    print(tridiagonal_matrix_algorithm(left, diag, right, b, 5))
-    exit()
-
-def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "0012", size = 5)
-    z3 = get_outer_boundary(z1, magnification=10)
-    z2 = get_connect_z1_to_z3(z1, z3)
-
-    make_grid(z1, z2, z3)
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(np.real(z2), np.imag(z2), "o")
-    plt.plot(np.real(z3), np.imag(z3), "x")
-    plt.show()
-
-    exit()
-    """
-    grid[0] = line_up_z2xy(z1[:size-1], two_rows = True)
-    
-    xy0 = line_up_z2xy(offset_surface(z1)[:size-1])
-    
-    
-    # print(xy0)
-    phi0 = np.zeros(size-1)
-    phi1 = np.zeros(size-1)
-    V0 = np.zeros(size-1) + 0.0001
-    V1 = np.zeros(size-1)
-    cM, cV = made_coefficient_matrix(xy0[0::2], grid[0, :, 0], xy0[1::2], grid[0, :, 1], phi0, phi1, V0, V1)
-
-    # print(cM)
-    xy1 = linalg.solve(cM, cV)
-    xy1_ = spla.bicg(cM, cV)[0]
-    print(xy1_)
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(xy1_[0::2], xy1_[1::2])
-    plt.show()
-    """
-if __name__ == '__main__':
-    main()
-
-
+"""
 """
 def make_grid(z1, z2, z3):
     xi_max = z1.shape[0]    # xi方向の格子点数
