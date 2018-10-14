@@ -89,6 +89,83 @@ def get_connect_z1_to_z3(z1, z3, resolution=None, magnification=10):
     return z2
 
 def make_grid_seko(z1, z2, z3, z4):
+    zc = np.average(np.real(z3)) + 1j * np.average(np.imag(z3))
+    outer_radius = 0.5 * (np.max(np.real(z3)) - np.min(np.real(z3)))
+    delta2 = np.zeros_like(z1, dtype=complex)
+    size = z1.shape[0]
+    delta2[0] = z1[1] - z1[size -1]
+    for i in range(1, size-1):
+        delta2[i] = z[i+1] - z[i-1]
+    delta2[size-1] = z[0] - z[size-2]
+
+    def get_distance_2_outer_circle(zp, delta2):
+        a = np.imag(1j * delta2)
+        b = np.real(1j * delta2)
+        c = -(a * np.real(zp) + b * np.imag(zp))
+        d = a * np.real(zc) + b * np.imag(zc) + c
+        inner_sqrt = (a**2 + b**2) * outer_radius**2 - d**2
+        if inner_sqrt < 0:
+            print("input_error")
+            exit()
+        x_cross = (-a * d + b * np.sqrt(inner_sqrt)) / (a**2 + b**2) + np.real(zc)
+        y_cross = (-b * d - a * np.sqrt(inner_sqrt)) / (a**2 + b**2) + np.imag(zc)
+        z_cross = x_cross + 1j * y_cross
+        return np.abs(z_cross - zp)
+    
+
+
+def main():
+    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 5)
+    z3 = get_outer_boundary(z1, magnification=10)
+    z2 = get_connect_z1_to_z3(z1, z3)
+    z4 = z2
+    """
+    box = 10
+    z1 = np.zeros(box) + 1j * np.arange(box)    #
+    z2 = np.arange(box) + 1j * np.zeros(box)
+    z3 = np.ones(box) * (box-1) + 1j * np.arange(box)
+    z4 = np.arange(box) + 1j * np.ones(box) * (box-1)
+    #"""
+    """
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(np.real(z2), np.imag(z2), "o")
+    plt.plot(np.real(z3), np.imag(z3), "x")
+    plt.plot(np.real(z4), np.imag(z4))
+    plt.show()
+    """
+    make_grid_seko(z1, z2, z3, z4)
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(np.real(z2), np.imag(z2), "o")
+    plt.plot(np.real(z3), np.imag(z3), "x")
+    plt.show()
+
+    exit()
+    """
+    grid[0] = line_up_z2xy(z1[:size-1], two_rows = True)
+    
+    xy0 = line_up_z2xy(offset_surface(z1)[:size-1])
+    
+    
+    # print(xy0)
+    phi0 = np.zeros(size-1)
+    phi1 = np.zeros(size-1)
+    V0 = np.zeros(size-1) + 0.0001
+    V1 = np.zeros(size-1)
+    cM, cV = made_coefficient_matrix(xy0[0::2], grid[0, :, 0], xy0[1::2], grid[0, :, 1], phi0, phi1, V0, V1)
+
+    # print(cM)
+    xy1 = linalg.solve(cM, cV)
+    xy1_ = spla.bicg(cM, cV)[0]
+    print(xy1_)
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.plot(xy1_[0::2], xy1_[1::2])
+    plt.show()
+    """
+if __name__ == '__main__':
+    main()
+
+"""
+def make_grid_seko(z1, z2, z3, z4):
     def offset_surface(z):
         size = z.shape[0]
 
@@ -148,7 +225,7 @@ def make_grid_seko(z1, z2, z3, z4):
     y_xi = lambda i, j: (grid_y[i + 1, j - 1] - grid_y[i - 1, j - 1])   # yのξ微分(の2倍)
     y_eta = lambda i, j:(grid_y[i, j - 1] - grid_y[i, j - 2])   # yのη微分(の2倍)
 
-    Aij = lambda i, j: 0.5 * np.array([[x_eta(i, j), y_eta(i, j)], [y_eta(i, j), -x_eta(i, j)]])
+    Aij = lambda i, j: 0.25 * np.array([[x_eta(i, j), y_eta(i, j)], [y_eta(i, j), -x_eta(i, j)]])
     invAij = lambda i, j: np.linalg.inv(Aij(i, j))
 
     Bij = lambda i, j: 0.5 * np.array([[x_xi(i, j), y_xi(i, j)], [-y_xi(i, j), x_xi(i, j)]])
@@ -280,57 +357,7 @@ def check_TDMA():
 
     print(tridiagonal_matrix_algorithm(left, diag, right, b, 5))
     exit()
-
-def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 5)
-    z3 = get_outer_boundary(z1, magnification=10)
-    z2 = get_connect_z1_to_z3(z1, z3)
-    z4 = z2
-    """
-    box = 10
-    z1 = np.zeros(box) + 1j * np.arange(box)    #
-    z2 = np.arange(box) + 1j * np.zeros(box)
-    z3 = np.ones(box) * (box-1) + 1j * np.arange(box)
-    z4 = np.arange(box) + 1j * np.ones(box) * (box-1)
-    #"""
-    """
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(np.real(z2), np.imag(z2), "o")
-    plt.plot(np.real(z3), np.imag(z3), "x")
-    plt.plot(np.real(z4), np.imag(z4))
-    plt.show()
-    """
-    make_grid_seko(z1, z2, z3, z4)
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(np.real(z2), np.imag(z2), "o")
-    plt.plot(np.real(z3), np.imag(z3), "x")
-    plt.show()
-
-    exit()
-    """
-    grid[0] = line_up_z2xy(z1[:size-1], two_rows = True)
-    
-    xy0 = line_up_z2xy(offset_surface(z1)[:size-1])
-    
-    
-    # print(xy0)
-    phi0 = np.zeros(size-1)
-    phi1 = np.zeros(size-1)
-    V0 = np.zeros(size-1) + 0.0001
-    V1 = np.zeros(size-1)
-    cM, cV = made_coefficient_matrix(xy0[0::2], grid[0, :, 0], xy0[1::2], grid[0, :, 1], phi0, phi1, V0, V1)
-
-    # print(cM)
-    xy1 = linalg.solve(cM, cV)
-    xy1_ = spla.bicg(cM, cV)[0]
-    print(xy1_)
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(xy1_[0::2], xy1_[1::2])
-    plt.show()
-    """
-if __name__ == '__main__':
-    main()
-
+"""
 """
 def make_grid_seko(z1, z2, z3, z4):
     xi_max = z1.shape[0]  # xi方向の格子点数
