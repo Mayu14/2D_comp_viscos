@@ -2,6 +2,7 @@
 from scipy.sparse import lil_matrix
 from scipy.sparse.linalg import bicg, spsolve
 from math import floor
+from scipy import interpolate
 import numpy as np
 from naca_4digit_test import Naca_4_digit, Naca_5_digit
 from joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
@@ -14,6 +15,21 @@ def get_complex_coords(type, size, center_x = -0.08, center_y = 0.08, naca4 = "0
             return np.concatenate([z, z[0].reshape(-1)]), z.shape[0] + 1
         else:
             return z, z.shape[0]
+    
+    # 極端に距離の近い制御点を除去する
+    def adjust_length(z):
+        len = np.zeros_like(z, dtype = float)
+        len[:z.shape[0] - 1] = np.abs(z[1:] - z[:z.shape[0] - 1])
+        len[z.shape[0] - 1] = np.abs(z[0] - z[z.shape[0] - 1])
+        average_len = np.average(len)
+
+        put_out = lambda x, count: np.hstack((x[:count], x[count + 1]))
+        count = z.shape[0] - 2
+        while count > 0:
+            if len[count] < 0.1 * average_len:
+                z = put_out(z, count)
+            count -= 1
+        return z
 
     if type == 0:
         t = np.linspace(start = 0, stop = 2.0 * np.pi, num = size + 1)
@@ -32,7 +48,8 @@ def get_complex_coords(type, size, center_x = -0.08, center_y = 0.08, naca4 = "0
     else:
         print("type error")
         exit()
-
+    
+    z = adjust_length(z)
     if type < 3:
         return reshape_z(z)
     else:
@@ -57,12 +74,47 @@ def get_outer_boundary(z1, magnification=5):
 
     model_length = get_model_length(z1)
     center_x, center_y = get_model_center(z1)
-    resolution = z1.shape[0]
-    center = center_x + 1j * center_y
+    zc = center_x + 1j * center_y
     radius = model_length * magnification
-    t = np.linspace(start=0, stop=2.0 * np.pi, num=resolution)
-    z3 = center + radius * np.exp(1j * t)   # Counter Clock Wise
+
+    # 法線の角度
+    delta2 = get_delta2(z1)
+    theta1 = np.angle(delta2 / (np.abs(delta2) * 1j))
+    theta1 = np.where(theta1 > 0, theta1, theta1 + 2.0 * np.pi)
+
+    # 物体を円に変換したときの換算角度
+    theta2 = get_length_rate(z1) * 2.0 * np.pi
+    average_theta = np.sort(0.5 * (theta1 + theta2))
+    z3 = zc + radius * np.exp(1j * average_theta)
     return z3[::-1] # Clock Wise and -1
+
+# そこまでの累積長さが全体の長さに占める割合を返す
+def get_length_rate(z1, output_total_length = False):
+    size = z1.shape[0]
+    delta1 = np.zeros_like(z1, dtype = complex)
+    delta1[:size - 1] = z1[1:] - z1[:size - 1]
+    delta1[size - 1] = z1[0] - z1[size - 1]
+    len = np.abs(delta1)
+    total_len = np.sum(len)
+    len_rate = np.zeros_like(z1, dtype = float)
+    accumulated_len = 0.0
+    for i in range(size):
+        len_rate[i] = accumulated_len / total_len
+        accumulated_len += len[i]
+    if output_total_length:
+        return len_rate, total_len
+    else:
+        return len_rate
+
+# 1点飛ばしでの座標の差分を返す
+def get_delta2(z1):
+    size = z1.shape[0]
+    delta2 = np.zeros_like(z1, dtype = complex)
+    delta2[0] = z1[1] - z1[size - 1]
+    for i in range(1, size - 1):
+        delta2[i] = z1[i + 1] - z1[i - 1]
+    delta2[size - 1] = z1[0] - z1[size - 2]
+    return delta2
 
 # 物体と外周を結ぶ線分を返す
 def get_connect_z1_to_z3(z1, z3, resolution=None, magnification=10):
@@ -87,35 +139,378 @@ def get_connect_z1_to_z3(z1, z3, resolution=None, magnification=10):
         z2[k] = z2[k-1] + delta_x[k - 1]
 
     return z2
+    
+def deduplication(z, array_list=None):
+    def put_out(x, count):
+        return np.hstack((x[:count], x[count+1]))
 
-def make_grid_seko(z1, z2, z3, z4):
-    zc = np.average(np.real(z3)) + 1j * np.average(np.imag(z3))
-    outer_radius = 0.5 * (np.max(np.real(z3)) - np.min(np.real(z3)))
-    delta2 = np.zeros_like(z1, dtype=complex)
+    def put_out_bound(x):
+        return x[:x.shape[0] - 1]
+        
+    size = z.shape[0]
+    
+    if z[size - 1] == z[0]:
+        size -= 1
+        z = put_out_bound(z)
+        if array_list != None:
+            for i in range(len(array_list)):
+                array_list[i] = put_out_bound(array_list[i])
+    
+    count = size - 2
+    while count > 0:
+        if z[count] == z[count + 1]:
+            z = put_out(z, count)
+            if array_list != None:
+                for i in range(len(array_list)):
+                    array_list[i] = put_out(array_list[i], count)
+        count -= 1
+    if array_list == None:
+        return z
+    else:
+        return z, array_list
+
+def redistribute(z1):
+    # エルミート補間して関数x=fx(t), y=fy(t)を得る
+    t, total_len = get_length_rate(z1, output_total_length = True)
+    fx = interpolate.PchipInterpolator(t, np.real(z1))
+    fy = interpolate.PchipInterpolator(t, np.imag(z1))
     size = z1.shape[0]
-    delta2[0] = z1[1] - z1[size -1]
-    for i in range(1, size-1):
-        delta2[i] = z[i+1] - z[i-1]
-    delta2[size-1] = z[0] - z[size-2]
+    residual = 100
+    # 隣接2辺がなす角度の直線からのずれ量を算出
+    plt.plot(np.real(z1), np.imag(z1), "o")
+    
+    a = 0
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.show()
+    while residual > 0.00001:
+        delta = np.zeros_like(z1, dtype = complex)
+        delta[0] = (z1[0] - z1[size - 1])
+        delta[1:] = (z1[1:] - z1[:size - 1])
+        len = np.abs(delta)
+        unit_delta = delta / len
+        angle = np.zeros_like(z1, dtype = float)
+        angle[:size - 1] = np.angle(unit_delta[1:] / (-unit_delta[:size - 1]))
+        angle[size - 1] = np.angle(unit_delta[0] / (-unit_delta[size - 1]))
+        angle = np.where(angle >= 0, angle, angle + 2.0 * np.pi)
+        
+        res_angle = np.abs(angle - np.pi)
+        """
+        drdt_edge = np.zeros_like(z1, dtype = float)
+        drdt_edge[0] = 0.5 * (res_angle[0] - res_angle[size - 1])
+        drdt_edge[1:] = 0.5 * (res_angle[1:] - res_angle[:size - 1])
+        """
+        drdt_center = np.zeros_like(z1, dtype = float)
+        drdt_center[0] = 0.5 * (res_angle[1] - res_angle[size - 1])
+        drdt_center[1:size - 1] = 0.5 * (res_angle[2:] - res_angle[:size - 2])
+        drdt_center[size - 1] = 0.5 * (res_angle[0] - res_angle[size - 2])
+        """
+        r_tt = np.zeros_like(z1, dtype = float)
+        r_tt[0] = (res_angle[1] - 2.0 * res_angle[0] + res_angle[size - 1]) / (len[0])
+        r_tt[1:size - 1] = (res_angle[2:] - 2.0 * res_angle[1:size - 1] + res_angle[:size - 2]) / (len[1:size - 1])
+        r_tt[size - 1] = (res_angle[0] - 2.0 * res_angle[size - 1] + res_angle[size - 2]) / (len[size - 1])
+        """
 
-    def get_distance_2_outer_circle(zp, delta2):
-        a = np.imag(1j * delta2)
-        b = np.real(1j * delta2)
-        c = -(a * np.real(zp) + b * np.imag(zp))
-        d = a * np.real(zc) + b * np.imag(zc) + c
-        inner_sqrt = (a**2 + b**2) * outer_radius**2 - d**2
-        if inner_sqrt < 0:
-            print("input_error")
-            exit()
-        x_cross = (-a * d + b * np.sqrt(inner_sqrt)) / (a**2 + b**2) + np.real(zc)
-        y_cross = (-b * d - a * np.sqrt(inner_sqrt)) / (a**2 + b**2) + np.imag(zc)
-        z_cross = x_cross + 1j * y_cross
-        return np.abs(z_cross - zp)
+        dt = np.where(np.abs(drdt_center) < 0.5*len, drdt_center, np.sign(drdt_center) * 0.5 * len)
+        plt.plot(t, drdt_center)
+        plt.show()
+        
+        print(len)
+        print(dt)
+        
+        residual = np.sum(np.abs(dt))
+        t += dt
+        np.where(t >= 0, t, t + 1)
+        t = np.sort(t)
+
+        z1 = fx(t) + 1j * fy(t)
+        a += 1
+        if a % 1 == 0:
+            plt.plot(fx(t), fy(t))
+            plt.show()
+    
+    plt.plot(np.real(z1), np.imag(z1))
+    plt.show()
+    return z1
     
 
+def make_grid_seko(z1, z2, z3, z4):
+    z1 = deduplication(z1)
+    z1 = redistribute(z1)
+    xi_max = z1.shape[0]
+    eta_max = z2.shape[0]
+    
+
+    
+    grid_x = np.zeros((xi_max, eta_max))
+    grid_y = np.zeros((xi_max, eta_max))
+    grid_x[:, 0] = np.real(z1)
+    grid_y[:, 0] = np.imag(z1)
+    grid_x[:, eta_max - 1] = np.real(z3[::-1])
+    grid_y[:, eta_max - 1] = np.imag(z3[::-1])
+    for j in range(1, eta_max-1):
+        grid_x[:, j] = (1.0 - float(j) / eta_max) * grid_x[:, 0] + (float(j) / eta_max) * grid_x[:, eta_max - 1]
+        grid_y[:, j] = (1.0 - float(j) / eta_max) * grid_y[:, 0] + (float(j) / eta_max) * grid_y[:, eta_max - 1]
+
+    def x_xi(i, j):
+        if i == 0:
+            return 0.5 * (grid_x[1, j] - grid_x[xi_max - 1, j]) # loop boundary
+        elif i == xi_max - 1:
+            return 0.5 * (grid_x[0, j] - grid_x[xi_max - 2, j])
+        else:
+            return 0.5 * (grid_x[i+1, j] - grid_x[i-1, j])
+        
+    def y_xi(i, j):
+        if i == 0:
+            return 0.5 * (grid_y[1, j] - grid_y[xi_max - 1, j])  # loop boundary
+        elif i == xi_max - 1:
+            return 0.5 * (grid_y[0, j] - grid_y[xi_max - 2, j])
+        else:
+            return 0.5 * (grid_y[i+1, j] - grid_y[i-1, j])
+        
+    def x_eta(i, j):
+        if j == 0:
+            return 0.5 * (-grid_x[i, 2] + 4.0 * grid_x[i, 1] - 3.0 * grid_x[i, 0])
+        elif j == eta_max - 1:
+            return - 0.5 * (-grid_x[i, eta_max - 3] + 4.0 * grid_x[i, eta_max - 2] - 3.0 * grid_x[i, eta_max - 1])
+        else:
+            return 0.5 * (grid_x[i, j+1] - grid_x[i, j-1])
+        
+    def y_eta(i, j):
+        if j == 0:
+            return 0.5 * (-grid_y[i, 2] + 4.0 * grid_y[i, 1] - 3.0 * grid_y[i, 0])
+        elif j == eta_max - 1:
+            return - 0.5 * (-grid_y[i, eta_max - 3] + 4.0 * grid_y[i, eta_max - 2] - 3.0 * grid_y[i, eta_max - 1])
+        else:
+            return 0.5 * (grid_y[i, j+1] - grid_y[i, j-1])
+    
+    def x_xixi(i, j):
+        if i == 0:
+            return grid_x[1, j] - 2.0 * grid_x[0, j] + grid_x[xi_max-1, j]
+        elif i == xi_max - 1:
+            return grid_x[0, j] - 2.0 * grid_x[xi_max-1, j] + grid_x[xi_max-2, j]
+        else:
+            return grid_x[i+1, j] - 2.0 * grid_x[i, j] + grid_x[i-1, j]
+            
+    def y_xixi(i, j):
+        if i == 0:
+            return grid_y[1, j] - 2.0 * grid_y[0, j] + grid_y[xi_max-1, j]
+        elif i == xi_max - 1:
+            return grid_y[0, j] - 2.0 * grid_y[xi_max-1, j] + grid_y[xi_max-2, j]
+        else:
+            return grid_y[i+1, j] - 2.0 * grid_y[i, j] + grid_y[i-1, j]
+    
+    def x_etaeta(i, j):
+        if j == 0:
+            return 2.0 * grid_x[i, 0] - 5.0 * grid_x[i, 1] + 4.0 * grid_x[i, 2] - grid_x[i, 3]
+        elif j == eta_max - 1:
+            return -(2.0 * grid_x[i, eta_max-1] - 5.0 * grid_x[i, eta_max-2] + 4.0 * grid_x[i, eta_max-3] - grid_x[i, eta_max-4])
+        else:
+            return grid_x[i, j+1] - 2.0 * grid_x[i, j] + grid_x[i, j-1]
+
+    def y_etaeta(i, j):
+        if j == 0:
+            return 2.0 * grid_y[i, 0] - 5.0 * grid_y[i, 1] + 4.0 * grid_y[i, 2] - grid_y[i, 3]
+        elif j == eta_max - 1:
+            return -(2.0 * grid_y[i, eta_max-1] - 5.0 * grid_y[i, eta_max-2] + 4.0 * grid_y[i, eta_max-3] - grid_y[i, eta_max-4])
+        else:
+            return grid_y[i, j+1] - 2.0 * grid_y[i, j] + grid_y[i, j-1]
+
+    def x_xieta(i, j):
+        if i == 0:
+            i_l = xi_max - 1
+            i_r = 1
+        elif i == xi_max - 1:
+            i_l = xi_max - 2
+            i_r = 0
+        else:
+            i_l = i - 1
+            i_r = i + 1
+        
+        if j == 0:
+            return 0.25 * ((-grid_x[i_r, 2] + 4.0*grid_x[i_r, 1] - 3.0 * grid_x[i_r, 0])
+                           - (-grid_x[i_l, 2] + 4.0*grid_x[i_l, 1] - 3.0 * grid_x[i_l, 0]))
+        elif j == eta_max - 1:
+            return -0.25 * ((-grid_x[i_r, eta_max-3] + 4.0*grid_x[i_r, eta_max-2] - 3.0 * grid_x[i_r, eta_max-1])
+                           - (-grid_x[i_l, eta_max-3] + 4.0*grid_x[i_l, eta_max-2] - 3.0 * grid_x[i_l, eta_max-1]))
+        else:
+            return 0.5 * (
+                grid_x[i_r, j + 1] - grid_x[i_r, j] - grid_x[i, j + 1] + 2.0 * grid_x[i, j] - grid_x[i, j - 1] -
+                grid_x[i_l, j] + grid_x[i_l, j - 1])
+
+    def y_xieta(i, j):
+        if i == 0:
+            i_l = xi_max - 1
+            i_r = 1
+        elif i == xi_max - 1:
+            i_l = xi_max - 2
+            i_r = 0
+        else:
+            i_l = i - 1
+            i_r = i + 1
+    
+        if j == 0:
+            return 0.25 * ((-grid_y[i_r, 2] + 4.0 * grid_y[i_r, 1] - 3.0 * grid_y[i_r, 0])
+                           - (-grid_y[i_l, 2] + 4.0 * grid_y[i_l, 1] - 3.0 * grid_y[i_l, 0]))
+        elif j == eta_max - 1:
+            return -0.25 * (
+                        (-grid_y[i_r, eta_max - 3] + 4.0 * grid_y[i_r, eta_max - 2] - 3.0 * grid_y[i_r, eta_max - 1])
+                        - (-grid_y[i_l, eta_max - 3] + 4.0 * grid_y[i_l, eta_max - 2] - 3.0 * grid_y[i_l, eta_max - 1]))
+        else:
+            return 0.5 * (
+                    grid_y[i_r, j + 1] - grid_y[i_r, j] - grid_y[i, j + 1] + 2.0 * grid_y[i, j] - grid_y[i, j - 1] -
+                    grid_y[i_l, j] + grid_y[i_l, j - 1])
+
+    g11 = lambda i, j: x_xi(i, j)**2 + y_xi(i, j)**2
+    g12 = lambda i, j: x_xi(i, j) * x_eta(i, j) + y_xi(i, j) * y_eta(i, j)
+    g22 = lambda i, j: x_eta(i, j)**2 + y_eta(i, j)**2
+    
+    # xi線をxi0線へ近づける制御関数P
+    def control_function_of_xi(xi, eta, xi_line, eta_line, a=1.0, b=0.0, c=1.0, d=0.0,  not_move_xi=True):
+        if (eta != 1) and (eta != eta_max - 2):
+            if not_move_xi:
+                return 0
+            else:
+                p = 0
+                for xi0 in xi_line:
+                    p += - a * np.sign(xi - xi0) * np.exp(-c * np.abs(xi - xi0))
+                return p
+        else:
+            i = xi
+            j = eta
+            return -(-(x_xi(i, j) * x_xixi(i, j) + y_xi(i, j) * y_xixi(i, j)) / g11(i, j)
+                    -(x_xi(i, j) * x_etaeta(i, j) + y_xi(i, j) * y_etaeta(i, j)) / g22(i, j))
+        
+    # eta線をeta0線へ近づける制御関数Q
+    def control_function_of_eta(xi, eta, xi_line, eta_line, a=10.0, b=0.0, c=1.0, d=0.0):
+        if (eta != 1) and (eta != eta_max - 2):
+            q = 0
+            for eta0 in eta_line:
+                q += - a * np.sign(eta - eta0) * np.exp(-c * np.abs(eta - eta0))
+            return q
+        else:
+            i = xi
+            j = eta
+            return -(-(x_eta(i, j) * x_etaeta(i, j) + y_eta(i, j) * y_etaeta(i, j)) / g22(i, j)
+                    -(x_eta(i, j) * x_xixi(i, j) + y_eta(i, j) * y_xixi(i, j)) / g11(i, j))
+    
+    def update_control_function(xi_line = [0], eta_line = [0], not_move_xi = True):
+        for i in range(xi_max):
+            for j in range(eta_max):
+                control_P[i, j] = control_function_of_xi(i, j, xi_line, eta_line)
+                control_Q[i, j] = control_function_of_eta(i, j, xi_line, eta_line)
+        return control_P, control_Q
+    
+    # explicit euler (for check)
+    control_P = np.zeros((xi_max, eta_max))
+    control_Q = np.zeros((xi_max, eta_max))
+    
+    
+    def rhs_x(i, j):
+        if (j != 1) and (j != eta_max-2):
+            return ((g22(i, j) * (x_xixi(i, j) + control_P[i, j] * x_xi(i, j)))
+                    + (g11(i, j) * (x_etaeta(i, j) + control_Q[i, j] * x_eta(i, j)))
+                    - 2.0 * g12(i, j) * x_xieta(i, j))
+        else:
+            return (g22(i, j) * x_xixi(i, j) + control_P[i, j] * x_xi(i, j)
+                    + g11(i, j) * x_etaeta(i, j) + control_Q[i, j] * x_eta(i, j))
+    
+    def rhs_y(i, j):
+        if (j != 1) and (j != eta_max - 2):
+            return ((g22(i, j) * (y_xixi(i, j) + control_P[i, j] * y_xi(i, j)))
+                    + (g11(i, j) * (y_etaeta(i, j) + control_Q[i, j] * y_eta(i, j)))
+                    - 2.0 * g12(i, j) * y_xieta(i, j))
+        else:
+            return (g22(i, j) * y_xixi(i, j) + control_P[i, j] * y_xi(i, j)
+                    + g11(i, j) * y_etaeta(i, j) + control_Q[i, j] * y_eta(i, j))
+    
+    # explicit euler (gauss-seidel)
+    dt = 0.005
+    xi_line = [0, int(eta_max/2)]
+    eta_line = [0]
+    for iter in range(10000):
+        control_P, control_Q = update_control_function(xi_line, eta_line)
+        for i in range(xi_max):
+            res = 0
+            for j in range(1, eta_max - 1):
+                res += grid_x[i, j] - rhs_x(i, j) * dt
+                res += grid_y[i, j] - rhs_y(i, j) * dt
+                grid_x[i, j] += rhs_x(i, j) * dt
+                grid_y[i, j] += rhs_y(i, j) * dt
+        
+        if iter % 1000 == 0:
+            print(res)
+            for i in range(xi_max):
+                plt.plot(grid_x[i, :], grid_y[i, :])
+            for j in range(eta_max):
+                plt.plot(grid_x[:, j], grid_y[:, j])
+            plt.xlim(-0.1, 1.1)
+            plt.ylim(-0.1, 1.1)
+            plt.show()
+            for i in range(xi_max):
+                plt.plot(grid_x[i, :], grid_y[i, :])
+            for j in range(eta_max):
+                plt.plot(grid_x[:, j], grid_y[:, j])
+            plt.show()
+            
+    
+    # alternative direction implicit
+    delta_tau = 0.1
+    def solve_first_matrix():
+        dx_star2 = np.zeros((xi_max, eta_max))
+        dy_star2 = np.zeros((xi_max, eta_max))
+        for j in range(1, eta_max-1):
+            matrix1 = lil_matrix((xi_max, xi_max))
+            rhs1_x = np.zeros(xi_max)
+            rhs1_y = np.zeros(xi_max)
+            for i in range(xi_max):
+                matrix1[i, i] = 1.0 + 2.0 * delta_tau * g22(i, j)
+                
+                if i != 0:
+                    im1 = i - 1
+                else:
+                    im1 = xi_max - 1
+                
+                if i != xi_max - 1:
+                    ip1 = i + 1
+                else:
+                    ip1 = 0
+                    
+                matrix1[i, im1] = -delta_tau * g22(i, j) * (1.0 - 0.5 * control_P[i, j])
+                matrix1[i, ip1] = -delta_tau * g22(i, j) * (1.0 + 0.5 * control_P[i, j])
+                
+                rhs1_x[i] = rhs_x(i, j)
+                rhs1_y[i] = rhs_y(i, j)
+                
+            dx_star2[:, j] = spsolve(matrix1, rhs1_x)
+            dy_star2[:, j] = spsolve(matrix1, rhs1_y)
+        return dx_star2, dy_star2
+    
+    def solve_second_matrix(dx_star2, dy_star2):
+        dx_star1 = np.zeros((xi_max, eta_max))
+        dy_star1 = np.zeros((xi_max, eta_max))
+        for i in range(xi_max):
+            matrix2 = lil_matrix((eta_max, eta_max))
+            for i in range(eta_max):
+                if (i == 0) and (i == xi_max - 1):
+                    matrix2[i, i] = 1.0
+                else:
+                    matrix2[i, i] = 1.0 + 2.0 * delta_tau * g11(i, j)
+                
+                    if i != 0:
+                        im1 = i - 1
+                    else:
+                        im1 = xi_max - 1
+                
+                    if i != xi_max - 1:
+                        ip1 = i + 1
+                    else:
+                        ip1 = 0
+                
+                
+                        
 
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 5)
+    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 10)
     z3 = get_outer_boundary(z1, magnification=10)
     z2 = get_connect_z1_to_z3(z1, z3)
     z4 = z2
