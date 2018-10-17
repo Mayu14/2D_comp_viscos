@@ -231,15 +231,14 @@ def redistribute(z1):
     plt.plot(np.real(z1), np.imag(z1))
     plt.show()
     return z1
-    
+
+
+
 
 def make_grid_seko(z1, z2, z3, z4):
-    z1 = deduplication(z1)
-    z1 = redistribute(z1)
+    # z1 = redistribute(z1)
     xi_max = z1.shape[0]
     eta_max = z2.shape[0]
-    
-
     
     grid_x = np.zeros((xi_max, eta_max))
     grid_y = np.zeros((xi_max, eta_max))
@@ -247,6 +246,7 @@ def make_grid_seko(z1, z2, z3, z4):
     grid_y[:, 0] = np.imag(z1)
     grid_x[:, eta_max - 1] = np.real(z3[::-1])
     grid_y[:, eta_max - 1] = np.imag(z3[::-1])
+    
     for j in range(1, eta_max-1):
         grid_x[:, j] = (1.0 - float(j) / eta_max) * grid_x[:, 0] + (float(j) / eta_max) * grid_x[:, eta_max - 1]
         grid_y[:, j] = (1.0 - float(j) / eta_max) * grid_y[:, 0] + (float(j) / eta_max) * grid_y[:, eta_max - 1]
@@ -422,42 +422,107 @@ def make_grid_seko(z1, z2, z3, z4):
         else:
             return (g22(i, j) * y_xixi(i, j) + control_P[i, j] * y_xi(i, j)
                     + g11(i, j) * y_etaeta(i, j) + control_Q[i, j] * y_eta(i, j))
+
+    def sample_output_vtk():
+        fname = "sample.vtk"
+        with open(fname, 'w') as f:
+            point_number = str(xi_max * eta_max)
+            cell_number = str((xi_max) * (eta_max - 1))
+            cell_vertex_number = str(5 * (xi_max) * (eta_max - 1))
+            pid = lambda i, j: i + eta_max * j
+            
+            def cell_structure(i, j):
+                if i != xi_max - 1:
+                    return "4 " + str(pid(i, j)) + " " + str(pid(i + 1, j)) + " " + str(
+                        pid(i + 1, j + 1)) + " " + str(pid(i, j + 1))
+                else:
+                    return "4 " + str(pid(i, j)) + " " + str(pid(0, j)) + " " + str(
+                        pid(0, j + 1)) + " " + str(pid(i, j + 1))
+            
+            # header
+            f.write("# vtk DataFile Version 3.0\n")
+            f.write("Unstructured Grid example\n")
+            f.write("ASCII\nDATASET UNSTRUCTURED_GRID\n")
+            f.write("POINTS " + point_number + " float\n")
+            # point coordinates
+            for j in range(eta_max):
+                for i in range(xi_max):
+                    f.write(str(grid_x[i, j]) + " " + str(grid_y[i, j]) + " 0.0\n")
+
+            # cell structure
+            f.write("CELLS " + cell_number + " " + cell_vertex_number + "\n")
+            for j in range(eta_max - 1):
+                for i in range(xi_max):
+                    f.write(cell_structure(i, j) + "\n")
+
+            # cell types
+            f.write("CELL_TYPES " + cell_number + "\n")
+            for j in range(eta_max - 1):
+                for i in range(xi_max):
+                    f.write("9\n")
+    
+    def plot_tmp():
+        for i in range(xi_max):
+            plt.plot(grid_x[i, :], grid_y[i, :])
+        for j in range(eta_max):
+            plt.plot(grid_x[:, j], grid_y[:, j])
+        plt.xlim(-0.1, 1.1)
+        plt.ylim(-0.1, 1.1)
+        plt.show()
+        for i in range(xi_max):
+            plt.plot(grid_x[i, :], grid_y[i, :])
+        for j in range(eta_max):
+            plt.plot(grid_x[:, j], grid_y[:, j])
+        plt.show()
+
+    # 物体表面を押し出す
+    def offset_surface(z):
+        size = z.shape[0]
+    
+        delta = np.zeros(size, dtype = complex)
+        delta[0] = z[1] - z[size - 1]
+        for i in range(1, size - 1):
+            delta[i] = z[i + 1] - z[i - 1]
+        delta[size - 1] = z[0] - z[size - 2]
+
+        normal = -1j * delta / np.abs(delta)
+        incremental = np.min(np.abs(delta))
+        return z + normal * incremental
     
     # explicit euler (gauss-seidel)
-    dt = 0.005
-    xi_line = [0, int(eta_max/2)]
-    eta_line = [0]
-    for iter in range(10000):
-        control_P, control_Q = update_control_function(xi_line, eta_line)
-        for i in range(xi_max):
-            res = 0
-            for j in range(1, eta_max - 1):
-                res += grid_x[i, j] - rhs_x(i, j) * dt
-                res += grid_y[i, j] - rhs_y(i, j) * dt
-                grid_x[i, j] += rhs_x(i, j) * dt
-                grid_y[i, j] += rhs_y(i, j) * dt
-        
-        if iter % 1000 == 0:
-            print(res)
+    def explicit_euler():
+        dt = 0.005
+        xi_line = [0, int(eta_max/2)]
+        eta_line = [0]
+        # orthogonal grid line for eta = 1
+        z1_eta1 = offset_surface(z1)
+        grid_x[:, 1] = np.real(z1_eta1)
+        grid_y[:, 1] = np.imag(z1_eta1)
+
+        for iter in range(10000):
+            control_P, control_Q = update_control_function(xi_line, eta_line)
             for i in range(xi_max):
-                plt.plot(grid_x[i, :], grid_y[i, :])
-            for j in range(eta_max):
-                plt.plot(grid_x[:, j], grid_y[:, j])
-            plt.xlim(-0.1, 1.1)
-            plt.ylim(-0.1, 1.1)
-            plt.show()
-            for i in range(xi_max):
-                plt.plot(grid_x[i, :], grid_y[i, :])
-            for j in range(eta_max):
-                plt.plot(grid_x[:, j], grid_y[:, j])
-            plt.show()
+                res = 0
+                for j in range(2, eta_max - 1):
+                    res += grid_x[i, j] - rhs_x(i, j) * dt
+                    res += grid_y[i, j] - rhs_y(i, j) * dt
+                    grid_x[i, j] += rhs_x(i, j) * dt
+                    grid_y[i, j] += rhs_y(i, j) * dt
             
+            if iter % 1000 == 0:
+                print(res)
+                # sample_output_vtk()
+                plot_tmp()
+        
+        return grid_x, grid_y
     
+    # grid_x, grid_y = explicit_euler()
     # alternative direction implicit
-    delta_tau = 0.1
+    delta_tau = 0.005
     def solve_first_matrix():
         dx_star2 = np.zeros((xi_max, eta_max))
         dy_star2 = np.zeros((xi_max, eta_max))
+
         for j in range(1, eta_max-1):
             matrix1 = lil_matrix((xi_max, xi_max))
             rhs1_x = np.zeros(xi_max)
@@ -480,7 +545,8 @@ def make_grid_seko(z1, z2, z3, z4):
                 
                 rhs1_x[i] = rhs_x(i, j)
                 rhs1_y[i] = rhs_y(i, j)
-                
+
+            matrix1 = matrix1.tocsr()
             dx_star2[:, j] = spsolve(matrix1, rhs1_x)
             dy_star2[:, j] = spsolve(matrix1, rhs1_y)
         return dx_star2, dy_star2
@@ -490,27 +556,85 @@ def make_grid_seko(z1, z2, z3, z4):
         dy_star1 = np.zeros((xi_max, eta_max))
         for i in range(xi_max):
             matrix2 = lil_matrix((eta_max, eta_max))
-            for i in range(eta_max):
-                if (i == 0) and (i == xi_max - 1):
-                    matrix2[i, i] = 1.0
+            for j in range(eta_max):
+                if (j == 0) or (j == eta_max - 1):
+                    matrix2[j, j] = 1.0
                 else:
-                    matrix2[i, i] = 1.0 + 2.0 * delta_tau * g11(i, j)
+                    matrix2[j, j] = 1.0 + 2.0 * delta_tau * g11(i, j)
+                    
+                    if j != 1:
+                        matrix2[j, j - 1] = -delta_tau * g11(i, j) * (1.0 - 0.5 * control_Q[i, j])
                 
-                    if i != 0:
-                        im1 = i - 1
-                    else:
-                        im1 = xi_max - 1
-                
-                    if i != xi_max - 1:
-                        ip1 = i + 1
-                    else:
-                        ip1 = 0
-                
+                    if j != eta_max - 2:
+
+                        matrix2[j, j + 1] = -delta_tau * g11(i, j) * (1.0 + 0.5 * control_Q[i, j])
+            
+            matrix2 = matrix2.tocsr()
+            dx_star1[i, :] = spsolve(matrix2, dx_star2[i, :])
+            dy_star1[i, :] = spsolve(matrix2, dy_star2[i, :])
+        return dx_star1, dy_star1
+            
+    def solve_third_matrix(dx_star1, dy_star1):
+        matrix3 = lil_matrix((xi_max * eta_max, xi_max * eta_max))
+        total_elements = xi_max * eta_max
+        for j in range(eta_max):
+            for i in range(xi_max):
+                k = i + eta_max * j
+                matrix3[k, k] = 1.0
+                if (j != 0) and (j != eta_max - 1):
+                    side_element = 0.5 * delta_tau * g12(i, j)
+                    # left side
+                    if j != 1:
+                        if i >= 1:
+                            jNlm1 = k - eta_max - 1
+                        else:
+                            jNlm1 = k - 1 
+                        matrix3[k, jNlm1] = side_element
+                        
+                        if i <= xi_max - 2:
+                            jNlp1 = k - eta_max + 1
+                        else:
+                            jNlp1 = k - 2 * eta_max + 1
+                        matrix3[k, jNlp1] = - side_element
+                    
+                    if j != eta_max - 2:
+                        if i >= 1:
+                            jNrm1 = k + eta_max - 1
+                        else:
+                            jNrm1 = k + 2 * eta_max - 1
+                        matrix3[k, jNrm1] = - side_element
+                        
+                        if i <= xi_max - 2:
+                            jNrp1 = k + eta_max + 1
+                        else:
+                            jNrp1 = k + 1
+                        matrix3[k, jNrp1] = side_element
+                        
+
+        matrix3 = matrix3.tocsr()
+        dx = spsolve(matrix3, dx_star1.T.reshape(-1))
+        dy = spsolve(matrix3, dy_star1.T.reshape(-1))
+        return dx.reshape(eta_max, xi_max).T, dy.reshape(eta_max, xi_max).T
+            
+    for i in range(10):
+        xi_line = []#[0, int(eta_max/2)]
+        eta_line = []#[0]
+        control_P, control_Q = update_control_function(xi_line, eta_line)
+
+        dx_star2, dy_star2 = solve_first_matrix()
+        dx_star1, dy_star1 = solve_second_matrix(dx_star2, dy_star2)
+        dx, dy = solve_third_matrix(dx_star1, dy_star1)
+        grid_x += dx
+        grid_y += dy
+        res = np.sum(np.abs(dx) + np.abs(dy))
+        print(res)
+        plot_tmp()
                 
                         
 
 def main():
     z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 10)
+    z1 = deduplication(z1)
     z3 = get_outer_boundary(z1, magnification=10)
     z2 = get_connect_z1_to_z3(z1, z3)
     z4 = z2
