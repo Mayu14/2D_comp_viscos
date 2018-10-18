@@ -169,74 +169,103 @@ def deduplication(z, array_list=None):
     else:
         return z, array_list
 
-def redistribute(z1):
+def redistribute(z1, deterring_concentration_number = 2):
     # エルミート補間して関数x=fx(t), y=fy(t)を得る
     t, total_len = get_length_rate(z1, output_total_length = True)
-    fx = interpolate.PchipInterpolator(t, np.real(z1))
-    fy = interpolate.PchipInterpolator(t, np.imag(z1))
+
+    fx = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.real(np.hstack((z1, z1[0]))))
+    fy = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.imag(np.hstack((z1, z1[0]))))
     size = z1.shape[0]
-    residual = 100
+
     # 隣接2辺がなす角度の直線からのずれ量を算出
-    plt.plot(np.real(z1), np.imag(z1), "o")
-    
-    a = 0
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.show()
-    while residual > 0.00001:
-        delta = np.zeros_like(z1, dtype = complex)
-        delta[0] = (z1[0] - z1[size - 1])
-        delta[1:] = (z1[1:] - z1[:size - 1])
-        len = np.abs(delta)
-        unit_delta = delta / len
-        angle = np.zeros_like(z1, dtype = float)
-        angle[:size - 1] = np.angle(unit_delta[1:] / (-unit_delta[:size - 1]))
-        angle[size - 1] = np.angle(unit_delta[0] / (-unit_delta[size - 1]))
-        angle = np.where(angle >= 0, angle, angle + 2.0 * np.pi)
-        
-        res_angle = np.abs(angle - np.pi)
-        """
-        drdt_edge = np.zeros_like(z1, dtype = float)
-        drdt_edge[0] = 0.5 * (res_angle[0] - res_angle[size - 1])
-        drdt_edge[1:] = 0.5 * (res_angle[1:] - res_angle[:size - 1])
-        """
-        drdt_center = np.zeros_like(z1, dtype = float)
-        drdt_center[0] = 0.5 * (res_angle[1] - res_angle[size - 1])
-        drdt_center[1:size - 1] = 0.5 * (res_angle[2:] - res_angle[:size - 2])
-        drdt_center[size - 1] = 0.5 * (res_angle[0] - res_angle[size - 2])
-        """
-        r_tt = np.zeros_like(z1, dtype = float)
-        r_tt[0] = (res_angle[1] - 2.0 * res_angle[0] + res_angle[size - 1]) / (len[0])
-        r_tt[1:size - 1] = (res_angle[2:] - 2.0 * res_angle[1:size - 1] + res_angle[:size - 2]) / (len[1:size - 1])
-        r_tt[size - 1] = (res_angle[0] - 2.0 * res_angle[size - 1] + res_angle[size - 2]) / (len[size - 1])
-        """
+    delta = np.zeros_like(z1, dtype = complex)
+    delta[0] = (z1[0] - z1[size - 1])
+    delta[1:] = (z1[1:] - z1[:size - 1])
+    len = np.abs(delta)
+    unit_delta = delta / len
+    angle = np.zeros_like(z1, dtype = float)
+    angle[:size - 1] = np.angle(unit_delta[1:] / (-unit_delta[:size - 1]))
+    angle[size - 1] = np.angle(unit_delta[0] / (-unit_delta[size - 1]))
+    angle = np.where(angle >= 0, angle, angle + 2.0 * np.pi)
 
-        dt = np.where(np.abs(drdt_center) < 0.5*len, drdt_center, np.sign(drdt_center) * 0.5 * len)
-        plt.plot(t, drdt_center)
-        plt.show()
-        
-        print(len)
-        print(dt)
-        
-        residual = np.sum(np.abs(dt))
-        t += dt
-        np.where(t >= 0, t, t + 1)
-        t = np.sort(t)
+    res_angle = np.abs(angle - np.pi)
+    # 辺の中心におけるずれ量を定義
+    res_angle_edge = 0.5 * np.hstack(((res_angle[1:] + res_angle[:res_angle.shape[0] - 1]), np.array(res_angle[0] - res_angle[res_angle.shape[0] - 1])))
+    # ずれ量を格子点数で規格化/整数値で分割できるように分配
+    tmp_num = res_angle_edge / np.sum(res_angle_edge) * size
+    num = np.zeros_like(tmp_num, dtype=int)
+    res = 0.0
+    for i in range(size):
+        res += tmp_num[i] - floor(tmp_num[i])
+        if res < 1.0:
+            num[i] = floor(tmp_num[i])
+        else:
+            num[i] = floor(tmp_num[i]) + 1
+            res -= 1.0
 
-        z1 = fx(t) + 1j * fy(t)
-        a += 1
-        if a % 1 == 0:
-            plt.plot(fx(t), fy(t))
-            plt.show()
-    
-    plt.plot(np.real(z1), np.imag(z1))
-    plt.show()
+    if np.sum(num) != size:
+        num[size - 1] += 1
+    # 点の集中し過ぎを防ぐため初期長さの半分を最小値として分配数調整
+    flag = 0
+    dcn = deterring_concentration_number
+
+    while flag == 0:
+        flag = 1
+        if num[0] > dcn:
+            num[0] -= 1
+            if num[1] > dcn:
+                num[size - 1] += 1
+            else:
+                num[1] += 1
+            flag = 0
+
+        for i in range(1, size - 1):
+            if num[i] > dcn:
+                num[i] -= 1
+                if num[i + 1] > dcn:
+                    num[i - 1] += 1
+                else:
+                    num[i + 1] += 1
+                flag = 0
+
+        if num[size - 1] > dcn:
+            num[size - 1] -= 1
+            if num[0] > dcn:
+                num[size - 2] += 1
+            else:
+                num[0] += 1
+            flag = 0
+
+    # 点を配置
+    d_len = np.hstack((t, np.array(1.0)))
+    d_len = d_len[1:] - d_len[:d_len.shape[0] - 1]
+
+    previous_t = 0.0
+    new_t = np.zeros_like(t)
+    k = 1
+    for i in range(size):
+        if num[i] != 0:
+            for j in range(num[i]):
+                new_t[k] = previous_t + d_len[i] / num[i]
+                previous_t = new_t[k]
+                k += 1
+                if k == size:
+                    break
+        else:
+            previous_t += d_len[i]
+
+    t = new_t
+
+    z1 = fx(t) + 1j * fy(t)
     return z1
 
 
 
 
-def make_grid_seko(z1, z2, z3, z4):
-    # z1 = redistribute(z1)
+def make_grid_seko(z1):
+    z1 = redistribute(z1)
+    z3 = get_outer_boundary(z1, magnification=5)
+    z2 = get_connect_z1_to_z3(z1, z3)
     xi_max = z1.shape[0]
     eta_max = z2.shape[0]
     
@@ -381,7 +410,7 @@ def make_grid_seko(z1, z2, z3, z4):
                     -(x_xi(i, j) * x_etaeta(i, j) + y_xi(i, j) * y_etaeta(i, j)) / g22(i, j))
         
     # eta線をeta0線へ近づける制御関数Q
-    def control_function_of_eta(xi, eta, xi_line, eta_line, a=10.0, b=0.0, c=1.0, d=0.0):
+    def control_function_of_eta(xi, eta, xi_line, eta_line, a=1.0, b=0.0, c=1.0, d=0.0):
         if (eta != 1) and (eta != eta_max - 2):
             q = 0
             for eta0 in eta_line:
@@ -423,7 +452,7 @@ def make_grid_seko(z1, z2, z3, z4):
             return (g22(i, j) * y_xixi(i, j) + control_P[i, j] * y_xi(i, j)
                     + g11(i, j) * y_etaeta(i, j) + control_Q[i, j] * y_eta(i, j))
 
-    def sample_output_vtk():
+    def sample_output_vtk(place="Lab"):
         fname = "sample.vtk"
         with open(fname, 'w') as f:
             point_number = str(xi_max * eta_max)
@@ -483,7 +512,7 @@ def make_grid_seko(z1, z2, z3, z4):
         delta[0] = z[1] - z[size - 1]
         for i in range(1, size - 1):
             delta[i] = z[i + 1] - z[i - 1]
-        delta[size - 1] = z[0] - z[size - 2]
+        delta[size - 1] = z[1] - z[size - 2]
 
         normal = -1j * delta / np.abs(delta)
         incremental = np.min(np.abs(delta))
@@ -491,7 +520,7 @@ def make_grid_seko(z1, z2, z3, z4):
     
     # explicit euler (gauss-seidel)
     def explicit_euler():
-        dt = 0.005
+        dt = 0.0005
         xi_line = [0, int(eta_max/2)]
         eta_line = [0]
         # orthogonal grid line for eta = 1
@@ -499,26 +528,28 @@ def make_grid_seko(z1, z2, z3, z4):
         grid_x[:, 1] = np.real(z1_eta1)
         grid_y[:, 1] = np.imag(z1_eta1)
 
-        for iter in range(10000):
-            control_P, control_Q = update_control_function(xi_line, eta_line)
-            for i in range(xi_max):
-                res = 0
-                for j in range(2, eta_max - 1):
-                    res += grid_x[i, j] - rhs_x(i, j) * dt
-                    res += grid_y[i, j] - rhs_y(i, j) * dt
-                    grid_x[i, j] += rhs_x(i, j) * dt
-                    grid_y[i, j] += rhs_y(i, j) * dt
-            
-            if iter % 1000 == 0:
-                print(res)
-                # sample_output_vtk()
-                plot_tmp()
+        trial = 0.9
+        while trial > 0:
+            dt *= trial
+            for iter in range(1000):
+                control_P, control_Q = update_control_function(xi_line, eta_line)
+                for i in range(xi_max):
+                    for j in range(2, eta_max - 1):
+                        grid_x[i, j] += rhs_x(i, j) * dt
+                        grid_y[i, j] += rhs_y(i, j) * dt
+
+            sample_output_vtk()
+            if np.average(grid_y[:, 2] - grid_y[:, 1]) < 1.2 * np.average(grid_y[:, 1] - grid_y[:, 0]):
+                trial = 0
+            # plot_tmp()
+
         
         return grid_x, grid_y
-    
-    # grid_x, grid_y = explicit_euler()
+
+    grid_x, grid_y = explicit_euler()
     # alternative direction implicit
     delta_tau = 0.005
+    # xi方向の行列を解く
     def solve_first_matrix():
         dx_star2 = np.zeros((xi_max, eta_max))
         dy_star2 = np.zeros((xi_max, eta_max))
@@ -529,7 +560,7 @@ def make_grid_seko(z1, z2, z3, z4):
             rhs1_y = np.zeros(xi_max)
             for i in range(xi_max):
                 matrix1[i, i] = 1.0 + 2.0 * delta_tau * g22(i, j)
-                
+                # xi方向は周期境界となるため隅に値を置く
                 if i != 0:
                     im1 = i - 1
                 else:
@@ -542,7 +573,7 @@ def make_grid_seko(z1, z2, z3, z4):
                     
                 matrix1[i, im1] = -delta_tau * g22(i, j) * (1.0 - 0.5 * control_P[i, j])
                 matrix1[i, ip1] = -delta_tau * g22(i, j) * (1.0 + 0.5 * control_P[i, j])
-                
+
                 rhs1_x[i] = rhs_x(i, j)
                 rhs1_y[i] = rhs_y(i, j)
 
@@ -550,13 +581,15 @@ def make_grid_seko(z1, z2, z3, z4):
             dx_star2[:, j] = spsolve(matrix1, rhs1_x)
             dy_star2[:, j] = spsolve(matrix1, rhs1_y)
         return dx_star2, dy_star2
-    
+
+    # eta方向の行列を解く
     def solve_second_matrix(dx_star2, dy_star2):
         dx_star1 = np.zeros((xi_max, eta_max))
         dy_star1 = np.zeros((xi_max, eta_max))
         for i in range(xi_max):
             matrix2 = lil_matrix((eta_max, eta_max))
             for j in range(eta_max):
+                # eta方向は等温境界
                 if (j == 0) or (j == eta_max - 1):
                     matrix2[j, j] = 1.0
                 else:
@@ -566,9 +599,8 @@ def make_grid_seko(z1, z2, z3, z4):
                         matrix2[j, j - 1] = -delta_tau * g11(i, j) * (1.0 - 0.5 * control_Q[i, j])
                 
                     if j != eta_max - 2:
-
                         matrix2[j, j + 1] = -delta_tau * g11(i, j) * (1.0 + 0.5 * control_Q[i, j])
-            
+
             matrix2 = matrix2.tocsr()
             dx_star1[i, :] = spsolve(matrix2, dx_star2[i, :])
             dy_star1[i, :] = spsolve(matrix2, dy_star2[i, :])
@@ -588,30 +620,30 @@ def make_grid_seko(z1, z2, z3, z4):
                         if i >= 1:
                             jNlm1 = k - eta_max - 1
                         else:
-                            jNlm1 = k - 1 
+                            jNlm1 = k - 1
                         matrix3[k, jNlm1] = side_element
-                        
+
                         if i <= xi_max - 2:
                             jNlp1 = k - eta_max + 1
                         else:
                             jNlp1 = k - 2 * eta_max + 1
                         matrix3[k, jNlp1] = - side_element
-                    
+
                     if j != eta_max - 2:
                         if i >= 1:
                             jNrm1 = k + eta_max - 1
                         else:
                             jNrm1 = k + 2 * eta_max - 1
                         matrix3[k, jNrm1] = - side_element
-                        
+
                         if i <= xi_max - 2:
                             jNrp1 = k + eta_max + 1
                         else:
                             jNrp1 = k + 1
                         matrix3[k, jNrp1] = side_element
-                        
 
         matrix3 = matrix3.tocsr()
+
         dx = spsolve(matrix3, dx_star1.T.reshape(-1))
         dy = spsolve(matrix3, dy_star1.T.reshape(-1))
         return dx.reshape(eta_max, xi_max).T, dy.reshape(eta_max, xi_max).T
@@ -619,7 +651,7 @@ def make_grid_seko(z1, z2, z3, z4):
     for i in range(10):
         xi_line = []#[0, int(eta_max/2)]
         eta_line = []#[0]
-        control_P, control_Q = update_control_function(xi_line, eta_line)
+        # control_P, control_Q = update_control_function(xi_line, eta_line)
 
         dx_star2, dy_star2 = solve_first_matrix()
         dx_star1, dy_star1 = solve_second_matrix(dx_star2, dy_star2)
@@ -633,11 +665,9 @@ def make_grid_seko(z1, z2, z3, z4):
                         
 
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 10)
+    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 100)
     z1 = deduplication(z1)
-    z3 = get_outer_boundary(z1, magnification=10)
-    z2 = get_connect_z1_to_z3(z1, z3)
-    z4 = z2
+    # z1 = np.hstack((z1[:size - 2], z1[size - 1]))
     """
     box = 10
     z1 = np.zeros(box) + 1j * np.arange(box)    #
@@ -652,10 +682,8 @@ def main():
     plt.plot(np.real(z4), np.imag(z4))
     plt.show()
     """
-    make_grid_seko(z1, z2, z3, z4)
+    make_grid_seko(z1)
     plt.plot(np.real(z1), np.imag(z1))
-    plt.plot(np.real(z2), np.imag(z2), "o")
-    plt.plot(np.real(z3), np.imag(z3), "x")
     plt.show()
 
     exit()
