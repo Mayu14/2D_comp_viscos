@@ -581,12 +581,15 @@ def make_grid_seko(z1):
     grid_x, grid_y = jacobi_pre(grid_x, grid_y)
     print(np.sum((grid_x2 - grid_x)**2))
     print(np.sum((grid_y2 - grid_y)**2))
+    sample_output_vtk()
+    grid_x = np.vstack((grid_x[:, :], grid_x[0, :]))
+    grid_y = np.vstack((grid_y[:, :], grid_y[0, :]))
     plot_tmp()
-    # sample_output_vtk()
+
 
 
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912", size = 100)
+    z1, size = get_complex_coords(type = 3, naca4 = "6784", size = 100)
     # z1, size = get_complex_coords(type=1, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     # plt.plot(np.real(z1), np.imag(z1))
     z1 = deduplication(z1)[::-1]
