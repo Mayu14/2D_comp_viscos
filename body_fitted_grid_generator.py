@@ -357,7 +357,7 @@ def make_grid_seko(z1):
             point_number = str(xi_max * eta_max)
             cell_number = str((xi_max) * (eta_max - 1))
             cell_vertex_number = str(5 * (xi_max) * (eta_max - 1))
-            pid = lambda i, j: i + eta_max * j
+            pid = lambda i, j: i + xi_max * j
 
             def cell_structure(i, j):
                 if i != xi_max - 1:
@@ -589,7 +589,7 @@ def make_grid_seko(z1):
 
 
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "6784", size = 100)
+    z1, size = get_complex_coords(type = 3, naca4 = "6784", size = 10)
     # z1, size = get_complex_coords(type=1, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     # plt.plot(np.real(z1), np.imag(z1))
     z1 = deduplication(z1)[::-1]
