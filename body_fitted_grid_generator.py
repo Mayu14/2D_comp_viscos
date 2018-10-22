@@ -1,12 +1,12 @@
 # coding: utf-8
-from scipy.sparse import lil_matrix, csr_matrix, csc_matrix
-from scipy.sparse.linalg import bicg, spsolve
-from math import floor
+from math import sqrt
 from scipy import interpolate
 import numpy as np
 from naca_4digit_test import Naca_4_digit, Naca_5_digit
 from joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
 import matplotlib.pyplot as plt
+import Lib.bisect as bisect
+import re
 
 # 物体表面の複素座標を取得する
 def get_complex_coords(type, size, center_x = -0.08, center_y = 0.08, naca4 = "0012"):
@@ -56,13 +56,13 @@ def get_complex_coords(type, size, center_x = -0.08, center_y = 0.08, naca4 = "0
         return z, z.shape[0]
 
 
-
 # 格子の外部境界(分割数は物体と同じの，物体形状の長軸長さのmagnification倍の円を返す)
 def get_outer_boundary(z1, magnification=5, equidistant=False):
     # 物体の代表長さを得る(x,y方向どちらかが最大と仮定しており，最長部長さを求めているわけでないことに注意されたし)
     def get_model_length(z):
         def get_length(x):
             return np.max(x) - np.min(x)
+
         x = np.real(z)
         y = np.real(z)
         return max(get_length(x), get_length(y))
@@ -89,6 +89,7 @@ def get_outer_boundary(z1, magnification=5, equidistant=False):
     else:
         z3 = zc + radius * np.exp(1j * np.linspace(0, 2.0 * np.pi, z1.shape[0] + 1))
         return z3[1:]
+
 
 # そこまでの累積長さが全体の長さに占める割合を返す
 def get_length_rate(z1, output_total_length = False):
@@ -332,7 +333,6 @@ def make_grid_seko(z1):
     control_P = np.zeros((xi_max, eta_max))
     control_Q = np.zeros((xi_max, eta_max))
 
-
     def rhs_x(i, j):
         if (j != 1) and (j != eta_max-2):
             return ((g22(i, j) * (x_xixi(i, j) + control_P[i, j] * x_xi(i, j)))
@@ -554,7 +554,7 @@ def make_grid_seko(z1):
             grid_x[:, j] = np.real(z2)
             grid_y[:, j] = np.imag(z2)
             flag = 0
-            mix_rate = 1.0 - max(np.exp(-float(j - 1)), 0.7)   # j番目のη線と直交するように与えたz2_orthogonalと，Δηが均等になるように与えたz2_equidistantの配合比率
+            mix_rate = 1.0 - max(np.exp(-0.18 * float(j - 1)), 0.7)   # j番目のη線と直交するように与えたz2_orthogonalと，Δηが均等になるように与えたz2_equidistantの配合比率
             while flag >= 0:
                 flag += 1
                 z2_equidistant = equidistant_offset(z2, max_incremental)
@@ -563,7 +563,7 @@ def make_grid_seko(z1):
                 delta_j__ = np.hstack((z2[1:] - z2[:xi_max - 1], z2[0] - z2[xi_max - 1]))
                 delta_jp1 = np.hstack((fix_z2[1:] - fix_z2[:xi_max - 1], fix_z2[0] - fix_z2[xi_max - 1]))
                 if np.any(np.real(delta_j__*np.conj(delta_jp1)) < 0):
-                    mix_rate = 1.0 - max(np.exp(-float(j)), 0.7 - 0.1 * flag)
+                    mix_rate = 1.0 - max(-0.18 * np.exp(-float(j - 2)), 0.7 - 0.1 * flag)
                     print(mix_rate)
                     if mix_rate > 0.9:
                         print("not converge")
@@ -579,17 +579,107 @@ def make_grid_seko(z1):
     grid_x2 = grid_x.copy()
     grid_y2 = grid_y.copy()
     grid_x, grid_y = jacobi_pre(grid_x, grid_y)
-    print(np.sum((grid_x2 - grid_x)**2))
-    print(np.sum((grid_y2 - grid_y)**2))
+    # print(np.sum((grid_x2 - grid_x)**2))
+    # print(np.sum((grid_y2 - grid_y)**2))
     sample_output_vtk()
     grid_x = np.vstack((grid_x[:, :], grid_x[0, :]))
     grid_y = np.vstack((grid_y[:, :], grid_y[0, :]))
-    plot_tmp()
+    # plot_tmp()
 
+    # for RANS simulation   # �ǂ���i�q�_�܂ł̋����C�e�_���ǂ̕ǂɑ�����̂�(�ǁ��i�q�_&���� / �i�q�_����&����)
+    def get_distance_from_object(grid_x, grid_y):
+        wall2point = [[] for i in range(xi_max)]  # [i][n]    i:wall number, n:point number (in this list)
+        point2wall = np.zeros((xi_max, eta_max, 2))  # (i, j, 0): wall number, (i, j, 1): distance between wall to point
+        # edge_i is made by point_i and point_i+1
+        make_e_angle_from_p_angle = lambda p_angle: 0.5 * np.hstack(
+            ((p_angle[1:] + p_angle[:size - 1]), (p_angle[0] - p_angle[size - 1])))
+        set_0to2pi = lambda e_angle: np.where(e_angle <= -np.pi, e_angle + 2.0 * np.pi,
+                                              e_angle)  # [-pi, pi] �� [0, 2pi]
+
+        eta0 = grid_x[:, 0] + 1j * grid_y[:, 0]  # object_surface (clock-wise)
+        center = get_object_center(eta0)
+        p_angle = np.angle(eta0 - center)  # grid_point's angle
+        size = p_angle.shape[0]
+
+        e_angle = make_e_angle_from_p_angle(p_angle)
+        e_angle = set_0to2pi(e_angle)
+        e_number = np.arange(size)  # clock wise
+        # if (np.any(e_angle[1:] - e_angle[:size - 1] < 0.0) or (e_angle[0] - e_angle[size - 1] < 0.0)):  # if object center is outside of object
+        e_number = e_number[np.argsort(e_angle)]
+        e_angle = np.sort(e_angle).tolist()
+
+        def get_candidate_point(nearest_edge):
+            if (nearest_edge == 0):  # edge made by point0 and point1
+                return [size - 1, 0, 1, 2]  # candidate_point 0, 1, 2, 3
+            elif nearest_edge == size - 1:
+                return [size - 2, size - 1, 0, 1]
+            elif nearest_edge == size - 2:
+                return [size - 3, size - 2, size - 1, 0]
+            else:
+                return [nearest_edge - 1, nearest_edge, nearest_edge + 1, nearest_edge + 2]
+
+        get_SQ_distance_from_point = lambda i, j, cp: (grid_x[i, j] - grid_x[cp, 0]) ** 2 + (
+                    grid_y[i, j] - grid_y[cp, 0]) ** 2
+
+        for j in range(1, eta_max - 1):
+            eta_jth_line = grid_x[:, j] + 1j * grid_y[:, j]  # jth eta line (complex form)
+            # jth_p_angle = np.angle(eta_jth_line - center)
+            jth_e_angle = set_0to2pi(
+                make_e_angle_from_p_angle(np.angle(eta_jth_line - center)))  # jth edge angle (i=0, 1, ..., xi_max-1)
+            for i in range(xi_max):
+                tmp_nearest_edge_candidate = bisect.bisect_left(e_angle, jth_e_angle[
+                    i])  # nearest_edge from jth edge (edge_number)
+                if tmp_nearest_edge_candidate == size:
+                    tmp_nearest_edge_candidate = 0
+                nearest_edge_candidate = e_number[tmp_nearest_edge_candidate]
+                candidate_point = get_candidate_point(
+                    nearest_edge_candidate)  # adjacent point from nearest edge (point number)
+                distance = np.zeros(4)
+                for k in range(4):
+                    distance[k] = get_SQ_distance_from_point(i, j, candidate_point[k])  # get distance ** 2
+                min_k = np.argmin(distance)
+                point2wall[i, j, 0] = candidate_point[
+                    min_k]  # nearest point number = nearest_edge_number  # edge = wall
+                point2wall[i, j, 1] = sqrt(distance[min_k])  # nearest_distance
+                wall2point[candidate_point[min_k]].append([i, j])
+
+        return point2wall, wall2point
+
+    point2wall, wall2point = get_distance_from_object(grid_x, grid_y)
+    write_out_mg2("sa2", grid_x, grid_y, point2wall, wall2point)
+    return grid_x, grid_y, point2wall, wall2point
+
+
+def write_out_mg2(fname, grid_x, grid_y, point2wall, wall2point):
+    fname += ".mg2"
+    xi_max = grid_x.shape[0]
+    eta_max = grid_y.shape[1]
+    with open(fname, 'w') as f:
+        f.write("# mayugrid2 Version 0.9\n")
+        f.write("xi_max " + str(xi_max) + "\n")
+        f.write("eta_max " + str(eta_max) + "\n")
+        f.write("xi = i, eta = j, N = i + xi_max * j, and include loopy elements.\n")
+        f.write("x - y coordinate " + str(xi_max * eta_max) + " items inline\n")
+        # point coordinates
+        for j in range(eta_max):
+            for i in range(xi_max):
+                f.write(str(grid_x[i, j]) + " " + str(grid_y[i, j]) + "\n")
+
+        f.write("The edge number of the object surface nearest to each grid point and the distance\n")
+        for j in range(eta_max):
+            for i in range(xi_max):
+                f.write(str(point2wall[i, j, 0]) + " " + str(point2wall[i, j, 1]) + "\n")
+
+        f.write("Grid point numbers belonging to each edge of the object surface\n")
+        for edge in range(xi_max):
+            p_size = len(wall2point[edge])
+            f.write("Total_number_of_points_belonging_to_" + str(edge) + "th edge: " + str(p_size) + "\n")
+            for p in range(p_size):
+                f.write(str(wall2point[edge][p]).replace("[", "").replace(",", "").replace("]", "") + "\n")
 
 
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "6784", size = 10)
+    z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 200)
     # z1, size = get_complex_coords(type=1, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     # plt.plot(np.real(z1), np.imag(z1))
     z1 = deduplication(z1)[::-1]
