@@ -11,7 +11,7 @@
 !	Update:2017.12.19
 !	Other:EulerEQ用に作ったけど，色々追加すればNSEQも対応できると思われる
 !***********************************/
-module StructVar_Mod
+module StructVar_Mod_mk2
 implicit none
 !COMMON StructuredVariable
 !__________________________________________________________
@@ -33,6 +33,7 @@ implicit none
         !double precision, allocatable :: InterpolatedQuantity(:,:,:,:) !補間したあとの保存変数(入れ方は一緒)
         double precision, allocatable :: GridJacobian(:, :, :)  ! セル中心における格子のヤコビ行列式(x, y, z)
         double precision, allocatable :: GridJacobiMatrix(:, :, :, :, :)    ! セル中心におけるヤコビ行列(i, j, x, y, z)
+        double precision, allocatable :: DistanceFromWall(:, :, :, :)   ! 0or1(距離・壁番号), x, y, z
         integer :: iEndFlag !定常流計算を打ち切る判定
     end type
 
@@ -41,6 +42,11 @@ implicit none
         double precision, allocatable :: RebuildQunatity(:,:,:,:,:) !セル界面上での再構築物理量(構成は同じ)
         double precision, allocatable :: NormalGradient(:,:,:,:,:) !セル界面における法線方向の基礎変数勾配
         double precision, allocatable :: TmpLimiterFunction(:,:,:,:,:) !セル界面における流束制限関数(全界面の最小値をセル中心の流束制限関数として採用する)
+        double precision, allocatable :: GridJacobiMatrix(:,:,:,:,:,:) ! (M(i,j), x, y, z, 面番号(裏表)
+    end type
+
+    type CellVertex ! セル頂点(Point)にて定義される量
+        double precision, allocatable :: GridPoint(:, :, :, :)  ! ((xyz), i, j, k)
     end type
 
     type BoundaryCondition

@@ -11,7 +11,7 @@
 !	Update:-
 !	Other:
 !***********************************/
-module FrequentOperation
+module FrequentOperation_mk2
 implicit none
 
 public CrossProduct

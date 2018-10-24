@@ -11,7 +11,7 @@
 !	Update:2017.11.10
 !	Other:
 !***********************************/
-module LoopVar_Mod
+module LoopVar_Mod_mk2
 implicit none
 !ここで定義する変数はループ変数として以外の使い方はしない！
 !ポインタは適宜「次元等による処理分け」「略記」の目的で使う
