@@ -11,7 +11,7 @@
 !	Update:2017.11.08
 !	Other:
 !***********************************/
-module ConstantVar_Mod
+module ConstantVar_Mod_mk2
 implicit none
 
 !Physical Constant
