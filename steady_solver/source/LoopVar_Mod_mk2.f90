@@ -8,7 +8,7 @@
 !	Note:
 !	Author:Akitaka Toyota
 !	Date:2017.10.06
-!	Update:2017.11.10
+!	Update:2018.10.25
 !	Other:
 !***********************************/
 module LoopVar_Mod_mk2
@@ -26,6 +26,9 @@ implicit none
 
     integer, target :: iFaceX,iFaceY,iFaceZ !セル界面で定義される変数のループ用
     integer, pointer :: iFX,iFY,iFZ
+
+    integer, target :: iPointX, iPointY, iPointZ
+    integer, pointer :: iPX, iPY, iPZ
 
     integer, pointer :: iTX,iTY,iTZ !時間Time
 
@@ -53,4 +56,4 @@ implicit none
 
     integer :: iFrontCell, iBackCell
 
-end module LoopVar_Mod
+end module LoopVar_Mod_mk2

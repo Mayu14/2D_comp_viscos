@@ -8,7 +8,7 @@
 !	Note:
 !	Author:Akitaka Toyota
 !	Date:2017.10.??
-!	Update:2017.11.08
+!	Update:2018.10.25
 !	Other:
 !***********************************/
 module ConstantVar_Mod_mk2
@@ -41,4 +41,4 @@ implicit none
 
     double precision, parameter :: CourantFriedrichsLewyCondition = 1.0d0
 
-end module ConstantVar_Mod
+end module ConstantVar_Mod_mk2
