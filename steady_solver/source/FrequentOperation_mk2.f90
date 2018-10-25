@@ -8,7 +8,7 @@
 !	Note:
 !	Author:Akitaka Toyota
 !	Date:2017.11.10
-!	Update:-
+!	Update:2018.10.25
 !	Other:
 !***********************************/
 module FrequentOperation_mk2
@@ -72,7 +72,7 @@ contains
 
 
     subroutine GetLocalNumber2D(Coords,Width,Bound,LocalNum)
-    use StructVar_Mod
+    ! use StructVar_Mod
     implicit none
 
     double precision, intent(in) :: Coords(:), Width(:), Bound(:)
@@ -280,5 +280,14 @@ contains
         return
     end subroutine GetEdgeIntersectionCoordsWithTriangle
 
-end module FrequentOperation
+    double precision function DeterminantOf2DMatrix(A11, A12, A21, A22) result(detA)
+    implicit none
+        double precision, intent(in) :: A11, A12, A21, A22
+        double precision, intent(out) :: detA
+
+            detA = A11 * A22 - A12 * A21
+        return
+    end function DeterminantOf2DMatrix
+
+end module FrequentOperation_mk2
 

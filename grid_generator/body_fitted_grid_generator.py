@@ -606,7 +606,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True):
 
         def get_candidate_point(nearest_edge):
             if (nearest_edge == 0):  # edge made by point0 and point1
-                return [size - 1, 0, 1, 2]  # candidate_point 0, 1, 2, 3
+                return [size - 2, 0, 1, 2]  # candidate_point 0, 1, 2, 3
             elif nearest_edge == size - 1:
                 return [size - 2, size - 1, 0, 1]
             elif nearest_edge == size - 2:
@@ -622,20 +622,18 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True):
             # jth_p_angle = np.angle(eta_jth_line - center)
             jth_e_angle = set_0to2pi(
                 make_e_angle_from_p_angle(np.angle(eta_jth_line - center)))  # jth edge angle (i=0, 1, ..., xi_max-1)
+
             for i in range(xi_max):
-                tmp_nearest_edge_candidate = bisect.bisect_left(e_angle, jth_e_angle[
-                    i])  # nearest_edge from jth edge (edge_number)
+                tmp_nearest_edge_candidate = bisect.bisect_left(e_angle, jth_e_angle[i])  # nearest_edge from jth edge (edge_number)
                 if tmp_nearest_edge_candidate == size:
                     tmp_nearest_edge_candidate = 0
                 nearest_edge_candidate = e_number[tmp_nearest_edge_candidate]
-                candidate_point = get_candidate_point(
-                    nearest_edge_candidate)  # adjacent point from nearest edge (point number)
+                candidate_point = get_candidate_point(nearest_edge_candidate)  # adjacent point from nearest edge (point number)
                 distance = np.zeros(4)
                 for k in range(4):
                     distance[k] = get_SQ_distance_from_point(i, j, candidate_point[k])  # get distance ** 2
                 min_k = np.argmin(distance)
-                point2wall[i, j, 0] = candidate_point[
-                    min_k]  # nearest point number = nearest_edge_number  # edge = wall
+                point2wall[i, j, 0] = candidate_point[min_k]  # nearest point number = nearest_edge_number  # edge = wall
                 point2wall[i, j, 1] = sqrt(distance[min_k])  # nearest_distance
                 wall2point[candidate_point[min_k]].append([i, j])
 
@@ -664,11 +662,11 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
 
         f.write("The edge number of the object surface nearest to each grid point and the distance\n")
         for j in range(eta_max):
-            for i in range(xi_max):
+            for i in range(xi_max - 1):
                 f.write(str(point2wall[i, j, 0]) + " " + str(point2wall[i, j, 1]) + "\n")
 
         f.write("Grid point numbers belonging to each edge of the object surface\n")
-        for edge in range(xi_max):
+        for edge in range(xi_max - 1):
             p_size = len(wall2point[edge])
             f.write("Total_number_of_points_belonging_to_" + str(edge) + "th edge: " + str(p_size) + "\n")
             for p in range(p_size):

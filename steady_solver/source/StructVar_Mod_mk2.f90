@@ -8,7 +8,7 @@
 !	Note:StructVarは構造型変数用(For Structured Variables)モジュールの略，構造格子用変数ではない
 !	Author:Akitaka Toyota
 !	Date:2017.10.06
-!	Update:2017.12.19
+!	Update:2018.10.25
 !	Other:EulerEQ用に作ったけど，色々追加すればNSEQも対応できると思われる
 !***********************************/
 module StructVar_Mod_mk2
@@ -33,7 +33,6 @@ implicit none
         !double precision, allocatable :: InterpolatedQuantity(:,:,:,:) !補間したあとの保存変数(入れ方は一緒)
         double precision, allocatable :: GridJacobian(:, :, :)  ! セル中心における格子のヤコビ行列式(x, y, z)
         double precision, allocatable :: GridJacobiMatrix(:, :, :, :, :)    ! セル中心におけるヤコビ行列(i, j, x, y, z)
-        double precision, allocatable :: DistanceFromWall(:, :, :, :)   ! 0or1(距離・壁番号), x, y, z
         integer :: iEndFlag !定常流計算を打ち切る判定
     end type
 
@@ -42,23 +41,32 @@ implicit none
         double precision, allocatable :: RebuildQunatity(:,:,:,:,:) !セル界面上での再構築物理量(構成は同じ)
         double precision, allocatable :: NormalGradient(:,:,:,:,:) !セル界面における法線方向の基礎変数勾配
         double precision, allocatable :: TmpLimiterFunction(:,:,:,:,:) !セル界面における流束制限関数(全界面の最小値をセル中心の流束制限関数として採用する)
-        double precision, allocatable :: GridJacobiMatrix(:,:,:,:,:,:) ! (M(i,j), x, y, z, 面番号(裏表)
+        double precision, allocatable :: GridJacobian(:, :, :, :)  ! セル界面における格子のヤコビ行列式(x, y, z,面番号(表裏))
+        double precision, allocatable :: GridJacobiMatrix(:,:,:,:,:,:) ! (M(i,j), x, y, z,面番号(表裏))
     end type
 
-    type CellVertex ! セル頂点(Point)にて定義される量
-        double precision, allocatable :: GridPoint(:, :, :, :)  ! ((xyz), i, j, k)
+    type PointDistaceByWall
+        integer :: includePoint ! その壁にいくつの格子点が対応しているか
+        double precision, allocatable :: point_id(:, :)    !壁内での局所点番号, 対応するijk番号
     end type
 
     type BoundaryCondition
         double precision, allocatable :: InFlowVariable(:) !流入する物理量のデータ
         double precision, allocatable :: OutFlowVariable(:) !流入する物理量のデータ
+        type(PointDistaceByWall), allocatable :: PDBW(:)
     end type
 
+
     type Geometry !幾何的な情報
-        double precision, allocatable :: Volume(:) !セル体積!セル番号,(構造格子の場合1)
-        double precision, allocatable :: Area(:)  !セル界面面積!面番号(構造の場合xyz)非構造の場合(大域面番号)
-        double precision, allocatable :: Width(:,:,:) !セル中心から界面までの距離!(構造の場合面番号(構造の場合xyz)，セル番号(構造の場合1)),(非構造(セル番号，局所面番号)
-        integer :: Dimension !計算次元
+        !double precision, allocatable :: Volume(:) !セル体積!セル番号,(構造格子の場合1)
+        !double precision, allocatable :: Area(:)  !セル界面面積!面番号(構造の場合xyz)非構造の場合(大域面番号)
+        !double precision, allocatable :: Width(:,:,:) !セル中心から界面までの距離!(構造の場合面番号(構造の場合xyz)，セル番号(構造の場合1)),(非構造(セル番号，局所面番号)
+        double precision, allocatable :: DistanceFromWall(:, :, :, :)   ! 0or1(距離・壁番号), x, y, z
+        integer :: iDimension
+    !only body-fitted-grid
+        double precision, allocatable :: VertexCoords(:, :, :, :)  ! ((xyz), i, j, k)
+        double precision, allocatable :: EdgeCoords(:, :, :, :, :)  ! ((xyz), セル中心i, j, k, 面番号)
+        double precision, allocatable :: CellCoords(:, :, :, :) ! ((xyz), セル中心i, j, k)
     !only StructuredGrid
         double precision, allocatable :: Bound(:,:) !1下界，2上界，xyz方向
         integer, allocatable :: CellNumber(:) !構造のみ要素数!(構造の場合xyz方向)
@@ -75,7 +83,7 @@ implicit none
     end type
 
     type Configulation !計算条件等の格納用
-        integer :: SwitchProgram
+        character(len=64) :: GridFileName
         integer :: UseReadRegion = 1 !1でデータから格子情報読み出し
         integer :: UseResume = 0 !1でデータから初期条件読み出し
             character(len=32) :: ResumeFileName !初期条件を読み出す際のファイル名
@@ -432,5 +440,5 @@ implicit none
     end type
 
 
-end module StructVar_Mod
+end module StructVar_Mod_mk2
 
