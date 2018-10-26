@@ -25,10 +25,9 @@ program steady_NS_rans_solver
     allocate(WatchTime(3,3))
     TotalTime = 0.0d0
     WatchTime = 0.0d0
-    call ReadConfigulation(Conf)
+    call ReadConfigulation_mk2(Conf)
     !iSwitch = 3
-    write(6,*) "Please input use CPU number."
-    read(5,*) CoreNumberOfCPU
+    call body_fitted_and_baldwin_lomax(Conf)
 
     stop
 contains

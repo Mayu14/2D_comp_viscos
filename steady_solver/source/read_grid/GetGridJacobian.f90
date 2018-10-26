@@ -14,7 +14,7 @@
 subroutine GetGridJacobian(Geom, CC, CE)
     use StructVar_Mod_mk2
     use LoopVar_Mod_mk2
-    use FrequentOperation_mk2 !only DeterminantOf2DMatrix
+    use FrequentOperation_mk2
     implicit none
 
     type(Geometry), intent(in) :: Geom
@@ -29,7 +29,7 @@ subroutine GetGridJacobian(Geom, CC, CE)
     do iCenterY = 1, Geom%CellNumber(2) + 1
         do iCenterX = 1, Geom%CellNumber(1) + 1
             if ((iCenterY == Geom%CellNumber(2) + 1) .and. (iCenterX == Geom%CellNumber(1) + 1)) then
-                pass
+
             else
                 do iEdge = 1, 2
                     if(iEdge == 1) then
@@ -55,8 +55,8 @@ subroutine GetGridJacobian(Geom, CC, CE)
     ! Cell Center
     do iCenterY = 1, Geom%CellNumber(2)
         do iCenterX = 1, Geom%CellNumber(1)
-            r_xi(:) = Geom%EdgeCoords(:, iCenterX + 1, iCenterY, 1) - Geom%EdgeCoords(:, iCenterX, iCenterY, 1)
-            r_eta(:) = Geom%EdgeCoords(:, iCenterX, iCenterY + 1, 1) - Geom%EdgeCoords(:, iCenterX, iCenterY, 1)
+            r_xi(:) = Geom%EdgeCoords(:, iCenterX + 1, iCenterY, 1, 1) - Geom%EdgeCoords(:, iCenterX, iCenterY, 1, 1)   !west
+            r_eta(:) = Geom%EdgeCoords(:, iCenterX, iCenterY + 1, 1, 2) - Geom%EdgeCoords(:, iCenterX, iCenterY, 1, 2)  !south
 
             detJ = 1.0 / DeterminantOf2DMatrix(r_xi(1), r_eta(1), r_xi(2), r_eta(2))
             CC%GridJacobian(iCenterX, iCenterY, 1) = detJ
