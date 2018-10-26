@@ -25,11 +25,13 @@ subroutine read_mayugrid2(cFileName, Geom)
     character :: cTmp
     integer, allocatable :: iLocalNum(:)
 
+    Geom%iDimension = 2
     iDim = Geom%iDimension !now only-2D
     iZeta_max = 1
     allocate(Geom%CellNumber(3))
 
     open(unit = 1, file =trim(adjustl(cFileName)), status = 'unknown')
+    write(6,*) "mu"
         read(1, *) cTmp, cTmp, cTmp, rVersion ! version
         if(rVersion /= 0.9) then
             write(6, *) "grid file version error"
@@ -38,6 +40,7 @@ subroutine read_mayugrid2(cFileName, Geom)
 
         read(1, *) cTmp, iXi_max
         read(1, *) cTmp, iEta_max
+
         allocate(Geom%VertexCoords(iDim, iXi_max, iEta_max, iZeta_max))
         !allocate(iPoint2Wall_belong(iXi_max, iEta_max), dPoint2Wall_distance(iXi_max, iEta_max))
         allocate(iLocalNum(2))
@@ -54,6 +57,7 @@ subroutine read_mayugrid2(cFileName, Geom)
         do iPointY = 1, iEta_max
             do iPointX = 1, iXi_max
                 read(1, *) Geom%DistanceFromWall(1, iPointX, iPointY, 1), Geom%DistanceFromWall(2, iPointX, iPointY, 1)
+
             end do
         end do
 
