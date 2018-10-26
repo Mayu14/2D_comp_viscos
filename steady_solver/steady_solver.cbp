@@ -31,8 +31,39 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="StructVar_Mod_mk2.f90" />
-		<Unit filename="main.f90" />
+		<Unit filename="source/ConstantVar_Mod_mk2.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="source/FrequentOperation_mk2.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="source/LoopVar_Mod_mk2.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="source/StructVar_Mod_mk2.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="source/config/ReadConfigulation_mk2.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/main.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/read_grid/GetCellAndEdgeCoordinate.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/read_grid/GetGridJacobian.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/read_grid/MallocAll.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/read_grid/SetRegion.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/read_grid/read_mayugrid2.f90">
+			<Option weight="1" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />
