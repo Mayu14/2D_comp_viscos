@@ -25,6 +25,7 @@ program steady_NS_rans_solver
     allocate(WatchTime(3,3))
     TotalTime = 0.0d0
     WatchTime = 0.0d0
+
     call ReadConfigulation_mk2(Conf)
     !iSwitch = 3
     call body_fitted_and_baldwin_lomax(Conf)

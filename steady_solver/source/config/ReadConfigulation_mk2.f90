@@ -1,11 +1,11 @@
 !***********************************/
-!	Name:è¨ˆç®—è¨­å®šã‚’èª­ã¿è¾¼ã‚€ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+!	Name:ŒvZİ’è‚ğ“Ç‚İ‚ŞƒvƒƒOƒ‰ƒ€
 !	Alias:ReadConfigulation
-!	Description:å°‚ç”¨ã®CalcConfigãƒ•ã‚¡ã‚¤ãƒ«ãŒå¿…è¦
+!	Description:ê—p‚ÌCalcConfigƒtƒ@ƒCƒ‹‚ª•K—v
 !	Type:Configulation
-!	Input:CalcConfig(å¤–éƒ¨å…¥åŠ›)
+!	Input:CalcConfig(ŠO•”“ü—Í)
 !	Output:Configulation
-!	Note:CalcConfigã¯ãƒ—ãƒ­ã‚°ãƒ©ãƒ æœ¬ä½“ã¨åŒã˜ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«ç½®ãã“ã¨
+!	Note:CalcConfig‚ÍƒvƒƒOƒ‰ƒ€–{‘Ì‚Æ“¯‚¶ƒfƒBƒŒƒNƒgƒŠ‚É’u‚­‚±‚Æ
 !	Author:Akitaka Toyota
 !	Date:2017.10.26
 !	Update:2017.11.07
@@ -19,23 +19,19 @@ type(Configulation), intent(out) :: Conf
 character :: cAnnotate
 
     open(unit=1, file='CalcConfig.dat',status='unknown')
-        read(1,*) cAnnotate
         read(1,*) Conf%GridFileName, cAnnotate
-        ! read(1,*) Conf%UseReadRegion,cAnnotate
         read(1,*) Conf%UseResume,cAnnotate
         read(1,*) Conf%ResumeFileName
         read(1,*) Conf%UseVariableTime,cAnnotate
         read(1,*) Conf%UseLocalTimeStep,cAnnotate
         read(1,*) Conf%UseMUSCL,cAnnotate
         read(1,*) Conf%KindLimiter,cAnnotate
-        read(1,*) Conf%UseOverSet, cAnnotate
         read(1,*) FixedTimeStep,cAnnotate
         read(1,*) OutputInterval, cAnnotate
         read(1,*) IterationNumber,cAnnotate
     close(1)
 
     DefaultTimeStep = FixedTimeStep
-
     return
 end subroutine ReadConfigulation_mk2
 
