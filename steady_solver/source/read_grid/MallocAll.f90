@@ -22,7 +22,6 @@ subroutine MallocAll(Conf, Geom, CC, CE)
     type(CellEdge), intent(inout) :: CE
 
     integer, allocatable :: iMin(:)
-    integer :: iYmax1, iZmax1
 
     iDim =Geom%iDimension
 
@@ -54,7 +53,7 @@ subroutine MallocAll(Conf, Geom, CC, CE)
 
     if(Conf%UseLocalTimeStep == 1) then
         allocate(CC%TimeWidth(iXmax,iYmax,iZmax))
-        allocate(CC%TmpTimeWidth(iMin(1):iXmax+1,iMin(2):iYmax1,1,iDim))
+        allocate(CC%TmpTimeWidth(iMin(1):iXmax+1,iMin(2):iYmax,1,iDim))
         CC%TmpTimeWidth = 0.0d0
     else
         allocate(CC%TimeWidth(1,1,1))

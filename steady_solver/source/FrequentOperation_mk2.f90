@@ -283,7 +283,6 @@ contains
     double precision function DeterminantOf2DMatrix(A11, A12, A21, A22) result(detA)
     implicit none
         double precision, intent(in) :: A11, A12, A21, A22
-        double precision, intent(out) :: detA
 
             detA = A11 * A22 - A12 * A21
         return

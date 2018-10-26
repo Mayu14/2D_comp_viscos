@@ -14,6 +14,7 @@
 subroutine read_mayugrid2(cFileName, Geom)
     use StructVar_Mod_mk2
     use LoopVar_Mod_mk2
+    use FrequentOperation_mk2
     implicit none
 
     character(len=64), intent(in) :: cFileName
