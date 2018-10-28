@@ -34,9 +34,21 @@ subroutine GetGridJacobian(Geom, CC, CE)
                 do iEdge = 1, 2
                     if(iEdge == 1) then
                         r_xi(:) = Geom%CellCoords(:, iCenterX, iCenterY, 1) - Geom%CellCoords(:, iCenterX - 1, iCenterY, 1)
-                        r_eta(:) = Geom%VertexCoords(:, iCenterX, iCenterY + 1, 1) - Geom%VertexCoords(:, iCenterX, iCenterY, 1)
+                        if (iCenterY == Geom%CellNumber(2) + 1) then
+                            r_eta(:) = 2.0d0 * Geom%VertexCoords(:, iCenterX, iCenterY, 1) &
+                                            &- Geom%VertexCoords(:, iCenterX, iCenterY - 1, 1)
+                        else
+                            r_eta(:) = Geom%VertexCoords(:, iCenterX, iCenterY + 1, 1) - Geom%VertexCoords(:, iCenterX, iCenterY, 1)
+                        end if
+
                     else
-                        r_xi(:) = Geom%VertexCoords(:, iCenterX, iCenterY + 1, 1) - Geom%VertexCoords(:, iCenterX, iCenterY, 1)
+                        if (iCenterX == Geom%CellNumber(1) + 1) then
+                            r_xi(:) = 2.0d0 * Geom%VertexCoords(:, iCenterX, iCenterY, 1)&
+                                           &- Geom%VertexCoords(:, iCenterX - 1, iCenterY, 1)
+                        else
+                            r_xi(:) = Geom%VertexCoords(:, iCenterX + 1, iCenterY, 1) - Geom%VertexCoords(:, iCenterX, iCenterY, 1)
+                        end if
+
                         r_eta(:) = Geom%CellCoords(:, iCenterX, iCenterY, 1) - Geom%CellCoords(:, iCenterX, iCenterY - 1, 1)
                     end if
 
