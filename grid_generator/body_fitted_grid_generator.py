@@ -660,7 +660,7 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
             for i in range(xi_max):
                 f.write(str(grid_x[i, j]) + " " + str(grid_y[i, j]) + "\n")
 
-        f.write("The edge number of the object surface nearest to each grid point and the distance\n")
+        f.write("The edge number of the object surface nearest to each grid point and the distance\n".replace(" ", "_"))
         for j in range(eta_max):
             for i in range(xi_max - 1):
                 f.write(str(point2wall[i, j, 0]) + " " + str(point2wall[i, j, 1]) + "\n")
@@ -668,7 +668,7 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
         f.write("Grid point numbers belonging to each edge of the object surface\n")
         for edge in range(xi_max - 1):
             p_size = len(wall2point[edge])
-            f.write("Total_number_of_points_belonging_to_" + str(edge) + "th edge: " + str(p_size) + "\n")
+            f.write("Total_number_of_points_belonging_to_" + str(edge) + "th_edge: " + str(p_size) + "\n")
             for p in range(p_size):
                 f.write(str(wall2point[edge][p]).replace("[", "").replace(",", "").replace("]", "") + "\n")
 

@@ -38,7 +38,7 @@ subroutine MallocAll(Conf, Geom, CC, CE)
     allocate(CC%ConservedQuantity(4, 0:iXmax, 0:iYmax, 1))
     allocate(CC%PrimitiveVariable(4, 0:iXmax, 0:iYmax, 1))
 
-    allocate(CE%NormalFluxDiff(4, 0:iXmax, 0:iYmax, 1, 2))
+    allocate(CE%NormalFluxDiff(4, 0:iXmax+1, 0:iYmax+1, 1, 2))
     CC%ConservedQuantity = 0.0d0
     CC%PrimitiveVariable = 0.0d0
     CE%NormalFluxDiff = 0.0d0
@@ -47,8 +47,8 @@ subroutine MallocAll(Conf, Geom, CC, CE)
     allocate(CC%GridJacobian(iXmax, iYmax, 1))
     allocate(CC%GridJacobiMatrix(2, 2, iXmax, iYmax, 1))
 
-    allocate(CE%GridJacobian(iXmax, iYmax, 1, 2))
-    allocate(CE%GridJacobiMatrix(2, 2, iXmax, iYmax, 1, 2))
+    allocate(CE%GridJacobian(iXmax+1, iYmax+1, 1, 2))
+    allocate(CE%GridJacobiMatrix(2, 2, iXmax+1, iYmax+1, 1, 2))
 
 
     if(Conf%UseLocalTimeStep == 1) then
