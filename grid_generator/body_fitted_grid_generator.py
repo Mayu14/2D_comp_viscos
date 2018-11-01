@@ -712,7 +712,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
         e_angle = np.sort(e_angle).tolist()
 
         def get_candidate_point(nearest_edge):
-            if (nearest_edge == 0):  # edge made by point0 and point1
+            if (nearest_edge == 0) or (nearest_edge == size - 1):  # edge made by point0 and point1
                 return [size - 2, 0, 1, 2]  # candidate_point 0, 1, 2, 3
             elif nearest_edge == size - 2:
                 return [size - 3, size - 2, 0, 1]
@@ -732,7 +732,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
 
             for i in range(xi_max):
                 tmp_nearest_edge_candidate = bisect.bisect_left(e_angle, jth_e_angle[i])  # nearest_edge from jth edge (edge_number)
-                if tmp_nearest_edge_candidate == size:
+                if tmp_nearest_edge_candidate == size - 1:
                     tmp_nearest_edge_candidate = 0
                 nearest_edge_candidate = e_number[tmp_nearest_edge_candidate]
                 candidate_point = get_candidate_point(nearest_edge_candidate)  # adjacent point from nearest edge (point number)
