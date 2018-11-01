@@ -172,7 +172,7 @@ def deduplication(z, array_list=None):
     else:
         return z, array_list
 
-def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
+def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, trianglation=True):
     xi_max = z1.shape[0]
     eta_max = int(0.5 * z1.shape[0])
 
@@ -361,11 +361,10 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
 
             def cell_structure(i, j):
                 if i != xi_max - 1:
-                    return "4 " + str(pid(i, j)) + " " + str(pid(i + 1, j)) + " " + str(
-                        pid(i + 1, j + 1)) + " " + str(pid(i, j + 1))
+                    ip1 = i + 1
                 else:
-                    return "4 " + str(pid(i, j)) + " " + str(pid(0, j)) + " " + str(
-                        pid(0, j + 1)) + " " + str(pid(i, j + 1))
+                    ip1 = 0
+                return "4 " + str(pid(i, j)) + " " + str(pid(ip1, j)) + " " + str(pid(ip1, j + 1)) + " " + str(pid(i, j + 1))
 
             # header
             f.write("# vtk DataFile Version 3.0\n")
@@ -388,6 +387,62 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
             for j in range(eta_max - 1):
                 for i in range(xi_max):
                     f.write("9\n")
+
+    def output_vtk_tri(fname, path):
+        fname = path + "tri_" + fname + ".vtk"
+        with open(fname, 'w') as f:
+            point_number = str(xi_max * eta_max)
+            cell_number = str(2 * (xi_max) * (eta_max - 1))
+            cell_vertex_number = str(2 * 4 * (xi_max) * (eta_max - 1))
+            pid = lambda i, j: i + xi_max * j
+
+            # 四角形セルの対角線長さを計算し，左下→右上の対角線(diag1)が，左上→右下の対角線(diag2)より短いときTrueを返す
+            def set_relatively_not_flat_tri(i, ip1, j):
+                diag1 = (grid_x[ip1, j + 1] - grid_x[i, j]) ** 2 + (grid_y[ip1, j + 1] - grid_y[i, j]) ** 2
+                diag2 = (grid_x[i, j + 1] - grid_x[ip1, j]) ** 2 + (grid_y[i, j + 1] - grid_y[ip1, j]) ** 2
+
+                if diag1 < diag2:
+                    return True
+                else:
+                    return False
+
+            def cell_structure(i, j):
+                # 短い対角線を新しい辺として四角形を三角形に分割する
+                if i != xi_max - 1:
+                    ip1 = i + 1
+                else:
+                    ip1 = 0
+                flag = set_relatively_not_flat_tri(i, ip1, j)
+                # flag == True:左下と右上を結ぶ対角線を新たな辺として，左上の三角形と右下の三角形に分割
+                if flag:
+                    tri1 = "3 " + str(pid(i, j)) + " "  + str(pid(ip1, j + 1)) + " " + str(pid(i, j + 1))
+                    tri2 = "3 " + str(pid(i, j)) + " " + str(pid(ip1, j)) + " " + str(pid(ip1, j + 1))
+                else:
+                    tri1 = "3 " + str(pid(i, j)) + " " + str(pid(ip1, j)) + " " + str(pid(i, j + 1))
+                    tri2 = "3 " + str(pid(ip1, j)) + " " + str(pid(ip1, j + 1)) + " " + str(pid(i, j + 1))
+                return tri1 + "\n" + tri2
+
+            # header
+            f.write("# vtk DataFile Version 3.0\n")
+            f.write("Unstructured Grid tri example\n")
+            f.write("ASCII\nDATASET UNSTRUCTURED_GRID\n")
+            f.write("POINTS " + point_number + " double\n")
+            # point coordinates
+            for j in range(eta_max):
+                for i in range(xi_max):
+                    f.write(str(grid_x[i, j]) + " " + str(grid_y[i, j]) + " 0.0\n")
+
+            # cell structure
+            f.write("CELLS " + cell_number + " " + cell_vertex_number + "\n")
+            for j in range(eta_max - 1):
+                for i in range(xi_max):
+                    f.write(cell_structure(i, j) + "\n")
+
+            # cell types
+            f.write("CELL_TYPES " + cell_number + "\n")
+            for j in range(eta_max - 1):
+                for i in range(xi_max):
+                    f.write("5\n5\n")
 
     def output_bdm(fname, path):
         fname = path + fname + ".mayugrid2"
@@ -440,9 +495,38 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
         delta[0] = z[1] - z[size - 1]
         for i in range(1, size - 1):
             delta[i] = z[i + 1] - z[i - 1]
-        delta[size - 1] = z[1] - z[size - 2]
+        delta[size - 1] = z[0] - z[size - 2]
 
         normal = -1j * delta / np.abs(delta)
+        """
+        dot_normal = np.zeros(size, dtype = float)
+        dot_normal[0] = np.real(normal[0] * np.conj(normal[size - 1]))
+        dot_normal[1:] = np.real(normal[1:] * np.conj(normal[:size - 1]))
+        """
+        def prevent_turn_over_cell(i, imp1, downwind=True):
+            dot_normal = np.real(normal[i] * np.conj(normal[imp1]))
+            flag = 0
+            if dot_normal < 0:
+                flag = 1
+                angle1 = np.angle(normal[i])
+                angle0 = np.angle(normal[imp1])
+                if angle1 < angle0:
+                    angle1 += 2.0 * np.pi
+                if downwind:
+                    normal[i] -= (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
+                else:
+                    normal[i] += (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
+            return flag
+
+        flag = 1
+        while flag != 0:
+            flag = 0
+            flag += prevent_turn_over_cell(0, xi_max - 1)
+            for i in range(1, size):
+                flag += prevent_turn_over_cell(i, i - 1)
+            for i in range(size-1):
+                flag += prevent_turn_over_cell(i, i + 1, downwind=False)
+            flag += prevent_turn_over_cell(xi_max - 1, 0, downwind=False)
 
         incremental = min(min(2.0 / np.pi * np.min(np.abs(delta)), np.average(np.abs(delta))), max_incremental)  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
 
@@ -545,7 +629,6 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
     get_length = lambda x: np.max(x) - np.min(x)
     get_model_length = lambda z: max(get_length(np.real(z)), get_length(np.imag(z)))
 
-    radius1 = 0.5 * get_model_length(z1)
     magnification = 5.0
     max_incremental = 10.0   # radius1 * (magnification - 1) / eta_max
 
@@ -553,8 +636,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
 
     grid_x[:, 0] = np.real(z1_eq)
     grid_y[:, 0] = np.imag(z1_eq)
-
     z2 = equidistant_offset(z1_eq, max_incremental)
+
     # z2 = np.hstack((z2[1:], z2[0]))
     circular_grid = False
     if circular_grid:
@@ -595,9 +678,12 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
 
     grid_x[:, eta_max-1] = np.real(z3)
     grid_y[:, eta_max - 1] = np.imag(z3)
-    grid_x, grid_y = jacobi_pre(grid_x, grid_y)
+    # grid_x, grid_y = jacobi_pre(grid_x, grid_y)
+
     if vtk:
         output_vtk(fname, path)
+    if trianglation:
+        output_vtk_tri(fname, path)
     if bdm == True:
         output_bdm(fname, path)
     grid_x = np.vstack((grid_x[:, :], grid_x[0, :]))
@@ -628,10 +714,10 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
         def get_candidate_point(nearest_edge):
             if (nearest_edge == 0):  # edge made by point0 and point1
                 return [size - 2, 0, 1, 2]  # candidate_point 0, 1, 2, 3
-            elif nearest_edge == size - 1:
-                return [size - 2, size - 1, 0, 1]
             elif nearest_edge == size - 2:
-                return [size - 3, size - 2, size - 1, 0]
+                return [size - 3, size - 2, 0, 1]
+            elif nearest_edge == size - 3:
+                return [size - 4, size - 3, size - 2, 0]
             else:
                 return [nearest_edge - 1, nearest_edge, nearest_edge + 1, nearest_edge + 2]
 
@@ -694,10 +780,10 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
                 f.write(str(wall2point[edge][p]).replace("[", "").replace(",", "").replace("]", "") + "\n")
 
 
-def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=True, vtk=True, bdm=True, path = ""):
+def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=True, vtk=True, bdm=True, trianglation=True, path = ""):
     z1, size = get_complex_coords(type = type, center_x = center_x, center_y=center_y, naca4 = naca4, size = size)
     z1 = deduplication(z1)[::-1]
-    make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm)
+    make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
     
 def main():
     z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 200)
