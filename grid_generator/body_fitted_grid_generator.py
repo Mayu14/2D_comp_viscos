@@ -172,7 +172,7 @@ def deduplication(z, array_list=None):
     else:
         return z, array_list
 
-def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True):
+def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True):
     xi_max = z1.shape[0]
     eta_max = int(0.5 * z1.shape[0])
 
@@ -389,6 +389,25 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True):
                 for i in range(xi_max):
                     f.write("9\n")
 
+    def output_bdm(fname, path):
+        fname = path + fname + ".mayugrid2"
+        def header_gen(area_name, point_number):
+            head1 = "begin " + area_name + "\n"
+            head2 = point_number + "\n"
+            return head1 + head2
+
+        with open(fname, 'w') as f:
+            f.write("type ""2D""\n")
+            f.write(header_gen(str(fname), str(xi_max * eta_max)))
+            for j in range(1, eta_max):
+                for i in range(xi_max):
+                    f.write(str(grid_x[i, j]) + " " + str(grid_y[i, j]) + "\n")
+            f.write("end " + str(fname))
+            f.write(header_gen("object_surface", str(xi_max)))
+            for i in range(xi_max):
+                f.write(str(grid_x[i, 0]) + " " + str(grid_y[i, 0]) + "\n")
+            f.write("end object_surface")
+
     def plot_tmp(detail = True, zoom = False, overview = True):
         if detail:
             for i in range(xi_max):
@@ -579,6 +598,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True):
     grid_x, grid_y = jacobi_pre(grid_x, grid_y)
     if vtk:
         output_vtk(fname, path)
+    if bdm == True:
+        output_bdm(fname, path)
     grid_x = np.vstack((grid_x[:, :], grid_x[0, :]))
     grid_y = np.vstack((grid_y[:, :], grid_y[0, :]))
 
@@ -672,10 +693,11 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
             for p in range(p_size):
                 f.write(str(wall2point[edge][p]).replace("[", "").replace(",", "").replace("]", "") + "\n")
 
-def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=True, vtk=True, path = ""):
+
+def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=True, vtk=True, bdm=True, path = ""):
     z1, size = get_complex_coords(type = type, center_x = center_x, center_y=center_y, naca4 = naca4, size = size)
     z1 = deduplication(z1)[::-1]
-    make_grid_seko(z1, path, fname, mayugrid2, vtk)
+    make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm)
     
 def main():
     z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 200)
