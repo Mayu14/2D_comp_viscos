@@ -6,7 +6,6 @@ from naca_4digit_test import Naca_4_digit, Naca_5_digit
 from joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
 import matplotlib.pyplot as plt
 import Lib.bisect as bisect
-import re
 
 # 物体表面の複素座標を取得する
 def get_complex_coords(type, size, center_x = -0.08, center_y = 0.08, naca4 = "0012"):
@@ -174,7 +173,7 @@ def deduplication(z, array_list=None):
 
 def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, trianglation=True):
     xi_max = z1.shape[0]
-    eta_max = int(0.5 * z1.shape[0])
+    eta_max = z1.shape[0]   # int(0.5 * z1.shape[0])
 
     grid_x = np.zeros((xi_max, eta_max))
     grid_y = np.zeros((xi_max, eta_max))
@@ -487,8 +486,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                 plt.plot(grid_x[:, j], grid_y[:, j])
             plt.show()
 
-    # 物体表面を押し出す
-    def offset_surface(z, outer = False, max_incremental=0.1):
+    # 物体表面を押し出す(η格子線の複素座標，オフセット方向(外側or内側)，最大のオフセット量，オフセット倍率(遠方領域で1以上の値を与えて計算領域を効率的に広げる))
+    def offset_surface(z, outer = False, max_incremental=0.1, accel=1.0):
         size = z.shape[0]
 
         delta = np.zeros(size, dtype = complex)
@@ -498,28 +497,24 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
         delta[size - 1] = z[0] - z[size - 2]
 
         normal = -1j * delta / np.abs(delta)
-        """
-        dot_normal = np.zeros(size, dtype = float)
-        dot_normal[0] = np.real(normal[0] * np.conj(normal[size - 1]))
-        dot_normal[1:] = np.real(normal[1:] * np.conj(normal[:size - 1]))
-        """
+        # 格子の裏返り防止(隣接する格子点から外向きξ方向へ伸びる2つの格子線がなす角度が90°以上開いている場合に，新しいη格子線が既存のη格子線と被らないように角度を修正する)
         def prevent_turn_over_cell(i, imp1, downwind=True):
-            dot_normal = np.real(normal[i] * np.conj(normal[imp1]))
+            dot_normal = np.real(normal[i] * np.conj(normal[imp1])) # 隣接する格子線同士の内積を取る
             flag = 0
-            if dot_normal < 0:
+            if dot_normal < 0:  # 内積が負のとき修正対象
                 flag = 1
                 angle1 = np.angle(normal[i])
                 angle0 = np.angle(normal[imp1])
                 if angle1 < angle0:
                     angle1 += 2.0 * np.pi
-                if downwind:
+                if downwind:    # ξが小さい側を修正する場合
                     normal[i] -= (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
-                else:
+                else:   # ξが大きい側を変更する場合(風下と風上とを2回セットとして修正する)
                     normal[i] += (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
             return flag
-
+        
         flag = 1
-        while flag != 0:
+        while flag != 0:    # flag=0となるまで格子の裏返り防止処理を掛ける
             flag = 0
             flag += prevent_turn_over_cell(0, xi_max - 1)
             for i in range(1, size):
@@ -527,8 +522,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
             for i in range(size-1):
                 flag += prevent_turn_over_cell(i, i + 1, downwind=False)
             flag += prevent_turn_over_cell(xi_max - 1, 0, downwind=False)
-
-        incremental = min(min(2.0 / np.pi * np.min(np.abs(delta)), np.average(np.abs(delta))), max_incremental)  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
+        
+        incremental = accel * min(min(2.0 / np.pi * np.min(np.abs(delta)), np.average(np.abs(delta))), max_incremental)  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
 
         if outer == True:
             return z - normal * incremental
@@ -621,8 +616,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
         equidistant_t = np.linspace(0, 1, z2.shape[0] + 1)[:z2.shape[0]]
         return fx(equidistant_t) + 1j * fy(equidistant_t)
 
-    def equidistant_offset(z2, max_incremental):
-        z2 = offset_surface(z2, outer=True, max_incremental=max_incremental)
+    def equidistant_offset(z2, max_incremental, accel):
+        z2 = offset_surface(z2, outer=True, max_incremental=max_incremental, accel = accel)
         return get_equidistant_curve(z2)
 
     get_object_center = lambda z2: np.average(np.real(z2)) + 1j * np.average(np.imag(z2))
@@ -631,12 +626,19 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
 
     magnification = 5.0
     max_incremental = 10.0   # radius1 * (magnification - 1) / eta_max
-
+    accel_parameter = 1.3   # 物体遠方領域でオフセット量を増やす際の割合
+    # accel量の設定
+    def set_accel(j, accel_parameter):
+        if j < int(eta_max / 2):
+            return 1.0
+        else:
+            return accel_parameter
+        
     z1_eq = get_equidistant_curve(z1)
 
     grid_x[:, 0] = np.real(z1_eq)
     grid_y[:, 0] = np.imag(z1_eq)
-    z2 = equidistant_offset(z1_eq, max_incremental)
+    z2 = equidistant_offset(z1_eq, max_incremental, accel = 1.0)
 
     # z2 = np.hstack((z2[1:], z2[0]))
     circular_grid = False
@@ -644,7 +646,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
         for j in range(1, eta_max-1):
             grid_x[:, j] = np.real(z2)
             grid_y[:, j] = np.imag(z2)
-            z2 = equidistant_offset(z2, max_incremental)
+            z2 = equidistant_offset(z2, max_incremental, accel = 1.0)
 
         obj_center = get_object_center(z2)
         phi = np.angle(z2[0] - obj_center)
@@ -652,6 +654,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
         radius = 0.5 * get_model_length(z1) * magnification
         z3 = obj_center + radius * np.exp(1j * np.linspace(phi, phi + 2.0 * np.pi, z1.shape[0] + 1))[1:][::-1]
     else:
+        model_length = get_model_length(z1)
         for j in range(1, eta_max):
             grid_x[:, j] = np.real(z2)
             grid_y[:, j] = np.imag(z2)
@@ -659,8 +662,8 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
             mix_rate = 1.0 - max(np.exp(-0.18 * float(j - 1)), 0.7)   # j番目のη線と直交するように与えたz2_orthogonalと，Δηが均等になるように与えたz2_equidistantの配合比率
             while flag >= 0:
                 flag += 1
-                z2_equidistant = equidistant_offset(z2, max_incremental)
-                z2_orthogonal = offset_surface(z2, outer=True, max_incremental=max_incremental)
+                z2_equidistant = equidistant_offset(z2, max_incremental, set_accel(j, accel_parameter))
+                z2_orthogonal = offset_surface(z2, outer=True, max_incremental=max_incremental, accel = set_accel(j, accel_parameter))
                 fix_z2 = (1.0 - mix_rate) * z2_orthogonal + mix_rate * z2_equidistant
                 delta_j__ = np.hstack((z2[1:] - z2[:xi_max - 1], z2[0] - z2[xi_max - 1]))
                 delta_jp1 = np.hstack((fix_z2[1:] - fix_z2[:xi_max - 1], fix_z2[0] - fix_z2[xi_max - 1]))
@@ -674,12 +677,16 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                     flag = -1
                     z2 = fix_z2
 
+            if (np.max(np.real(z2)) - np.min(np.real(z2)) > 40.0 * model_length):
+                eta_max = j + 2
+                break
+
         z3 = z2
 
     grid_x[:, eta_max-1] = np.real(z3)
     grid_y[:, eta_max - 1] = np.imag(z3)
     # grid_x, grid_y = jacobi_pre(grid_x, grid_y)
-
+    grid_x, grid_y = grid_x[:, :eta_max], grid_y[:, :eta_max]
     if vtk:
         output_vtk(fname, path)
     if trianglation:
@@ -786,7 +793,7 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
     
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 200)
+    z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 100)
     # z1, size = get_complex_coords(type=1, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     # plt.plot(np.real(z1), np.imag(z1))
     z1 = deduplication(z1)[::-1]
