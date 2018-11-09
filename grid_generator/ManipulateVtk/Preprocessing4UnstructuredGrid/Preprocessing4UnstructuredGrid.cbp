@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Preprocessing4UnstructuredGrid" />
+		<Option pch_mode="2" />
+		<Option compiler="ifclin" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Preprocessing4UnstructuredGrid" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="ifclin" />
+				<Compiler>
+					<Add option="-i8" />
+					<Add option="-check uninit" />
+					<Add option="-check pointers" />
+					<Add option="-check bounds" />
+					<Add option="-stand f90" />
+					<Add option="-O0" />
+					<Add option="-traceback" />
+					<Add option="-warn all" />
+					<Add option="-debug full" />
+					<Add option="-check all" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Preprocessing4UnstructuredGrid" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="ifclin" />
+				<Compiler>
+					<Add option="-i8" />
+					<Add option="-O2" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-warn all" />
+		</Compiler>
+		<Unit filename="../../1Dimension/EulerSolver2/source/FrequentOperation.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="../../1Dimension/EulerSolver2/source/LoopVar_Mod.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="../../1Dimension/EulerSolver2/source/StructVar_Mod.f90">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="main.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/UCalcCellVolume.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UCalcEdgeArea.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UCalcElementCenter.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/UCalcInscribedCircleOfCell.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UCalcNormalVector.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UCalcWidthCell2Edge.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UCheckGrid.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UGetDistanceFromSurface.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UMakeConvexHull.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UMakeEdgeNumber.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/UMakeInternalObject.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UMarkingVirtualCell.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UOutputUnStrGrid.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/UReSortVirtualCell.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UReadRegionVTK.f90">
+			<Option weight="1" />
+		</Unit>
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
