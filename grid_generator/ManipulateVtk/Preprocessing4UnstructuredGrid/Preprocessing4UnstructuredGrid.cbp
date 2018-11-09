@@ -38,13 +38,13 @@
 		<Compiler>
 			<Add option="-warn all" />
 		</Compiler>
-		<Unit filename="../../1Dimension/EulerSolver2/source/FrequentOperation.f90">
+		<Unit filename="../../../flow_solver/EulerSolver2_2018/source/FrequentOperation.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="../../1Dimension/EulerSolver2/source/LoopVar_Mod.f90">
+		<Unit filename="../../../flow_solver/EulerSolver2_2018/source/LoopVar_Mod.f90">
 			<Option weight="0" />
 		</Unit>
-		<Unit filename="../../1Dimension/EulerSolver2/source/StructVar_Mod.f90">
+		<Unit filename="../../../flow_solver/EulerSolver2_2018/source/StructVar_Mod.f90">
 			<Option weight="0" />
 		</Unit>
 		<Unit filename="main.f90">
