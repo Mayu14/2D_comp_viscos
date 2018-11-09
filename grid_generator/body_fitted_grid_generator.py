@@ -513,16 +513,25 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                     normal[i] += (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
             return flag
         
-        flag = 1
+        get_positive_angle = lambda angle: np.where(np.angle(angle) < 0.0, np.angle(angle) + 2.0 * np.pi, np.angle(angle))
+        flag = 0
+        count = 0
+        tmp_normal = normal.copy()
         while flag != 0:    # flag=0となるまで格子の裏返り防止処理を掛ける
             flag = 0
+            count += 1
             flag += prevent_turn_over_cell(0, xi_max - 1)
             for i in range(1, size):
                 flag += prevent_turn_over_cell(i, i - 1)
             for i in range(size-1):
                 flag += prevent_turn_over_cell(i, i + 1, downwind=False)
             flag += prevent_turn_over_cell(xi_max - 1, 0, downwind=False)
+            if count == 1000:
+                flag = True
         
+        if flag:
+            normal = tmp_normal
+            
         incremental = accel * min(min(2.0 / np.pi * np.min(np.abs(delta)), np.average(np.abs(delta))), max_incremental)  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
 
         if outer == True:
@@ -635,7 +644,6 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
             return accel_parameter
         
     z1_eq = get_equidistant_curve(z1)
-
     grid_x[:, 0] = np.real(z1_eq)
     grid_y[:, 0] = np.imag(z1_eq)
     z2 = equidistant_offset(z1_eq, max_incremental, accel = 1.0)
@@ -676,6 +684,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                 else:
                     flag = -1
                     z2 = fix_z2
+
 
             if (np.max(np.real(z2)) - np.min(np.real(z2)) > 40.0 * model_length):
                 eta_max = j + 2
@@ -753,10 +762,10 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
 
         return point2wall, wall2point
     
-    point2wall, wall2point = get_distance_from_object(grid_x, grid_y)
-    if mg2:
-        write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point)
-    return grid_x, grid_y, point2wall, wall2point
+    # point2wall, wall2point = get_distance_from_object(grid_x, grid_y)
+    # if mg2:
+        # write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point)
+    return grid_x, grid_y   #, point2wall, wall2point
 
 
 def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
@@ -793,9 +802,8 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
     
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "4912b", size = 100)
-    # z1, size = get_complex_coords(type=1, center_x=0.08, center_y=0.3, naca4="4912", size=100)
-    # plt.plot(np.real(z1), np.imag(z1))
+    z1, size = get_complex_coords(type = 3, naca4 = "0012", size = 100)
+    # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1)
     # plt.plot(np.real(z1), np.imag(z1))
