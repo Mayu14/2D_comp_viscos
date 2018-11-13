@@ -20,6 +20,7 @@ public CheckPointInternalTriangle
 public CheckEdgeIntersect
 public GetEdgeIntersectionCoords
 public GetEdgeIntersectionCoordsWithTriangle
+public AbsVector
 
 contains
     subroutine CrossProduct(A,B,C) !外積計算
@@ -279,6 +280,13 @@ contains
 
         return
     end subroutine GetEdgeIntersectionCoordsWithTriangle
+
+    function AbsVector(vector) result(length)
+        double precision, intent(in) :: vector
+        double precision :: length
+        length = sqrt(dot_product(vector, vector))
+        return
+    end function AbsVector
 
 end module FrequentOperation
 

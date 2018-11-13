@@ -104,6 +104,11 @@
             allocate(UG%GM%Interpolated(UG%GI%AllCells,1,1)) !時間が進んでいる格子から内挿されたとき，この値を1にして時間積分の対象から外す
         end if
 
+        if(UConf%TurbulenceModel /= 0) then
+            allocate(UCC%StrainRateTensor(iDim, iDim, UG%GI%RealCells, 1, 1))    !uvw, xyz, icell, 1, 1
+            allocate(UCC%LaminarViscosity(UG%GI%RealCells, 1, 1))
+            allocate(UCC%TurbulenceViscosity(UG%GI%RealCells, 1, 1))
+        end if
         return
     end subroutine UAllocVariables
 
