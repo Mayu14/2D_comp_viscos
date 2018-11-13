@@ -47,9 +47,15 @@ implicit none
         double precision, allocatable :: TmpLimiterFunction(:,:,:,:,:) !セル界面における流束制限関数(全界面の最小値をセル中心の流束制限関数として採用する)
     end type
 
+    type ViscosityWall
+        integer :: iNumberOfMember ! その壁に所属する要素の総数
+        integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
+    end type
+
     type BoundaryCondition
         double precision, allocatable :: InFlowVariable(:) !流入する物理量のデータ(基礎変数形式)
         double precision, allocatable :: OutFlowVariable(:) !流入する物理量のデータ(基礎変数形式)
+        type(ViscosityWall), allocatable :: VW(:)
     end type
 
     type Geometry !幾何的な情報
