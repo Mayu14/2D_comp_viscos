@@ -49,6 +49,7 @@ implicit none
 
     type ViscosityWall
         integer :: iNumberOfMember ! その壁に所属する要素の総数
+        integer :: iGlobalEdge  ! 物体表面の局所境界辺番号→大域辺番号を返すやつ
         integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
     end type
 
