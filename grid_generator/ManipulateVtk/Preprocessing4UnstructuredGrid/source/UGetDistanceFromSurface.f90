@@ -1,14 +1,14 @@
 !***********************************/
-!	Name:非構造格子用EulerSolverのための仮想格子属性割り当てプログラム
+!	Name:各セルに対し最近傍物体表面を求め，そこからの垂直距離を求めるプログラム
 !	Alias:UGetDistanceFromSurface
-!	Description:ユーザー指定基準で仮想セルに境界番号を割り当てる
-!	Type:UGetDistanceFromSurface
+!	Description:
+!	Type:UG
 !	Input:
 !	Output:
-!	Note:座標に基づいて色々やる，とりあえず，上界下界の座標基準と中心からの距離基準による境界属性割り当ては実装した，それ以外は今後の努力次第
+!	Note:効率を度外視してO(N^2)で書いたため，ボトルネックになるようなら修正するかも
 !	Author:Akitaka Toyota
 !	Date:2018.11.06
-!	Update:-
+!	Update:2018.11.13
 !	Other:
 !***********************************/
 subroutine UGetDistanceFromSurface(UG)
@@ -161,10 +161,9 @@ contains
             end if
         end do
 
-        ! call CrossProduct()
-        minDistance = abs(dot_product(UG%CD%Edge(iSurfaceEdge(de_num), :) - UG%CD%Cell(iCellNum, :), -UG%GM%Normal(de_num, :)))    !法線ベクトルは物体外→物体内部に向いているため負号で反転
-        !write(6, *) UG%CD%Edge(iSurfaceEdge(de_num), :) - UG%CD%Cell(iCellNum, :), -UG%GM%Normal(de_num, :)
-        !write(6, *) minDistance
+        minDistance = AbsCrossProduct(UG%CD%Cell(iCellNum, :) - UG%CD%Edge(iSurfaceEdge(de_num), :),&
+                                    & UG%CD%Point(UG%Line%Point(iSurfaceEdge(de_num), 1), :) - UG%CD%Point(UG%Line%Point(iSurfaceEdge(de_num), 2), :)) &
+                                    & / UG%GM%Area(iSurfaceEdge(de_num))    ! 物体表面の辺と，界面中心からセル中心を結ぶ辺とがなす平行四辺形の高さを求める
 
         return
     end subroutine get_minimum_distance_bruteforce

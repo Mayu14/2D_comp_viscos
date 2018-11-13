@@ -39,122 +39,133 @@ subroutine UOutputUnStrGrid(UG,cFileName)
         write(1,*) "InternalObjectPoint", UG%IO%iTotal
 
 !三角形要素の幾何的関係
-        write(1,*) "TriPoint"
+        write(1,*) "TriPoint ", UG%Tri%Total * 3
         do iCell=1, UG%Tri%Total
             write(1,*) (UG%Tri%Point(iCell,iLoop),iLoop=1,3)
         end do
 
-        write(1,*) "TriEdge"
+        write(1,*) "TriEdge ", UG%Tri%Total * 3
         do iCell=1, UG%Tri%Total
             write(1,*) (UG%Tri%Edge(iCell,iLoop),iLoop=1,3)
         end do
 
-        write(1,*) "TriCell"
+        write(1,*) "TriCell ", UG%Tri%Total * 3
         do iCell=1, UG%Tri%Total
             write(1,*) (UG%Tri%Cell(iCell,iLoop),iLoop=1,3)
         end do
 
 !四辺形要素の幾何的関係
         if(UG%Quad%Total /= 0) then
-            write(1,*) "coming soon..."
+            write(6,*) "coming soon..."
             stop
         end if
 
 !線要素の幾何的関係
-        write(1,*) "LinePoint"
+        write(1,*) "LinePoint ", UG%Line%Total * 2
         do iEdge=1, UG%Line%Total
             write(1,*) (UG%Line%Point(iEdge,iLoop),iLoop=1,2)
         end do
 
-        write(1,*) "LineCell"
+        write(1,*) "LineCell ", UG%Line%Total * 4
         do iEdge=1, UG%Line%Total
             write(1,*) ((UG%Line%Cell(iEdge,iSide,iLocalEdge),iLocalEdge=1,2),iSide=1,2)
         end do
 
 !仮想格子の幾何的関係
-        write(1,*) "VCCell"
+        write(1,*) "VCCell ", (UG%GI%AllCells - UG%GI%RealCells) * 2
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
             write(1,*) (UG%VC%Cell(iCell,iLoop),iLoop=1,2)
         end do
 
-        write(1,*) "VCEdge"
+        write(1,*) "VCEdge ", UG%GI%AllCells - UG%GI%RealCells
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
             write(1,*) UG%VC%Edge(iCell)
         end do
 
 !格子点の座標情報
-        write(1,*) "PointC"
+        write(1,*) "PointC ", UG%GI%Points * 3
         do iPoint=1, UG%GI%Points
             write(1,*) (UG%CD%Point(iPoint,iLoop),iLoop=1,3)
         end do
 
 !格子境界中心の座標情報
-        write(1,*) "EdgeC"
+        write(1,*) "EdgeC ", UG%GI%Edges * 3
         do iEdge=1,UG%GI%Edges
             write(1,*) (UG%CD%Edge(iEdge,iLoop),iLoop=1,3)
         end do
 
 !格子要素中心の座標情報
-        write(1,*) "CellC"
+        write(1,*) "CellC ", UG%GI%AllCells * 3
         do iCell=1,UG%GI%AllCells
             write(1,*) (UG%CD%Cell(iCell,iLoop),iLoop=1,3)
         end do
 
 !格子境界の面積
-        write(1,*) "EdgeS"
+        write(1,*) "EdgeS ", UG%GI%Edges
         do iEdge=1,UG%GI%Edges
             write(1,*) UG%GM%Area(iEdge)
         end do
 
 !格子境界の体積
-        write(1,*) "CellV"
+        write(1,*) "CellV ", UG%GI%RealCells
         do iCell=1,UG%GI%RealCells
             write(1,*) UG%GM%Volume(iCell)
         end do
 
 !セル界面における法線ベクトル
-        write(1,*) "EdgeNormal"
+        write(1,*) "EdgeNormal ", UG%GI%Edges * 3
         do iEdge=1,UG%GI%Edges
             write(1,*) (UG%GM%Normal(iEdge,iLoop),iLoop=1,3)
         end do
 
 !セル中心から界面中心までの距離ベクトル(中心基準)
-        write(1,*) "Width"
+        write(1,*) "Width ", UG%GI%RealCells
         do iCell=1,UG%GI%RealCells
             write(1,*) ((UG%GM%Width(iCell,iLocalEdge,iLoop),iLoop=1,3),iLocalEdge=1,3)
         end do
 
 !仮想セルに適用する境界条件
-        write(1,*) "BoudnaryCondition of VirtualCell"
+        write(1,*) "BoudnaryCondition_of_VirtualCell ", UG%GI%AllCells - UG%GI%RealCells
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
             write(1,*) UG%GM%CellType(iCell,1,1)
         end do
 
 !Radius of Cell's Inscribed-Circle for compute CFL Condition
-        write(1,*) "InscribedCircleRadius"
+        write(1,*) "InscribedCircleRadius ", UG%GI%RealCells
         do iCell=1,UG%GI%RealCells
             write(1,*) UG%InscribedCircle(iCell)
         end do
 
 !内部に含む物体を構成する凸包のデータ
-        write(1,*) "InternalObject"
+        write(1,*) "InternalObject ", UG%IO%iTotal
         do iPoint=1, UG%IO%iTotal
             write(1,*) UG%IO%PointNum(iPoint)
         end do
 
 !MUSCLのLimiterで使用する各セルにおける界面までの平均距離
-        write(1,*) "AverageWid"
+        write(1,*) "AverageWid ", UG%GI%RealCells
         do iCell=1,UG%GI%RealCells
             write(1,*) UG%GM%AverageWidth(iCell)
         end do
 
 !格子外周を構成する凸包のデータ
-        write(1,*) "ConvexHull"
+        write(1,*) "ConvexHull ", UG%CH%iTotal
         do iPoint=1, UG%CH%iTotal
             write(1,*) UG%CH%PointNum(iPoint)
         end do
 
+! セルから最も近い物体表面セル
+        write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
+        do iCell = 1, UG%Tri%Total
+            write(1, *) UG%Tri%Belongs2Wall(iCell)
+        end do
 
+! 物体表面からの距離
+        write(1, *) "DistanceFromObjectSurface ", UG%Tri%Total
+        do iCell = 1, UG%Tri%Total
+            write(1, *) UG%Tri%Distance(iCell)
+        end do
+        write(1,*) ""
 
     close(1)
 return
