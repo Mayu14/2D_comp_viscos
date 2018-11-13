@@ -77,8 +77,8 @@ program Preprocessing4UnstructuredGrid
     call UGetDistanceFromSurface(UG)
 
 !テスト出力
-    call UCheckGrid(UG)
-    stop
+    !call UCheckGrid(UG)
+
 !中間ファイルの出力
     call UOutputUnStrGrid(UG,cFileName)
 
