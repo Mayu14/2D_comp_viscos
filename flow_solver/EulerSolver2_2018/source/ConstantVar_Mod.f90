@@ -30,7 +30,7 @@ implicit none
     logical :: invicid = .true.
     double precision, parameter :: Gmin1 = SpecificOfHeatRatio - 1.0d0
     double precision, parameter :: InverseGmin1 = 1.0d0/Gmin1
-
+    complex(kind(0d0)), parameter :: ImaginaryNumber = cmplx(0.0d0, 1.0d0, kind(0d0))
     ! CFL Number
     double precision :: CourantFriedrichsLewyCondition = 1.0d0
 
@@ -49,6 +49,12 @@ implicit none
 
     ! Venkatakrishnan Limiter parameter
     double precision :: VenkatakrishnanParameterK = 0.3d0
+
+    ! Sutherland's Law parameter (for gas)
+    double precision, parameter :: SutherlandTemperature_S = 110.4d0
+    double precision, parameter :: ReferenceTemperature_Tref = 273.15d0
+    double precision, parameter :: ReferenceViscosity_Mu0 = 0.00001716d0
+    double precision, parameter :: SutherlandCoefficient1 = 0.000001458d0 ! Mu0 / (Tref)**(3/2) * (Tref + S)
 
     ! Baldwin-Lomax parameter
     double precision, parameter :: KarmanConstant = 0.4d0
