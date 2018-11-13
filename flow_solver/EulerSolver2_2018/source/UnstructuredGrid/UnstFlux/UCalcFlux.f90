@@ -41,5 +41,9 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         call UUpwindFlux_Dim2(UG,UCE)
     end if
 
+    if(UConf%TurbulenceModel == 1) then
+        !call BaldwinLomax
+    end if
+
 return
 end subroutine UCalcFlux

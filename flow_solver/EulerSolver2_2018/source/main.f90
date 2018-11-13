@@ -342,8 +342,8 @@ contains
         call UOutput(UConf,UG,UCC,iStep)
 
         !max(UG%GM%Bound(2,1)-UG%GM%Bound(1,1),UG%GM%Bound(2,2)-UG%GM%Bound(1,2)/
-        ExactSolResolution = UG%GI%AllCells
-        call PreNumericalEx(ExactSolResolution,NE)
+        !ExactSolResolution = UG%GI%AllCells
+        !call PreNumericalEx(ExactSolResolution,NE)
 
         iStartStep = 1
         UG%GM%Interpolated = 0

@@ -154,20 +154,29 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             UG%IO%iMinNumber = minval(UG%IO%PointNum)
         end if
 
-        if(UConf%UseMUSCL == 1) then
-            read(1,*) cAnnotate !"AverageWid"
+        read(1,*) cAnnotate !"AverageWid"
+        !if(UConf%UseMUSCL == 1) then
             do iCell=1,UG%GI%RealCells
                 read(1,*) UG%GM%AverageWidth(iCell)
             end do
-        end if
+        !end if
 
-        if(UConf%UseOverSet == 1) then
-            read(1,*) cAnnotate !"ConvexHull"
+        read(1,*) cAnnotate !"ConvexHull"
+        if(UG%CH%iTotal /= 0) then
             do iCell=1,UG%CH%iTotal
                 read(1,*) UG%CH%PointNum(iCell)
             end do
         end if
 
+        read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+        do iCell = 1, UG%Tri%Total
+            read(1, *) UG%Tri%Belongs2Wall(iCell)
+        end do
+
+        read(1, *) cAnnotate !"DistanceFromObjectSurface "
+        do iCell = 1, UG%Tri%Total
+            read(1, *) UG%Tri%Distance(iCell)
+        end do
 
         close(1)
 

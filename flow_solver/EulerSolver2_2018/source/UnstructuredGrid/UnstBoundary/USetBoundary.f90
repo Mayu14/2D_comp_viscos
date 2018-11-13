@@ -27,8 +27,11 @@ implicit none
             call InOutFlowBoundary
 
         else if(UG%GM%CellType(iCell,1,1) == 2) then !Wall
-
-            call WallBoundary
+            if(invicid == .true.) then
+                call WallBoundary
+            else
+                call NonSlipBoundary
+            end if
 
         else if(UG%GM%CellType(iCell,1,1) == 3) then !Reflect Wall
             call ReflectBoundary
@@ -140,7 +143,17 @@ contains
     return
     end subroutine WallBoundary
 
+    subroutine NonSlipBoundary ! すべての速度を0にする
+    implicit none
 
+        iAdjacentCell = UG%VC%Cell(iCell,1)
+        iAdjacentEdge = UG%VC%Edge(iCell)
+        UCC%ConservedQuantity(1,iCell,1,1) = UCC%ConservedQuantity(1,iAdjacentCell,1,1) !Grad 0
+        UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)   !Energy Gradient 0 !これ正しいの？
+        UCC%ConservedQuantity(2:iDim+1,iCell,1,1) = 0.0d0
+
+    return
+    end subroutine NonSlipBoundary
 
     subroutine ReflectBoundary
     implicit none
