@@ -81,6 +81,7 @@ implicit none
         integer :: UseMUSCL = 0   !1でRoeの流束差分離法による空間2次精度計算を実行
             integer :: KindLimiter = 1 !1:Venkatakrishnan, 2(未実装)
         integer :: UseOverSet = 0
+        integer :: TurbulenceModel = 0  !0:invicid flow, 1:Baldwin-Lomax(RANS)
     end type
 
     type RoeAverage !Roe平均

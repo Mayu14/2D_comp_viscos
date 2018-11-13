@@ -24,6 +24,10 @@
         allocate(UG%Tri%Edge(UG%Tri%Total,3))  !三角形要素の構成辺番号は(要素数,3)
         allocate(UG%Tri%Cell(UG%Tri%Total,3))  !三角形要素の隣接要素番号は(要素数,3)
         allocate(UG%Tri%Type(UG%Tri%Total)) !三角形要素の種類（与えるべき境界条件（内部境界条件を利用するため））
+
+        allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号    ! only-use Baldwin-Lomax model
+        allocate(UG%Tri%Distance(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号からの界面垂直方向距離 ! only-use Baldwin-Lomax model
+
         allocate(UG%Line%Point(UG%Line%Total,2)) !辺要素の構成点番号は(要素数,2)
         allocate(UG%Line%Cell(UG%Line%Total,2,2)) !辺要素の隣接要素番号は(要素数,2,2) !最後の引数はセル番号と，相手セルから見た界面自身の局所界面番号の切替
         allocate(UG%VC%Cell(UG%GI%RealCells+1:UG%GI%AllCells,2)) !仮想要素の隣接要素番号は(要素数,2) !最後の引数は相手から見た共有辺の辺番号

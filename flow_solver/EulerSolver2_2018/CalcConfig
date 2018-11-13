@@ -17,6 +17,7 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 1 各時間段階ごとにCFL条件を満たす最大の時間刻み幅を用いる:UseVariableTimeWidth
 
 0 0:非定常計算，1:定常計算
+
 0 局所時間刻みを使用:UseLocalTimeStep 
 
 0 2段階有理ルンゲクッタ法による時間2次精度計算:UseRRK2
@@ -43,4 +44,8 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 
 0.1 クーラン数
 
+
+
+0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
+10000 レイノルズ数	
 
