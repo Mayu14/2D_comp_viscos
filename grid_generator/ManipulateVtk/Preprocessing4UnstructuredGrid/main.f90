@@ -117,6 +117,7 @@ contains
         ! for test
         allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells))
         allocate(UG%Tri%Distance(UG%GI%RealCells))
+
     return
     end subroutine AllocVariables_P4U
 
