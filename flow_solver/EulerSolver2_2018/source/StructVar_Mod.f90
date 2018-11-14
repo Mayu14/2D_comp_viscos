@@ -56,6 +56,7 @@ implicit none
     type BoundaryCondition
         double precision, allocatable :: InFlowVariable(:) !流入する物理量のデータ(基礎変数形式)
         double precision, allocatable :: OutFlowVariable(:) !流入する物理量のデータ(基礎変数形式)
+        integer :: iWallTotal = 0   ! 壁条件の界面総数
         type(ViscosityWall), allocatable :: VW(:)
     end type
 

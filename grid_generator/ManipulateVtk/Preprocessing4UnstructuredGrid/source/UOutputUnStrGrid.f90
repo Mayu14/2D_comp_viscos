@@ -167,6 +167,15 @@ subroutine UOutputUnStrGrid(UG,cFileName)
         end do
         write(1,*) ""
 
+! 各壁に対応する
+        write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
+        do iEdge = 1, UG%GM%BC%iWallTotal
+            write(1, *) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+            do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                write(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+            end do
+        end do
+
     close(1)
 return
 end subroutine UOutputUnStrGrid

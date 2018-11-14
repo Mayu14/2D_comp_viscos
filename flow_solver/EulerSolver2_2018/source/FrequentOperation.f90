@@ -282,7 +282,7 @@ contains
     end subroutine GetEdgeIntersectionCoordsWithTriangle
 
     function AbsVector(vector) result(length)
-        double precision, intent(in) :: vector
+        double precision, intent(in) :: vector(:)
         double precision :: length
         length = sqrt(dot_product(vector, vector))
         return
