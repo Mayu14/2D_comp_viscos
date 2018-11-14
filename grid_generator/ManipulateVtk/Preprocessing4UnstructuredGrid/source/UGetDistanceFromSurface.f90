@@ -18,75 +18,73 @@ subroutine UGetDistanceFromSurface(UG)
     implicit none
     type(UnstructuredGrid), intent(inout) :: UG
 
-    integer :: iSurfaceCell
-
-    integer :: iTmpEdge, iCount, iFlag, iSupport
+    integer :: iSurfaceCell ! 物体表面セルの総数 = 物体表面界面の数
     integer, allocatable :: iSurfaceEdge(:) ! surface edge number → edge number
-    integer, allocatable :: iCWEdge(:) ! iSurfaceEdgeを時計周りor反時計周りに格納
-    integer, allocatable :: iCheck(:)
-    integer :: iNextCell, iYoungCell, iCandidateEdge
+    double precision :: tmp_de_num
     double precision, allocatable :: dDistance(:, :)    ! iCell, 1:所属界面，2:距離
 
-    iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells
-    allocate(iSurfaceEdge(iSurfaceCell), iCWEdge(iSurfaceCell))
+    integer :: iTmpWall, iMember, iMem1, iMem2, iTermination ! 仮置き壁番号, メンバセル用ループ変数, メンバセル1, メンバセル2, バブルソートの終端
+    integer, allocatable :: iCount(:)   ! 各壁ごとの入力済みカウント用配列
+    integer :: iFlag = 0    ! 並び替え終了フラグ
 
-    iEdge = 1
+    iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells  ! 物体表面界面数の特定
+    UG%GM%BC%iWallTotal = iSurfaceCell
+
+    allocate(iSurfaceEdge(iSurfaceCell))    ! 物体表面の局所界面番号→大域界面番号
+    allocate(UG%GM%BC%VW(iSurfaceCell))     ! 粘性壁登録変数の動的確保
+
+    iEdge = 1   ! 局所界面番号の初期化
     do iCell = UG%GI%RealCells+1, UG%GI%AllCells    ! すべての仮想セルについて巡回
         if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
             iSurfaceEdge(iEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
+            UG%GM%BC%VW(iEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
             iEdge = iEdge + 1
         end if
     end do
-
     ! この時点で物体表面の辺を順不同に全格納完了
-    ! 物体表面の辺を時計回りor反時計周りに並べ替える
-    iCount = 1
-    iFlag = 1
-    iEdge = iSurfaceEdge(15)
-    iCWEdge(iCount) = iEdge
-
-    do while(iCount < iSurfaceCell)
-        iCount = iCount + 1
-        iPoint = UG%Line%Point(iEdge, iFlag)    ! 探索対象辺の端点
-        iFlag = 0   ! 隣接辺が見つかり次第flag = 1
-
-        do iTmpEdge = 1, iSurfaceCell   ! 物体表面の辺についてループ
-            iAdjacentEdge = iSurfaceEdge(iTmpEdge)  ! 隣接辺候補を格納
-            if(iEdge /= iAdjacentEdge) then   ! 隣接辺候補が探索対象と異なる辺であり、かつ
-                if(iPoint == UG%Line%Point(iAdjacentEdge, 1)) then   ! 端点を共有する辺なら隣接辺であるから
-                    iCWEdge(iCount) = iAdjacentEdge ! iCWEdgeに隣接辺を登録し
-                    iFlag = 2   ! 検索終了フラグを立てる
-                else if (iPoint == UG%Line%Point(iAdjacentEdge, 2)) then
-                    iCWEdge(iCount) = iAdjacentEdge ! iCWEdgeに隣接辺を登録し
-                    iFlag = 1   ! 検索終了フラグを立てる
-                end if
-            end if
-            if(iFlag /= 0) exit
-        end do
-        if(iFlag == 0) then
-            write(6, *) "error", iCount, iEdge, iAdjacentEdge, iPoint
-        end if
-        iEdge = iAdjacentEdge
-    end do
 
     ! すべてのセルについて、所属表面および所属表面からの距離を求める
-    allocate(iCheck(UG%GI%RealCells), dDistance(UG%GI%RealCells, 2))
-    iCount = 0  ! 初期化
-    iCheck = 0  ! 初期化
-    iSupport = 1
+    allocate(dDistance(UG%GI%RealCells, 2))
+    ! UG%GM%BC%VW内部のメンバ総数の初期化
+    call viscosity_wall_initialize(UG%GM%BC, iSurfaceCell)
 
-    do iCell = 1, UG%GI%RealCells
-        if(iCheck(iCell) /= 1) then
-            iCheck(iCell) = 1
-            iCount = iCount + 1
-            call get_minimum_distance_bruteforce(iCell, dDistance(iCell, 1), dDistance(iCell, 2))
-        end if
+    do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
+        call get_minimum_distance_bruteforce(iCell, tmp_de_num, dDistance(iCell, 2))    ! 直線距離が最短となる界面の局所界面番号tmp_de_numと，垂直方向距離dDistance(iCell, 2)を格納
+        dDistance(iCell, 1) = int(tmp_de_num)    ! 局所界面番号であることに注意されたし
+        UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember = UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember + 1 ! 局所界面に所属するセルの総数を+1
+    end do
+    UG%Tri%Belongs2Wall = int(dDistance(:, 1))  ! 三角形要素番号→所属する壁の局所界面番号
+    UG%Tri%Distance = dDistance(:, 2)   ! 三角形要素番号→所属する壁までの距離
+    ! ここまでで各界面に所属するセルの総数が得られたため，壁→セルの検索用配列を用意する
+    call viscosity_wall_malloc(UG%GM%BC, iSurfaceCell)
+    ! 壁にセルを仮登録(順不同)
+    allocate(iCount(iSurfaceCell))  ! 入力済み確認配列
+    iCount = 1
+    do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
+        iTmpWall = UG%Tri%Belongs2Wall(iCell)   ! 所属壁番号を仮置きして
+        UG%GM%BC%VW(iTmpWall)%iMemberCell(iCount(iTmpWall)) = iCell ! 壁番号→所属要素
+        iCount(iTmpWall) = iCount(iTmpWall) + 1 ! 入力した回数を反映する
     end do
 
-    UG%Tri%Belongs2Wall = int(dDistance(:, 1))
-    UG%Tri%Distance = dDistance(:, 2)
-    return
+    ! 距離準並び替えを実施(もうめんどいしバブルソートでええやろ(適当))(そもそも入力がほぼ整列済みである可能性が高いから...(震え声))
+    do iTmpWall = 1, iSurfaceCell   ! すべての界面について
+        iFlag = 0
+        do while(iFlag == 0)
+            iFlag = 1   ! 終了フラグを点灯
+            iTermination = 1
+            do iMember = 1, UG%GM%BC%VW(iTmpWall)%iNumberOfMember - iTermination
+                iMem1 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember)  ! iMember番目のメンバセルのセル番号
+                iMem2 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1)  ! iMember + 1番目のメンバセルのセル番号
+                if (UG%Tri%Distance(iMem1) > UG%Tri%Distance(iMem2)) then   ! iMem1の距離の方がiMem2より遠いならば
+                    iFlag = 0   ! 終了フラグを消灯し
+                    call SwapInteger(UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember), UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1))    ! メンバセルの登録順序を変更
+                end if
+            end do
+            iTermination = iTermination + 1 ! ソート済み領域をソート対象から外す
+        end do
+    end do
 
+    return
 contains
 
     double precision function get_distance_e2c(edge, cell) result(distance)
@@ -113,41 +111,6 @@ contains
         return
     end subroutine get_edge_id
 
-    subroutine get_minimum_distance_e2c(edge_num, de_num, minDistance)
-        integer, intent(in) :: edge_num
-        double precision, intent(out) :: de_num, minDistance
-        integer, allocatable :: e_num(:)
-        integer :: iTmp, iNum
-        double precision, allocatable :: Distance(:)
-        allocate(e_num(3), Distance(3))
-        ! 調べる辺をリストアップ
-        call get_edge_id(edge_num, e_num(1), e_num(2), e_num(3))
-        ! 調べるべき3辺とセル中心の距離を求める
-        do iTmp = 1, 3
-            iCell = UG%Line%Cell(iCWEdge(e_num(iTmp)), 1, 1)  ! 最初のセル
-            Distance(iTmp) = get_distance_e2c(UG%CD%Edge(iCWEdge(e_num(iTmp)), :), UG%CD%Cell(iCell, :))
-        end do
-
-        ! 最小の距離と，辺の所属を返す
-        if (Distance(1) < Distance(2)) then
-            if (Distance(1) < Distance(3)) then
-                iNum = 1
-            else
-                iNum = 3
-            end if
-        else
-            if (Distance(2) < Distance(3)) then
-                iNum = 2
-            else
-                iNum = 3
-            end if
-        end if
-
-        de_num = dble(iNum) !dble(e_num(iNum))
-        minDistance = Distance(iNum)
-        return
-    end subroutine
-
     subroutine get_minimum_distance_bruteforce(iCellNum, de_num, minDistance)
         integer, intent(in) :: iCellNum
         double precision, intent(out) :: de_num, minDistance
@@ -167,5 +130,42 @@ contains
 
         return
     end subroutine get_minimum_distance_bruteforce
+
+    ! メンバ総数の初期化
+    subroutine viscosity_wall_initialize(BC, iWallNumber)
+        type(BoundaryCondition), intent(inout) :: BC
+        integer, intent(in) :: iWallNumber
+
+        do iLoop = 1, iWallNumber
+            BC%VW(iLoop)%iNumberOfMember = 0
+        end do
+
+        return
+    end subroutine viscosity_wall_initialize
+
+    ! メンバセル登録用配列の動的確保
+    subroutine viscosity_wall_malloc(BC, iWallNumber)
+        type(BoundaryCondition), intent(inout) :: BC
+        integer, intent(in) :: iWallNumber
+
+        do iLoop = 1, iWallNumber
+            allocate(BC%VW(iLoop)%iMemberCell(BC%VW(iLoop)%iNumberOfMember))
+        end do
+
+        return
+    end subroutine viscosity_wall_malloc
+
+    subroutine check_sort
+        do iTmpWall = 1, iSurfaceCell
+            write(6, *) UG%GM%BC%VW(iTmpWall)%iNumberOfMember
+            do iMember = 1, UG%GM%BC%VW(iTmpWall)%iNumberOfMember
+                write(6, *) UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember), UG%Tri%Distance(UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember))
+            end do
+            write(6,*) ""
+            write(6,*) ""
+            write(6,*) ""
+        end do
+    return
+    end subroutine check_sort
 
 end subroutine UGetDistanceFromSurface
