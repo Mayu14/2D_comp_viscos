@@ -36,6 +36,7 @@ implicit none
 
     ! Physical Property Value
     double precision :: ReynoldsNumber = 0.0d0
+    double precision :: MachNumber = 1.0d0
     double precision, parameter :: LaminarPrandtlNumber = 0.72d0
     double precision, parameter :: TurbulentPrandtlNumber = 0.9d0
 

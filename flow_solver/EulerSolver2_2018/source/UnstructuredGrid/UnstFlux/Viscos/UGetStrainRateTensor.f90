@@ -35,8 +35,8 @@ subroutine UGetStrainRateTensor(UG,UCC)
                          & + alpha3 * UCC%PrimitiveVariable(1 + iVelDir, iAdjC3, 1, 1) &
                          & - alpha0 * UCC%PrimitiveVariable(1 + iVelDir, iCell, 1, 1)) / totalLength
 
-            UCC%StrainRateTensor(iVelDir, 1) = real(tmpDerivetive)
-            UCC%StrainRateTensor(iVelDir, 2) = aimag(tmpDerivetive)
+            UCC%StrainRateTensor(iVelDir, 1, iCell, 1, 1) = real(tmpDerivetive)
+            UCC%StrainRateTensor(iVelDir, 2, iCell, 1, 1) = aimag(tmpDerivetive)
         end do
     end do
 
@@ -63,9 +63,9 @@ contains
         iAdjE2 = UG%Tri%Edge(iCell, 2)
         iAdjE3 = UG%Tri%Edge(iCell, 3)
 
-        call CheckBackOrFront(iCell, iAdjC1, iDirectionW1, iDirectionN1)
-        call CheckBackOrFront(iCell, iAdjC2, iDirectionW2, iDirectionN2)
-        call CheckBackOrFront(iCell, iAdjC3, iDirectionW3, iDirectionN3)
+        call CheckBackOrFront(iCell, iAdjC1, iDirectionW1, DirectionN1)
+        call CheckBackOrFront(iCell, iAdjC2, iDirectionW2, DirectionN2)
+        call CheckBackOrFront(iCell, iAdjC3, iDirectionW3, DirectionN3)
 
         length1 = AbsVector(UG%GM%Width(iCell, 1, :)) + AbsVector(UG%GM%Width(iAdjC1, UG%Line%Cell(iAdjE1, iDirectionW1, 2), :))
         length2 = AbsVector(UG%GM%Width(iCell, 2, :)) + AbsVector(UG%GM%Width(iAdjC2, UG%Line%Cell(iAdjE1, iDirectionW1, 2), :))
@@ -110,6 +110,6 @@ contains
             & -(((len3) * (len2 ** 2) * (len1 ** 3)) + ((len3 ** 3) * (len2 ** 2) * (len1)) + ((len3 ** 3) * (len2) * (len1 ** 2)))
 
         return
-    function GetDeterminantOfA
+    end function GetDeterminantOfA
 
 end subroutine UGetStrainRateTensor

@@ -108,6 +108,8 @@
             allocate(UCC%StrainRateTensor(iDim, iDim, UG%GI%RealCells, 1, 1))    !uvw, xyz, icell, 1, 1
             allocate(UCC%LaminarViscosity(UG%GI%RealCells, 1, 1))
             allocate(UCC%TurbulenceViscosity(UG%GI%RealCells, 1, 1))
+
+            allocate(UG%GM%BC%VW(UG%VC%Total - UG%GI%OutlineCells))
         end if
         return
     end subroutine UAllocVariables
