@@ -15,6 +15,7 @@ subroutine UReadInflowOutflowCondition(UG)
 use StructVar_Mod
 use LoopVar_Mod
 use ConstantVar_Mod, Gamma => SpecificOfHeatRatio
+use FrequentOperation
 implicit none
     type(UnstructuredGrid), intent(inout) :: UG
     character(len=64) :: cFileName
@@ -29,6 +30,7 @@ implicit none
         do iLoop=1,5
             read(1,*) cAnnotate, UG%GM%BC%InFlowVariable(iLoop)
         end do
+            MachNumber = AbsVector(UG%GM%BC%InFlowVariable(2:4))
             UG%GM%BC%InFlowVariable(5) = UG%GM%BC%InFlowVariable(1)/Gamma !無次元化
             !UG%GM%BC%InFlowVariable(5) = &
             !&   UG%GM%BC%InFlowVariable(5)/Gmin1 + 0.5d0 * UG%GM%BC%InFlowVariable(1) &

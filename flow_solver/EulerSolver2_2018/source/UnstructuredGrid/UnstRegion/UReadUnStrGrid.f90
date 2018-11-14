@@ -178,6 +178,18 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             read(1, *) UG%Tri%Distance(iCell)
         end do
 
+        read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
+        if(UConf%TurbulenceModel /= 0) then
+            do iEdge = 1, UG%GM%BC%iWallTotal
+                read(1,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
+                do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    read(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                end do
+            end do
+        end if
+
+
         close(1)
 
         UG%GM%Bound(1,1) = minval(UG%CD%Point(:,1),1)
