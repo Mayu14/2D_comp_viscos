@@ -24,7 +24,6 @@ subroutine UGetStrainRateTensor(UG,UCC)
     double precision :: totalLength
     integer :: iVelDir
 
-
     iDim = UG%GM%Dimension
     do iCell = 1, UG%GI%RealCells
         call GetWeightOfCenterDifferenceScheme(iCell, iAdjC1, iAdjC2, iAdjC3, alpha1, alpha2, alpha3, totalLength)
@@ -38,10 +37,13 @@ subroutine UGetStrainRateTensor(UG,UCC)
             UCC%StrainRateTensor(iVelDir, 1, iCell, 1, 1) = real(tmpDerivetive)
             UCC%StrainRateTensor(iVelDir, 2, iCell, 1, 1) = aimag(tmpDerivetive)
         end do
+
+        UCC%AbsoluteVortisity(iCell, 1, 1) = abs(UCC%StrainRateTensor(1, 2, iCell, 1, 1) &
+                                             & - UCC%StrainRateTensor(2, 1, iCell, 1, 1))
+
     end do
 
-
-return
+    return
 contains
     subroutine GetWeightOfCenterDifferenceScheme(iCell, iAdjC1, iAdjC2, iAdjC3, alpha1, alpha2, alpha3, totalLength)
         implicit none
