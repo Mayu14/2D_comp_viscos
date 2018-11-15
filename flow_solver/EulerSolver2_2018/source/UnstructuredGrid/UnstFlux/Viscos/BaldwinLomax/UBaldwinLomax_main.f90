@@ -23,24 +23,24 @@ subroutine UBaldwinLomax_main(UConf,UG,UCC,UCE)
 
 ! RANS common
     ! Calc Laminar Viscosity from Sutherland's Law
+    call UGetLaminarViscosity(UConf, UG, UCC)
 
     ! Calc Strain Rate Tensor
+    call UGetStrainRateTensor(UG, UCC)
+
     ! Calc absolute vortisity   each cell
+
+
 ! Baldwin-Lomax
     ! loop of wall
         ! get density, shear_stress, and viscosity on wall
         ! get y_plus & mixing_length
-
-
-
-
 
     ! get y_max, F_max, and u_dif on each wall boundary respectively
     ! 壁番号→壁に所属する要素の総数，近い順に整列済みでセル番号の検索が可能，高速巡回が可能なように内部では配列にしておく
     ! Calc y_cross of Baldwin-Lomax on each wall boundary respectively
 
     ! Calc Turbulance Viscosity of Baldwin-Lomax Model
-
 
 return
 contains
