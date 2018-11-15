@@ -27,6 +27,7 @@ implicit none
         double precision, allocatable :: TurbulenceViscosity(:, :, :)
         ! double precision, allocatable :: Temparature(:, :, :, :)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
+        double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
 
         double precision, allocatable :: GradientOfVariable(:,:,:,:,:) !各セルにおける基礎変数勾配(xyz方向)(変数番号，x座標,y座標,z座標,xyz方向),非構造：(変数番号，セル番号，1,1,xyz)
         double precision, allocatable :: VariationOfVariable(:,:,:,:,:) !各セルの隣接セルにおける基礎変数勾配の最大値(1で最大,2で最小)(1or2,変数,x,y,z)
