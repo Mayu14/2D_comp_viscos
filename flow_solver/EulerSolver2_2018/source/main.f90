@@ -527,6 +527,7 @@ contains
     integer :: ExactSolResolution
     type(MoveGrid) :: MG
     type(MotionWait) :: MW
+    type(AeroCharacteristics) :: UAC
     allocate(SW%LapTime(3,7))
 
         call UReadUnStrGrid(UConf,UCC,UCE,UG)
@@ -544,6 +545,7 @@ contains
         write(6,*) CoreNumberOfCPU,"Parallel"
         UCC%iEndFlag = 0
         allocate(MW%StepDistance(1:3))
+        allocate(AC%coefficient(2, int(IterationNumber/OutputInterval))))
         do iStep = iStartStep, IterationNumber
 
             if(UConf%UseLocalTimeStep == 0) then
@@ -572,6 +574,7 @@ contains
                 else
                     iStep4Plot = iStep / OutputInterval
                     call UOutput(UConf,UG,UCC,iStep4Plot)
+                    call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
                 end if
             end if
             if(UCC%iEndFlag == 2) exit
@@ -581,7 +584,7 @@ contains
         end do
 
         call UOutput(UConf,UG,UCC,iStep)
-
+        call UOutput_Characteristics(UAC)
     return
     end subroutine SteadUnstructEuler
 

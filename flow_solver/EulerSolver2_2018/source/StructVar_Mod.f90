@@ -460,9 +460,14 @@ implicit none
         double precision :: ErrorNorm
     end type
 
+    type AeroCharacteristics
+        double precision, allocatable :: coefficient(:, :)  !1:lift or drag(1or2), 2:timestep
+    end type
+
     type NumericalExperiment
         type(TranslationTest) :: TT
         type(ShockTubeTest) :: STT
+        !type(AeroCharacteristics) :: AC
     end type
 
 
