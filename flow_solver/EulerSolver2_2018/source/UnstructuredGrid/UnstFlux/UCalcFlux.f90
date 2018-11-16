@@ -42,7 +42,7 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
     end if
 
     if(UConf%TurbulenceModel == 1) then
-        !call BaldwinLomax
+        call UBaldwinLomax_main(UConf, UG, UCC)
     end if
 
 return
