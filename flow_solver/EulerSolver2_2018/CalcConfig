@@ -30,7 +30,7 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 
 0.001 最大時間刻み幅
 
-100 出力間隔
+1 出力間隔
 
 1000000 反復回数
 
@@ -46,6 +46,6 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 
 
 
-0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
+1	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
 10000 レイノルズ数	
 
