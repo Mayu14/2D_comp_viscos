@@ -31,10 +31,10 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC)
     ! Edgeで計算すべきということに気付いたため修正開始
 ! RANS common
     ! Calc Laminar Viscosity from Sutherland's Law
-    call UGetLaminarViscosity(UConf, UG, UCC)
+    call UGetLaminarViscosity_mk2(UConf, UG, UCC)
 
     ! Calc Strain Rate Tensor & AbsoluteVortisity
-    call UGetStrainRateTensor(UG, UCC)
+    call UGetStrainRateTensor_edge(UG, UCC)
 
 ! Baldwin-Lomax
     ! loop of wall
