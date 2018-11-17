@@ -74,6 +74,9 @@
 		<Unit filename="source/UGetDistanceFromSurface.f90">
 			<Option weight="2" />
 		</Unit>
+		<Unit filename="source/UGetDistanceFromSurface_Edge.f90">
+			<Option weight="2" />
+		</Unit>
 		<Unit filename="source/UMakeConvexHull.f90">
 			<Option weight="2" />
 		</Unit>
