@@ -418,6 +418,7 @@
 			<Option weight="2" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_edge.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/URansCommon.f90" />
 		<Unit filename="source/UnstructuredGrid/UnstInitialize/UReadInitialCondition.f90">
 			<Option weight="1" />
 		</Unit>
@@ -459,6 +460,7 @@
 			<Option weight="1" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstTools/UCalcAeroCharacteristics.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstTools/UCentralDifferencePrepareAroundEdge.f90" />
 		<Unit filename="source/main.f90">
 			<Option weight="2" />
 		</Unit>

@@ -28,14 +28,10 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
 
     if(UConf%UseMUSCL == 1) then
         do iEdge = 1, UG%GI%Edges
-            iFrontCell = UG%Line%Cell(iEdge, 1, 1)
-            iFrontLocalEdge = UG%Line%Cell(iEdge, 1, 2)
-            iBackCell =  UG%Line%Cell(iEdge, 2, 1)
-            iBackLocalEdge =UG%Line%Cell(iEdge, 2, 2)
+            call UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
             velocity_dif(1:2) = UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) - UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge) ! 表 - 裏
 
-            length = AbsVector(UG%GM%Width(iFrontCell, iFrontLocalEdge, :)) + AbsVector(UG%GM%Width(iBackCell, iBackLocalEdge))
             UCE%StrainRateTensor(:, 1, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 1)
             UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * (-UG%GM%Normal(iEdge, 2))
             UCE%AbsoluteVortisity(iEdge, 1, 1) = abs(UCE%StrainRateTensor(1, 2, iEdge, 1, 1) &
@@ -44,14 +40,10 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
 
     else
         do iEdge = 1, UG%GI%Edges
-            iFrontCell = UG%Line%Cell(iEdge, 1, 1)
-            iFrontLocalEdge = UG%Line%Cell(iEdge, 1, 2)
-            iBackCell =  UG%Line%Cell(iEdge, 2, 1)
-            iBackLocalEdge =UG%Line%Cell(iEdge, 2, 2)
+            call UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
             velocity_dif(1:2) = UCC%PrimitiveVariable(2:3, iFrontCell, 1, 1) - UCC%PrimitiveVariable(2:3, iBackCell, 1, 1) ! 表 - 裏
 
-            length = AbsVector(UG%GM%Width(iFrontCell, iFrontLocalEdge, :)) + AbsVector(UG%GM%Width(iBackCell, iBackLocalEdge))
             UCE%StrainRateTensor(:, 1, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 1)
             UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * (-UG%GM%Normal(iEdge, 2))
             UCE%AbsoluteVortisity(iEdge, 1, 1) = abs(UCE%StrainRateTensor(1, 2, iEdge, 1, 1) &
