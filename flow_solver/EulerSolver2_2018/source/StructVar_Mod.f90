@@ -46,12 +46,19 @@ implicit none
         double precision, allocatable :: RebuildQunatity(:,:,:,:,:) !セル界面上での再構築物理量(構成は同じ)
         double precision, allocatable :: NormalGradient(:,:,:,:,:) !セル界面における法線方向の基礎変数勾配
         double precision, allocatable :: TmpLimiterFunction(:,:,:,:,:) !セル界面における流束制限関数(全界面の最小値をセル中心の流束制限関数として採用する)
+
+        double precision, allocatable :: LaminarViscosity(:, :, :)
+        double precision, allocatable :: TurbulenceViscosity(:, :, :)
+        double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
+        double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
     end type
 
     type ViscosityWall
-        integer :: iNumberOfMember ! その壁に所属する要素の総数
         integer :: iGlobalEdge  ! 物体表面の局所境界辺番号→大域辺番号を返すやつ
+        integer :: iNumberOfMember ! その壁に所属する要素の総数
+        integer :: iNumberOfMemberEdge ! その壁に所属する界面の総数
         integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
+        integer, allocatable :: iMemberEdge(:)  ! その壁に所属する界面の界面番号を壁から近い順に格納(距離情報は界面側が保有)
     end type
 
     type BoundaryCondition
@@ -130,6 +137,8 @@ implicit none
         integer :: Total !辺要素の総数
         integer, allocatable :: Point(:,:) !(辺要素番号，局所点番号)で全体点番号を返すLine%Point(iEdge,iLocalPoint)=iPoint
         integer, allocatable :: Cell(:,:,:) !辺要素の隣接要素番号は(要素数,2,2) !最後の引数はセル番号と，相手セルから見た界面自身の局所界面番号の切替
+        integer, allocatable :: Belongs2Wall(:)   !(大域界面番号)で最も近い壁境界の辺番号を返す
+        double precision, allocatable :: Distance(:)    !(大域界面番号)で最も近い壁境界からの距離を返す
     end type
 
     type Triangle !三角形要素データ格納用
