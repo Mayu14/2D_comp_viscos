@@ -167,6 +167,19 @@ subroutine UOutputUnStrGrid(UG,cFileName)
         end do
         write(1,*) ""
 
+! 界面から最も近い物体表面
+        write(1, *) "NearestSurfaceBoundaryEdgeNum4Edge ", UG%Line%Total
+        do iEdge = 1, UG%Line%Total
+            write(1, *) UG%Line%Belongs2Wall(iEdge)
+        end do
+
+! 物体表面からの距離
+        write(1, *) "DistanceFromObjectSurface4Edge ", UG%Line%Total
+        do iEdge = 1, UG%Line%Total
+            write(1, *) UG%Line%Distance(iEdge)
+        end do
+        write(1,*) ""
+
 ! 各壁に対応する
         write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
         do iEdge = 1, UG%GM%BC%iWallTotal
