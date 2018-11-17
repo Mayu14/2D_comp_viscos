@@ -178,6 +178,16 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             read(1, *) UG%Tri%Distance(iCell)
         end do
 
+        read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+        do iEdge = 1, UG%Line%Total
+            read(1, *) UG%Line%Belongs2Wall(iEdge)
+        end do
+
+        read(1, *) cAnnotate !"DistanceFromObjectSurface4Edge "
+        do iEdge = 1, UG%Line%Total
+            read(1, *) UG%Line%Distance(iEdge)
+        end do
+
         read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
         if(UConf%TurbulenceModel /= 0) then
             do iEdge = 1, UG%GM%BC%iWallTotal
