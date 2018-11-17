@@ -27,6 +27,8 @@
 
         allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号    ! only-use Baldwin-Lomax model
         allocate(UG%Tri%Distance(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号からの界面垂直方向距離 ! only-use Baldwin-Lomax model
+        allocate(UG%Line%Belongs2Wall(UG%GI%Edges))
+        allocate(UG%Line%Distance(UG%GI%Edges))
 
         allocate(UG%Line%Point(UG%Line%Total,2)) !辺要素の構成点番号は(要素数,2)
         allocate(UG%Line%Cell(UG%Line%Total,2,2)) !辺要素の隣接要素番号は(要素数,2,2) !最後の引数はセル番号と，相手セルから見た界面自身の局所界面番号の切替
