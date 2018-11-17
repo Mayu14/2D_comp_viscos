@@ -187,6 +187,15 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                     read(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
                 end do
             end do
+
+            read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                read(1,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                allocate(UG%GM%BC%VW(iLoop)%iMemberEdge(UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge))
+                do iEdge = 1, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                    read(1,*) UG%GM%BC%VW(iLoop)%iMemberCell(iEdge)
+                end do
+            end do
         end if
 
 
