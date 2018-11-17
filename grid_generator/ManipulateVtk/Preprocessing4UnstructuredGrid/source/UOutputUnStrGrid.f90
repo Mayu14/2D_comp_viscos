@@ -176,6 +176,14 @@ subroutine UOutputUnStrGrid(UG,cFileName)
             end do
         end do
 
+        write(1,*) "Wall2Edge_data ", UG%GM%BC%iWallTotal
+        do iLoop = 1, UG%GM%BC%iWallTotal
+            write(1, *) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+            do iEdge = 1,  UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                write(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
+            end do
+        end do
     close(1)
+
 return
 end subroutine UOutputUnStrGrid

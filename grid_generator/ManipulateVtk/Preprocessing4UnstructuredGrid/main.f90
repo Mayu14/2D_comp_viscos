@@ -118,6 +118,8 @@ contains
         allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells))
         allocate(UG%Tri%Distance(UG%GI%RealCells))
 
+        allocate(UG%Line%Belongs2Wall(UG%GI%Edges))
+        allocate(UG%Line%Distance(UG%GI%RealCells))
     return
     end subroutine AllocVariables_P4U
 

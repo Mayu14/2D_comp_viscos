@@ -28,7 +28,7 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC)
     integer :: iY_max_num!, y_max_num(:)    ! y_maxを与えるCellNum(壁ごとの局所番号)
     double precision, allocatable :: mixing_length(:)   ! iWallごとmixing_length
 
-    !allocate(y_max_num(UG%GM%BC%iWallTotal))
+    ! Edgeで計算すべきということに気付いたため修正開始
 ! RANS common
     ! Calc Laminar Viscosity from Sutherland's Law
     call UGetLaminarViscosity(UConf, UG, UCC)
