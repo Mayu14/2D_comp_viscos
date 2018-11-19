@@ -42,6 +42,8 @@ program EulerEQ1D
         call SteadUnstructEuler(Conf)
     end if
 
+    else if(Conf%SwitchProgram == 5) then
+        ! call JobParallelNS(Conf)
     stop
 
 contains

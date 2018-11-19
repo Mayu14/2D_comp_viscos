@@ -38,7 +38,11 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         call UUpwindFlux_Dim2(UG,UCE,UCC)
 
     else if(UConf%UseMUSCL == 1) then
-        call UUpwindFlux_Dim2(UG,UCE)
+        if(UConf%UseFluxMethod == 0) then
+            call UUpwindFlux_Dim2(UG,UCE)
+        else if (UCOnf%UseFluxMethod == 1) then
+            call USlau2(UG, UCE, UCC)
+        end if
     end if
 
     if(UConf%TurbulenceModel == 1) then
