@@ -29,11 +29,14 @@ subroutine OUnstEuler(iStep,OConf,UG,UCC,UCE,SW)
 
 
 !$ SW%LapTime(1,2) = omp_get_wtime()
+
             call UCalcFlux(OConf,UG,UCC,UCE)
 !$ SW%LapTime(2,2) = omp_get_wtime()
 
 !$ SW%LapTime(1,3) = omp_get_wtime()
+
             call UTimeIntegral(OConf,UG,UCE,UCC,iStep)
+
 !$ SW%LapTime(2,3) = omp_get_wtime()
 !$ SW%LapTime(3,2) = SW%LapTime(3,2) + SW%LapTime(2,2) - SW%LapTime(1,2)
 !$ SW%LapTime(3,3) = SW%LapTime(3,3) + SW%LapTime(2,3) - SW%LapTime(1,3)

@@ -24,7 +24,12 @@ implicit none
     integer :: iSwitch
 
     if(UConf%UseVariableTime == 1) then
-        call UCalcTimeWidth(UG,UCC)
+        if(UConf%UseJobParallel == 0) then
+            call UCalcTimeWidth(UG,UCC)
+        else
+            call JPUCalcTimeWidth(UG, UCC)
+        end if
+
         if(UConf%UseLocalTimeStep == 1) then
             iTC => iCell
         else
