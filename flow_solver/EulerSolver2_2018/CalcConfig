@@ -18,7 +18,7 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 
 0 0:非定常計算，1:定常計算
 
-0 局所時間刻みを使用:UseLocalTimeStep 
+1 局所時間刻みを使用:UseLocalTimeStep 
 
 0 2段階有理ルンゲクッタ法による時間2次精度計算:UseRRK2
 

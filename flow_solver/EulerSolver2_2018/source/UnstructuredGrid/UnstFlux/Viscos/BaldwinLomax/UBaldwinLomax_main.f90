@@ -35,7 +35,6 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
     ! Calc Strain Rate Tensor & AbsoluteVortisity
-
     call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
 
 ! Baldwin-Lomax
@@ -43,7 +42,6 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     ! loop of wall
     do iWall=1, UG%GM%BC%iWallTotal
         ! get density, shear_stress, and viscosity on wall
-
         call GetWallVariable(UG, UCC, UCE, iWall, Wall_Density, Wall_Viscosity, Wall_dudy)
 
         allocate(mixing_length(UG%GM%BC%VW(iWall)%iNumberOfMemberEdge))
@@ -53,11 +51,17 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
         end do
 
         ! get y_max, F_max, and u_dif on each wall boundary respectively
+
         call CalcYmaxAndFmax_Udif(UCE%RebuildQunatity, mixing_length, UCE%AbsoluteVortisity(:, 1, 1), UG%GM%BC%VW(iWall), iY_max_num, Fmax, Udif)
     ! 壁番号→壁に所属する要素の総数，近い順に整列済みでセル番号の検索が可能，高速巡回が可能なように内部では配列にしておく
 
         yMax = UG%Line%Distance(UG%GM%BC%VW(iWall)%iMemberEdge(iY_max_num))
-        Fwake = min(yMax * Fmax, Cwk * yMax * (Udif ** 2) / Fmax)
+        if(Fmax == 0.0d0) then
+            Fwake = 0.0d0
+        else
+            Fwake = min(yMax * Fmax, Cwk * yMax * (Udif ** 2) / Fmax)
+        end if
+
 
         ! Calc Turbulance Viscosity of Baldwin-Lomax Model
         call GetTurbulenceViscosity(UG%GM%BC%VW(iWall), mixing_length**2, Fwake, yMax, UG%Line%Distance(:), UCE)
@@ -117,6 +121,7 @@ contains
             tmpUmax = max(tmpU, tmpUmax)
             tmpUmin = min(tmpU, tmpUmin)
         end do
+
         Udif = tmpUmax - tmpUmin
 
         return
@@ -137,8 +142,14 @@ contains
         iFlag = 1
         do iMem = 1, VW%iNumberOfMemberEdge
             iEdgeNum = VW%iMemberEdge(iMem)
-            Fkleb = 1.0d0 / (1.0d0 + 5.5d0 * (Ckleb * Distance(iEdgeNum) / yMax) ** 6)
+            if(yMax == 0.0d0) then
+                Fkleb = 0.0d0
+            else
+                Fkleb = 1.0d0 / (1.0d0 + 5.5d0 * (Ckleb * Distance(iEdgeNum) / yMax) ** 6)
+            end if
+
             Mu_out = ClauserConstant * Ccp * Fwake * Fkleb
+
             if(iFlag == 1) then
                 Mu_in = (0.5d0 * (UCE%RebuildQunatity(1, 1, 1, 2, iEdgeNum) + UCE%RebuildQunatity(1, 1, 1, 1, iEdgeNum))) &
                         &    * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)

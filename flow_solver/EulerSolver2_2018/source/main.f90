@@ -44,7 +44,7 @@ program EulerEQ1D
 
     else if(Conf%SwitchProgram == 5) then
         Conf%UseJobParallel = 1
-        call JobParallelNS(Conf)
+        call JobParallelControler(Conf)
     end if
     stop
 

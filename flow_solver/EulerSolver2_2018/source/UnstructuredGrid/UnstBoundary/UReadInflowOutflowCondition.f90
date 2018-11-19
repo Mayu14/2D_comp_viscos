@@ -49,9 +49,22 @@ implicit none
 
             !UG%GM%BC%OutFlowVariable(2:4) = UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量
     close(1)
-!write(6,*) (UG%GM%BC%InFlowVariable(iLoop),iLoop=1,5)
-!write(6,*) (UG%GM%BC%OutFlowVariable(iLoop),iLoop=1,5)
-!stop
 
-return
+    call ChangeAngle(angle, UG%GM%BC%InFlowVariable(2:4))
+    call ChangeAngle(angle, UG%GM%BC%OutFlowVariable(2:4))
+
+    return
+
+contains
+
+    subroutine ChangeAngle(Angle, Velocity)
+        implicit none
+        double precision, intent(in) :: AttackAngle
+        double precision, intent(inout) :: Velocity(:)
+
+        Velocity(1) = Velocity(1) * cos(AttackAngle) - Velocity(2) * sin(AttackAngle)
+        Velocity(2) = Velocity(1) * sin(AttackAngle) + Velocity(2) * cos(AttackAngle)
+        return
+    end subroutine ChangeAngle
+
 end subroutine UReadInflowOutflowCondition

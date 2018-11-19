@@ -82,4 +82,4 @@
     end do
 
     return
-end subroutine UUpwindFlux_Dim2
+end subroutine JPUUpwindFlux_Dim2
