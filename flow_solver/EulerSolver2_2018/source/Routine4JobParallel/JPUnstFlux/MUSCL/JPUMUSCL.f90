@@ -19,7 +19,6 @@ subroutine JPUMUSCL(UConf,UG,UCC,UCE)
     type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
 
-    !if(UConf%UseOverSet == 0) then
 !基礎変数型式への変換
         call UConserve2Primitive(UG,UCC)
     !end if

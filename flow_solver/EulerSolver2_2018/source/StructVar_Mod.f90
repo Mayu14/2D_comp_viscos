@@ -107,6 +107,8 @@ implicit none
         integer :: TurbulenceModel = 0  !0:invicid flow, 1:Baldwin-Lomax(RANS)
         integer :: UseSutherlandLaw = 0    !0:not use, 1:use
         integer :: UseJobParallel = 0   ! 0:not use, 1:use
+        double precision :: dAttackAngle    ! 迎角(JobParallel用)
+        character(len=32) :: cGridName  ! mayuファイル名(JobParallel用)
     end type
 
     type RoeAverage !Roe平均

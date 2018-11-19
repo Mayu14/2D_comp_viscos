@@ -32,10 +32,15 @@ ContactDetermination.f90 \
 GJKAlgorithm.f90 
 
 SRCS_f90d6 = \
+JPUGetLimiter.f90 \
+JPUMUSCL.f90 \
+JPUGetQuantityOnSurface.f90 
+
+SRCS_f90d7 = \
 UCentralDifferencePrepareAroundEdge.f90 \
 UCalcAeroCharacteristics.f90 
 
-SRCS_f90d7 = \
+SRCS_f90d8 = \
 NumericalExperimentation.f90 \
 PreNumericalEx.f90 \
 OutputExact.f90 \
@@ -46,14 +51,14 @@ UOutputExact.f90 \
 NumericalEx_mod.f90 \
 CalcResidual.f90 
 
-SRCS_f90d8 = \
+SRCS_f90d9 = \
 OutputGnuPlot.f90 \
 MergeGnuPlot.f90 \
 Output4Resume.f90 \
 OutputResult.f90 \
 OutputResultWithVC.f90 
 
-SRCS_f90d9 = \
+SRCS_f90d10 = \
 ComputeInfluenceArea.f90 \
 AllocCC4MB.f90 \
 VelocityCorrection.f90 \
@@ -61,39 +66,43 @@ InfluenceSeparationMain.f90 \
 InitializeInfluenceSeparation.f90 \
 ModifyQuantity.f90 
 
-SRCS_f90d10 = \
+SRCS_f90d11 = \
 OUnstEuler.f90 \
 OStructEuler.f90 
 
-SRCS_f90d11 = \
+SRCS_f90d12 = \
 UnstTestVTK.f90 \
 UAllocVariables.f90 \
 UReadUnStrGrid.f90 \
 URegistCellType.f90 \
 UTestAlloc.f90 
 
-SRCS_f90d12 = \
+SRCS_f90d13 = \
 GetLimiter.f90 \
 GetQuantityOnSurface.f90 \
 MUSCL.f90 \
 GetGradient.f90 
 
-SRCS_f90d13 = \
+SRCS_f90d14 = \
 ResisterGlobal2Local.f90 \
 SimpleSearchDonorInLocalGrid.f90 \
 RegistVar_Mod4OMP.f90 
 
-SRCS_f90d14 = \
+SRCS_f90d15 = \
 ErrorMessage.f90 
 
-SRCS_f90d15 = \
+SRCS_f90d16 = \
+JPUCalcTimeWidth.f90 \
+JPUCheckCFL4FixedTime.f90 
+
+SRCS_f90d17 = \
 CheckCFL4FixedTime.f90 \
 TimeIntegral.f90 \
 ExplicitEulerMethod.f90 \
 CalcTimeWidth.f90 \
 RationalRungeKutta2.f90 
 
-SRCS_f90d16 = \
+SRCS_f90d18 = \
 InterpolationOfLocalGrid.f90 \
 OTransferInflowMomentum.f90 \
 ControlLocalInterpolation.f90 \
@@ -101,13 +110,13 @@ ShockConvergeLocalInterpolateMain.f90 \
 OTransferOutflowMomentum.f90 \
 InterpolationOfGlobalGrid.f90 
 
-SRCS_f90d17 = \
+SRCS_f90d19 = \
 MOutput.f90 \
 MOutputSTRUCT.f90 \
 MOutputForInfluenceArea.f90 \
 MOutputForObject.f90 
 
-SRCS_f90d18 = \
+SRCS_f90d20 = \
 CalcFlux.f90 \
 UpwindFlux_Dim1.f90 \
 GetRoeAverage.f90 \
@@ -115,14 +124,19 @@ UpwindFlux_Dim2.f90 \
 GetEigenMatrix.f90 \
 GetGeneralFlux.f90 
 
-SRCS_f90d19 = \
+SRCS_f90d21 = \
+JPUFindVariation.f90 \
+JPUGetNormalGradient.f90 \
+JPUVenkatakrishnan.f90 
+
+SRCS_f90d22 = \
 AllocVariables.f90 \
 ShockTubeIC.f90 \
 ReadInitialCondition.f90 \
 AllocTest.f90 \
 Initialize.f90 
 
-SRCS_f90d20 = \
+SRCS_f90d23 = \
 OMakeTransformationMatrix.f90 \
 OComputeNextCoords.f90 \
 OMoveCheck.f90 \
@@ -132,25 +146,25 @@ ORefreshStoreDisplacement.f90 \
 OCalculateMotionWait.f90 \
 OGetDisplacement.f90 
 
-SRCS_f90d21 = \
+SRCS_f90d24 = \
 UShockTubeIC.f90 \
 UReadInitialCondition.f90 \
 UnstInitialize.f90 
 
-SRCS_f90d22 = \
+SRCS_f90d25 = \
 GetNormalGradient.f90 \
 FindVariation.f90 \
 Venkatakrishnan.f90 
 
-SRCS_f90d23 = \
+SRCS_f90d26 = \
 TestBoundary.f90 \
 SetBoundary.f90 
 
-SRCS_f90d24 = \
+SRCS_f90d27 = \
 Primitive2Conserve.f90 \
 Conserve2Primitive.f90 
 
-SRCS_f90d25 = \
+SRCS_f90d28 = \
 AllocVariables4MultipleOverset.f90 \
 DataFabrication4FirstStep.f90 \
 MShockTubeIC.f90 \
@@ -158,35 +172,38 @@ MInitialize.f90 \
 OMakeRelativeCoordinate.f90 \
 OMakeAuxiliaryStructuredGrid.f90 
 
-SRCS_f90d26 = \
+SRCS_f90d29 = \
 ReadConfigulation.f90 
 
-SRCS_f90d27 = \
+SRCS_f90d30 = \
+JPUUpwindFlux_Dim2.f90 
+
+SRCS_f90d31 = \
 UGetStrainRateTensor_edge.f90 \
 UGetStrainRateTensor.f90 \
 UGetLaminarViscosity_mk2.f90 \
 URansCommon.f90 
 
-SRCS_f90d28 = \
+SRCS_f90d32 = \
 StructVar_Mod.f90 \
 LoopVar_Mod.f90 \
 FrequentOperation.f90 \
 ConstantVar_Mod.f90 \
 main.f90 
 
-SRCS_f90d29 = \
+SRCS_f90d33 = \
 UGetLimiter.f90 \
 UGetGradient.f90 \
 UGetQuantityOnSurface.f90 \
 UMUSCL.f90 
 
-SRCS_f90d30 = \
+SRCS_f90d34 = \
 USlau2.f90 
 
-SRCS_f90d31 = \
+SRCS_f90d35 = \
 Register4InterpolationMain.f90 
 
-SRCS_f90d32 = \
+SRCS_f90d36 = \
 CalcVolume.f90 \
 CalcEdgeArea.f90 \
 SetRegion.f90 \
@@ -195,37 +212,40 @@ SetRegionData.f90 \
 ReadRegionData.f90 \
 TestRegionData.f90 
 
-SRCS_f90d33 = \
+SRCS_f90d37 = \
 ExcludeImperfectOverlapped.f90 \
 ReRegistBoundaryCell.f90 \
 RegisterIntoGlobal.f90 
 
-SRCS_f90d34 = \
+SRCS_f90d38 = \
 FreeMemory.f90 \
 MemoryReleaseOfDE.f90 
 
-SRCS_f90d35 = \
+SRCS_f90d39 = \
 UFindVariation.f90 \
 UGetNormalGradient.f90 \
 UVenkatakrishnan.f90 \
 UVenkatakrishnanVarMod4OMP.f90 
 
-SRCS_f90d36 = \
+SRCS_f90d40 = \
 UConserve2Primitive.f90 \
 UPrimitive2Conserve.f90 \
 JobParallelNS.f90 
 
-SRCS_f90d37 = \
+SRCS_f90d41 = \
 UExplicitEulerMethod.f90 \
 UTimeIntegral.f90 \
 UCheckCFL4FixedTime.f90 \
 UCalcTimeWidth.f90 
 
-SRCS_f90d38 = \
+SRCS_f90d42 = \
 UOutput.f90 \
 UOutput_Characteristics.f90 
 
-SRCS_f90d39 = \
+SRCS_f90d43 = \
+JobParallelControler.f90 
+
+SRCS_f90d44 = \
 GetGlobalNumber2D.f90 
 
 OBJS_f90d1 = \
@@ -258,10 +278,15 @@ ContactDetermination.o \
 GJKAlgorithm.o 
 
 OBJS_f90d6 = \
+JPUGetLimiter.o \
+JPUMUSCL.o \
+JPUGetQuantityOnSurface.o 
+
+OBJS_f90d7 = \
 UCentralDifferencePrepareAroundEdge.o \
 UCalcAeroCharacteristics.o 
 
-OBJS_f90d7 = \
+OBJS_f90d8 = \
 NumericalExperimentation.o \
 PreNumericalEx.o \
 OutputExact.o \
@@ -272,14 +297,14 @@ UOutputExact.o \
 NumericalEx_mod.o \
 CalcResidual.o 
 
-OBJS_f90d8 = \
+OBJS_f90d9 = \
 OutputGnuPlot.o \
 MergeGnuPlot.o \
 Output4Resume.o \
 OutputResult.o \
 OutputResultWithVC.o 
 
-OBJS_f90d9 = \
+OBJS_f90d10 = \
 ComputeInfluenceArea.o \
 AllocCC4MB.o \
 VelocityCorrection.o \
@@ -287,39 +312,43 @@ InfluenceSeparationMain.o \
 InitializeInfluenceSeparation.o \
 ModifyQuantity.o 
 
-OBJS_f90d10 = \
+OBJS_f90d11 = \
 OUnstEuler.o \
 OStructEuler.o 
 
-OBJS_f90d11 = \
+OBJS_f90d12 = \
 UnstTestVTK.o \
 UAllocVariables.o \
 UReadUnStrGrid.o \
 URegistCellType.o \
 UTestAlloc.o 
 
-OBJS_f90d12 = \
+OBJS_f90d13 = \
 GetLimiter.o \
 GetQuantityOnSurface.o \
 MUSCL.o \
 GetGradient.o 
 
-OBJS_f90d13 = \
+OBJS_f90d14 = \
 ResisterGlobal2Local.o \
 SimpleSearchDonorInLocalGrid.o \
 RegistVar_Mod4OMP.o 
 
-OBJS_f90d14 = \
+OBJS_f90d15 = \
 ErrorMessage.o 
 
-OBJS_f90d15 = \
+OBJS_f90d16 = \
+JPUCalcTimeWidth.o \
+JPUCheckCFL4FixedTime.o 
+
+OBJS_f90d17 = \
 CheckCFL4FixedTime.o \
 TimeIntegral.o \
 ExplicitEulerMethod.o \
 CalcTimeWidth.o \
 RationalRungeKutta2.o 
 
-OBJS_f90d16 = \
+OBJS_f90d18 = \
 InterpolationOfLocalGrid.o \
 OTransferInflowMomentum.o \
 ControlLocalInterpolation.o \
@@ -327,13 +356,13 @@ ShockConvergeLocalInterpolateMain.o \
 OTransferOutflowMomentum.o \
 InterpolationOfGlobalGrid.o 
 
-OBJS_f90d17 = \
+OBJS_f90d19 = \
 MOutput.o \
 MOutputSTRUCT.o \
 MOutputForInfluenceArea.o \
 MOutputForObject.o 
 
-OBJS_f90d18 = \
+OBJS_f90d20 = \
 CalcFlux.o \
 UpwindFlux_Dim1.o \
 GetRoeAverage.o \
@@ -341,14 +370,19 @@ UpwindFlux_Dim2.o \
 GetEigenMatrix.o \
 GetGeneralFlux.o 
 
-OBJS_f90d19 = \
+OBJS_f90d21 = \
+JPUFindVariation.o \
+JPUGetNormalGradient.o \
+JPUVenkatakrishnan.o 
+
+OBJS_f90d22 = \
 AllocVariables.o \
 ShockTubeIC.o \
 ReadInitialCondition.o \
 AllocTest.o \
 Initialize.o 
 
-OBJS_f90d20 = \
+OBJS_f90d23 = \
 OMakeTransformationMatrix.o \
 OComputeNextCoords.o \
 OMoveCheck.o \
@@ -358,25 +392,25 @@ ORefreshStoreDisplacement.o \
 OCalculateMotionWait.o \
 OGetDisplacement.o 
 
-OBJS_f90d21 = \
+OBJS_f90d24 = \
 UShockTubeIC.o \
 UReadInitialCondition.o \
 UnstInitialize.o 
 
-OBJS_f90d22 = \
+OBJS_f90d25 = \
 GetNormalGradient.o \
 FindVariation.o \
 Venkatakrishnan.o 
 
-OBJS_f90d23 = \
+OBJS_f90d26 = \
 TestBoundary.o \
 SetBoundary.o 
 
-OBJS_f90d24 = \
+OBJS_f90d27 = \
 Primitive2Conserve.o \
 Conserve2Primitive.o 
 
-OBJS_f90d25 = \
+OBJS_f90d28 = \
 AllocVariables4MultipleOverset.o \
 DataFabrication4FirstStep.o \
 MShockTubeIC.o \
@@ -384,35 +418,38 @@ MInitialize.o \
 OMakeRelativeCoordinate.o \
 OMakeAuxiliaryStructuredGrid.o 
 
-OBJS_f90d26 = \
+OBJS_f90d29 = \
 ReadConfigulation.o 
 
-OBJS_f90d27 = \
+OBJS_f90d30 = \
+JPUUpwindFlux_Dim2.o 
+
+OBJS_f90d31 = \
 UGetStrainRateTensor_edge.o \
 UGetStrainRateTensor.o \
 UGetLaminarViscosity_mk2.o \
 URansCommon.o 
 
-OBJS_f90d28 = \
+OBJS_f90d32 = \
 StructVar_Mod.o \
 LoopVar_Mod.o \
 FrequentOperation.o \
 ConstantVar_Mod.o \
 main.o 
 
-OBJS_f90d29 = \
+OBJS_f90d33 = \
 UGetLimiter.o \
 UGetGradient.o \
 UGetQuantityOnSurface.o \
 UMUSCL.o 
 
-OBJS_f90d30 = \
+OBJS_f90d34 = \
 USlau2.o 
 
-OBJS_f90d31 = \
+OBJS_f90d35 = \
 Register4InterpolationMain.o 
 
-OBJS_f90d32 = \
+OBJS_f90d36 = \
 CalcVolume.o \
 CalcEdgeArea.o \
 SetRegion.o \
@@ -421,37 +458,40 @@ SetRegionData.o \
 ReadRegionData.o \
 TestRegionData.o 
 
-OBJS_f90d33 = \
+OBJS_f90d37 = \
 ExcludeImperfectOverlapped.o \
 ReRegistBoundaryCell.o \
 RegisterIntoGlobal.o 
 
-OBJS_f90d34 = \
+OBJS_f90d38 = \
 FreeMemory.o \
 MemoryReleaseOfDE.o 
 
-OBJS_f90d35 = \
+OBJS_f90d39 = \
 UFindVariation.o \
 UGetNormalGradient.o \
 UVenkatakrishnan.o \
 UVenkatakrishnanVarMod4OMP.o 
 
-OBJS_f90d36 = \
+OBJS_f90d40 = \
 UConserve2Primitive.o \
 UPrimitive2Conserve.o \
 JobParallelNS.o 
 
-OBJS_f90d37 = \
+OBJS_f90d41 = \
 UExplicitEulerMethod.o \
 UTimeIntegral.o \
 UCheckCFL4FixedTime.o \
 UCalcTimeWidth.o 
 
-OBJS_f90d38 = \
+OBJS_f90d42 = \
 UOutput.o \
 UOutput_Characteristics.o 
 
-OBJS_f90d39 = \
+OBJS_f90d43 = \
+JobParallelControler.o 
+
+OBJS_f90d44 = \
 GetGlobalNumber2D.o 
 
 SRC_DIR_f90d1 = source/UnstructuredGrid/UnstFlux/Viscos/BaldwinLomax/
@@ -464,73 +504,83 @@ SRC_DIR_f90d4 = source/MultipleOverSetMethod/MainProcess/Registration/Local/Loca
 
 SRC_DIR_f90d5 = source/MultipleOverSetMethod/MainProcess/ContactDetermination/
 
-SRC_DIR_f90d6 = source/UnstructuredGrid/UnstTools/
+SRC_DIR_f90d6 = source/Routine4JobParallel/JPUnstFlux/MUSCL/
 
-SRC_DIR_f90d7 = source/NumericalExperimentation/
+SRC_DIR_f90d7 = source/UnstructuredGrid/UnstTools/
 
-SRC_DIR_f90d8 = source/StructuredGrid/Output/
+SRC_DIR_f90d8 = source/NumericalExperimentation/
 
-SRC_DIR_f90d9 = source/MultipleOverSetMethod/MainProcess/InfluenceSeparation/
+SRC_DIR_f90d9 = source/StructuredGrid/Output/
 
-SRC_DIR_f90d10 = source/MultipleOverSetMethod/Calculation/
+SRC_DIR_f90d10 = source/MultipleOverSetMethod/MainProcess/InfluenceSeparation/
 
-SRC_DIR_f90d11 = source/UnstructuredGrid/UnstRegion/
+SRC_DIR_f90d11 = source/MultipleOverSetMethod/Calculation/
 
-SRC_DIR_f90d12 = source/StructuredGrid/Flux/MUSCL/
+SRC_DIR_f90d12 = source/UnstructuredGrid/UnstRegion/
 
-SRC_DIR_f90d13 = source/MultipleOverSetMethod/MainProcess/Registration/Local/
+SRC_DIR_f90d13 = source/StructuredGrid/Flux/MUSCL/
 
-SRC_DIR_f90d14 = source/StructuredGrid/Error/
+SRC_DIR_f90d14 = source/MultipleOverSetMethod/MainProcess/Registration/Local/
 
-SRC_DIR_f90d15 = source/StructuredGrid/TimeIntegral/
+SRC_DIR_f90d15 = source/StructuredGrid/Error/
 
-SRC_DIR_f90d16 = source/MultipleOverSetMethod/MainProcess/Interpolation/
+SRC_DIR_f90d16 = source/Routine4JobParallel/JPUnstTimeIntegral/
 
-SRC_DIR_f90d17 = source/MultipleOverSetMethod/Output/
+SRC_DIR_f90d17 = source/StructuredGrid/TimeIntegral/
 
-SRC_DIR_f90d18 = source/StructuredGrid/Flux/
+SRC_DIR_f90d18 = source/MultipleOverSetMethod/MainProcess/Interpolation/
 
-SRC_DIR_f90d19 = source/StructuredGrid/Initialize/
+SRC_DIR_f90d19 = source/MultipleOverSetMethod/Output/
 
-SRC_DIR_f90d20 = source/MultipleOverSetMethod/MainProcess/MoveGrid/
+SRC_DIR_f90d20 = source/StructuredGrid/Flux/
 
-SRC_DIR_f90d21 = source/UnstructuredGrid/UnstInitialize/
+SRC_DIR_f90d21 = source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/
 
-SRC_DIR_f90d22 = source/StructuredGrid/Flux/MUSCL/Venkatakrishnan/
+SRC_DIR_f90d22 = source/StructuredGrid/Initialize/
 
-SRC_DIR_f90d23 = source/StructuredGrid/Boundary/
+SRC_DIR_f90d23 = source/MultipleOverSetMethod/MainProcess/MoveGrid/
 
-SRC_DIR_f90d24 = source/StructuredGrid/
+SRC_DIR_f90d24 = source/UnstructuredGrid/UnstInitialize/
 
-SRC_DIR_f90d25 = source/MultipleOverSetMethod/PreProcess/
+SRC_DIR_f90d25 = source/StructuredGrid/Flux/MUSCL/Venkatakrishnan/
 
-SRC_DIR_f90d26 = source/StructuredGrid/Config/
+SRC_DIR_f90d26 = source/StructuredGrid/Boundary/
 
-SRC_DIR_f90d27 = source/UnstructuredGrid/UnstFlux/Viscos/
+SRC_DIR_f90d27 = source/StructuredGrid/
 
-SRC_DIR_f90d28 = source/
+SRC_DIR_f90d28 = source/MultipleOverSetMethod/PreProcess/
 
-SRC_DIR_f90d29 = source/UnstructuredGrid/UnstFlux/MUSCL/
+SRC_DIR_f90d29 = source/StructuredGrid/Config/
 
-SRC_DIR_f90d30 = source/UnstructuredGrid/UnstFlux/Invicid/
+SRC_DIR_f90d30 = source/Routine4JobParallel/JPUnstFlux/
 
-SRC_DIR_f90d31 = source/MultipleOverSetMethod/MainProcess/Registration/
+SRC_DIR_f90d31 = source/UnstructuredGrid/UnstFlux/Viscos/
 
-SRC_DIR_f90d32 = source/StructuredGrid/Region/
+SRC_DIR_f90d32 = source/
 
-SRC_DIR_f90d33 = source/MultipleOverSetMethod/MainProcess/Registration/Global/
+SRC_DIR_f90d33 = source/UnstructuredGrid/UnstFlux/MUSCL/
 
-SRC_DIR_f90d34 = source/MultipleOverSetMethod/FreeMemory/
+SRC_DIR_f90d34 = source/UnstructuredGrid/UnstFlux/Invicid/
 
-SRC_DIR_f90d35 = source/UnstructuredGrid/UnstFlux/MUSCL/Venkatakrishnan/
+SRC_DIR_f90d35 = source/MultipleOverSetMethod/MainProcess/Registration/
 
-SRC_DIR_f90d36 = source/UnstructuredGrid/
+SRC_DIR_f90d36 = source/StructuredGrid/Region/
 
-SRC_DIR_f90d37 = source/UnstructuredGrid/UnstTimeIntegral/
+SRC_DIR_f90d37 = source/MultipleOverSetMethod/MainProcess/Registration/Global/
 
-SRC_DIR_f90d38 = source/UnstructuredGrid/UnstOutput/
+SRC_DIR_f90d38 = source/MultipleOverSetMethod/FreeMemory/
 
-SRC_DIR_f90d39 = source/MultipleOverSetMethod/MainProcess/CutCellAndMergeCell/
+SRC_DIR_f90d39 = source/UnstructuredGrid/UnstFlux/MUSCL/Venkatakrishnan/
+
+SRC_DIR_f90d40 = source/UnstructuredGrid/
+
+SRC_DIR_f90d41 = source/UnstructuredGrid/UnstTimeIntegral/
+
+SRC_DIR_f90d42 = source/UnstructuredGrid/UnstOutput/
+
+SRC_DIR_f90d43 = source/Routine4JobParallel/
+
+SRC_DIR_f90d44 = source/MultipleOverSetMethod/MainProcess/CutCellAndMergeCell/
 OBJS_DIR = obj/Debug/source/UnstructuredGrid/UnstFlux/Viscos/BaldwinLomax/
 EXE_DIR = bin/Debug/
 
@@ -542,12 +592,12 @@ CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-sta
 LFLAGS = -qopenmp -s
 LIBS = 
 
-VPATH = $(SRC_DIR_f90d1):$(OBJS_DIR):$(SRC_DIR_f90d2):$(OBJS_DIR):$(SRC_DIR_f90d3):$(OBJS_DIR):$(SRC_DIR_f90d4):$(OBJS_DIR):$(SRC_DIR_f90d5):$(OBJS_DIR):$(SRC_DIR_f90d6):$(OBJS_DIR):$(SRC_DIR_f90d7):$(OBJS_DIR):$(SRC_DIR_f90d8):$(OBJS_DIR):$(SRC_DIR_f90d9):$(OBJS_DIR):$(SRC_DIR_f90d10):$(OBJS_DIR):$(SRC_DIR_f90d11):$(OBJS_DIR):$(SRC_DIR_f90d12):$(OBJS_DIR):$(SRC_DIR_f90d13):$(OBJS_DIR):$(SRC_DIR_f90d14):$(OBJS_DIR):$(SRC_DIR_f90d15):$(OBJS_DIR):$(SRC_DIR_f90d16):$(OBJS_DIR):$(SRC_DIR_f90d17):$(OBJS_DIR):$(SRC_DIR_f90d18):$(OBJS_DIR):$(SRC_DIR_f90d19):$(OBJS_DIR):$(SRC_DIR_f90d20):$(OBJS_DIR):$(SRC_DIR_f90d21):$(OBJS_DIR):$(SRC_DIR_f90d22):$(OBJS_DIR):$(SRC_DIR_f90d23):$(OBJS_DIR):$(SRC_DIR_f90d24):$(OBJS_DIR):$(SRC_DIR_f90d25):$(OBJS_DIR):$(SRC_DIR_f90d26):$(OBJS_DIR):$(SRC_DIR_f90d27):$(OBJS_DIR):$(SRC_DIR_f90d28):$(OBJS_DIR):$(SRC_DIR_f90d29):$(OBJS_DIR):$(SRC_DIR_f90d30):$(OBJS_DIR):$(SRC_DIR_f90d31):$(OBJS_DIR):$(SRC_DIR_f90d32):$(OBJS_DIR):$(SRC_DIR_f90d33):$(OBJS_DIR):$(SRC_DIR_f90d34):$(OBJS_DIR):$(SRC_DIR_f90d35):$(OBJS_DIR):$(SRC_DIR_f90d36):$(OBJS_DIR):$(SRC_DIR_f90d37):$(OBJS_DIR):$(SRC_DIR_f90d38):$(OBJS_DIR):$(SRC_DIR_f90d39):$(OBJS_DIR)
-OBJS = $(addprefix $(OBJS_DIR), $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39))
+VPATH = $(SRC_DIR_f90d1):$(OBJS_DIR):$(SRC_DIR_f90d2):$(OBJS_DIR):$(SRC_DIR_f90d3):$(OBJS_DIR):$(SRC_DIR_f90d4):$(OBJS_DIR):$(SRC_DIR_f90d5):$(OBJS_DIR):$(SRC_DIR_f90d6):$(OBJS_DIR):$(SRC_DIR_f90d7):$(OBJS_DIR):$(SRC_DIR_f90d8):$(OBJS_DIR):$(SRC_DIR_f90d9):$(OBJS_DIR):$(SRC_DIR_f90d10):$(OBJS_DIR):$(SRC_DIR_f90d11):$(OBJS_DIR):$(SRC_DIR_f90d12):$(OBJS_DIR):$(SRC_DIR_f90d13):$(OBJS_DIR):$(SRC_DIR_f90d14):$(OBJS_DIR):$(SRC_DIR_f90d15):$(OBJS_DIR):$(SRC_DIR_f90d16):$(OBJS_DIR):$(SRC_DIR_f90d17):$(OBJS_DIR):$(SRC_DIR_f90d18):$(OBJS_DIR):$(SRC_DIR_f90d19):$(OBJS_DIR):$(SRC_DIR_f90d20):$(OBJS_DIR):$(SRC_DIR_f90d21):$(OBJS_DIR):$(SRC_DIR_f90d22):$(OBJS_DIR):$(SRC_DIR_f90d23):$(OBJS_DIR):$(SRC_DIR_f90d24):$(OBJS_DIR):$(SRC_DIR_f90d25):$(OBJS_DIR):$(SRC_DIR_f90d26):$(OBJS_DIR):$(SRC_DIR_f90d27):$(OBJS_DIR):$(SRC_DIR_f90d28):$(OBJS_DIR):$(SRC_DIR_f90d29):$(OBJS_DIR):$(SRC_DIR_f90d30):$(OBJS_DIR):$(SRC_DIR_f90d31):$(OBJS_DIR):$(SRC_DIR_f90d32):$(OBJS_DIR):$(SRC_DIR_f90d33):$(OBJS_DIR):$(SRC_DIR_f90d34):$(OBJS_DIR):$(SRC_DIR_f90d35):$(OBJS_DIR):$(SRC_DIR_f90d36):$(OBJS_DIR):$(SRC_DIR_f90d37):$(OBJS_DIR):$(SRC_DIR_f90d38):$(OBJS_DIR):$(SRC_DIR_f90d39):$(OBJS_DIR):$(SRC_DIR_f90d40):$(OBJS_DIR):$(SRC_DIR_f90d41):$(OBJS_DIR):$(SRC_DIR_f90d42):$(OBJS_DIR):$(SRC_DIR_f90d43):$(OBJS_DIR):$(SRC_DIR_f90d44):$(OBJS_DIR)
+OBJS = $(addprefix $(OBJS_DIR), $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39) $(OBJS_f90d40) $(OBJS_f90d41) $(OBJS_f90d42) $(OBJS_f90d43) $(OBJS_f90d44))
 
 all : $(EXE)
 
-$(EXE) : $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39)
+$(EXE) : $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39) $(OBJS_f90d40) $(OBJS_f90d41) $(OBJS_f90d42) $(OBJS_f90d43) $(OBJS_f90d44)
 	@mkdir -p $(EXE_DIR)
 	$(LD) -o $(EXE_DIR)$(EXE) $(OBJS) $(LFLAGS) $(LIBS)
 
@@ -707,6 +757,26 @@ $(OBJS_f90d39):
 	@mkdir -p $(OBJS_DIR)
 	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d39)$(@:.o=.f90) -o $(OBJS_DIR)$@
 
+$(OBJS_f90d40):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d40)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d41):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d41)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d42):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d42)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d43):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d43)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d44):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d44)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
 clean :
 	rm -f $(OBJS_DIR)*.*
 	rm -f $(EXE_DIR)$(EXE)
@@ -733,6 +803,11 @@ AddSharedDonorCellNumber.o: \
 ApploximateCircleMethod.o: \
     ApploximateCircleMethod.f90 \
     StructVar_Mod.o
+JPUGetLimiter.o: \
+    JPUGetLimiter.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
 UCentralDifferencePrepareAroundEdge.o: \
     UCentralDifferencePrepareAroundEdge.f90 \
     FrequentOperation.o \
@@ -776,6 +851,11 @@ ResisterGlobal2Local.o: \
     StructVar_Mod.o
 ErrorMessage.o: \
     ErrorMessage.f90
+JPUCalcTimeWidth.o: \
+    JPUCalcTimeWidth.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
 CheckCFL4FixedTime.o: \
     CheckCFL4FixedTime.f90 \
     ConstantVar_Mod.o \
@@ -798,6 +878,11 @@ CalcFlux.o: \
     CalcFlux.f90 \
     LoopVar_Mod.o \
     StructVar_Mod.o
+JPUFindVariation.o: \
+    JPUFindVariation.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
 AllocVariables.o: \
     AllocVariables.f90 \
     ConstantVar_Mod.o \
@@ -863,6 +948,11 @@ ReadConfigulation.o: \
     ReadConfigulation.f90 \
     ConstantVar_Mod.o \
     StructVar_Mod.o
+JPUUpwindFlux_Dim2.o: \
+    JPUUpwindFlux_Dim2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
 ExactSol_mod.o: \
     ExactSol_mod.f90
 TimeIntegral.o: \
@@ -895,6 +985,9 @@ UGetStrainRateTensor_edge.o: \
     StructVar_Mod.o
 StructVar_Mod.o: \
     StructVar_Mod.f90
+JPUMUSCL.o: \
+    JPUMUSCL.f90 \
+    StructVar_Mod.o
 DataFabrication4FirstStep.o: \
     DataFabrication4FirstStep.f90 \
     LoopVar_Mod.o \
@@ -937,6 +1030,11 @@ SetBoundary.o: \
     StructVar_Mod.o
 LoopVar_Mod.o: \
     LoopVar_Mod.f90
+JPUGetNormalGradient.o: \
+    JPUGetNormalGradient.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
 MShockTubeIC.o: \
     MShockTubeIC.f90 \
     ConstantVar_Mod.o \
@@ -965,6 +1063,10 @@ Conserve2Primitive.o: \
     StructVar_Mod.o
 BoundaryBoxMethod.o: \
     BoundaryBoxMethod.f90 \
+    StructVar_Mod.o
+JPUCheckCFL4FixedTime.o: \
+    JPUCheckCFL4FixedTime.f90 \
+    ConstantVar_Mod.o \
     StructVar_Mod.o
 MInitialize.o: \
     MInitialize.f90 \
@@ -1018,6 +1120,11 @@ ExcludeImperfectOverlapped.o: \
     StructVar_Mod.o
 FreeMemory.o: \
     FreeMemory.f90 \
+    StructVar_Mod.o
+JPUGetQuantityOnSurface.o: \
+    JPUGetQuantityOnSurface.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
     StructVar_Mod.o
 NumericalEx_mod.o: \
     NumericalEx_mod.f90 \
@@ -1221,6 +1328,10 @@ ExplicitEulerMethod.o: \
 ORefreshStoreDisplacement.o: \
     ORefreshStoreDisplacement.f90 \
     StructVar_Mod.o
+JobParallelControler.o: \
+    JobParallelControler.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
 UTestAlloc.o: \
     UTestAlloc.f90 \
     LoopVar_Mod.o \
@@ -1294,6 +1405,11 @@ OCalculateMotionWait.o: \
     OCalculateMotionWait.f90 \
     ConstantVar_Mod.o \
     StructVar_Mod.o
+JPUVenkatakrishnan.o: \
+    JPUVenkatakrishnan.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
 TestRegionData.o: \
     TestRegionData.f90 \
     LoopVar_Mod.o \

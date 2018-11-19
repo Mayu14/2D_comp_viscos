@@ -23,12 +23,12 @@ subroutine JobParallelNS(UConf)
     type(AeroCharacteristics) :: UAC
 
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
-    !call UTestAlloc(UCC,UCE,UG)
     call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
     iStep = 0
     call UReadInflowOutflowCondition(UG)
     call UOutput(UConf,UG,UCC,iStep)
 
+    allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
     iStartStep = 1
     do iStep = iStartStep, IterationNumber
 
@@ -68,9 +68,7 @@ contains
         type(CellEdge), intent(inout) :: UCE
 
             call USetBoundary(UG,UCC)
-
             call UCalcFlux(OConf,UG,UCC,UCE)
-
             call UTimeIntegral(OConf,UG,UCE,UCC,iStep)
 
         return

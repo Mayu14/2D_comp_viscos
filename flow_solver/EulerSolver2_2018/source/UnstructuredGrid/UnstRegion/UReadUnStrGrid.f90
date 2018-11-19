@@ -25,6 +25,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
+    if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName
     cFileName = "tri_sample.mayu"
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
