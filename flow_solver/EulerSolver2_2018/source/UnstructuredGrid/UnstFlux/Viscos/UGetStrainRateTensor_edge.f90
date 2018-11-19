@@ -28,7 +28,7 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
 
     if(UConf%UseMUSCL == 1) then
         do iEdge = 1, UG%GI%Edges
-            call UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
+            call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
             velocity_dif(1:2) = UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) - UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge) ! 表 - 裏
 
@@ -40,7 +40,7 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
 
     else
         do iEdge = 1, UG%GI%Edges
-            call UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
+            call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
             velocity_dif(1:2) = UCC%PrimitiveVariable(2:3, iFrontCell, 1, 1) - UCC%PrimitiveVariable(2:3, iBackCell, 1, 1) ! 表 - 裏
 

@@ -11,10 +11,11 @@
 !	Update:
 !	Other:
 !***********************************/
-subroutine UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
+subroutine UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
     use StructVar_Mod
     use FrequentOperation
     type(UnstructuredGrid), intent(in) :: UG
+    integer, intent(in) :: iEdge
     integer, intent(out) :: iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge
     double precision, intent(out) :: length
 
@@ -22,7 +23,7 @@ subroutine UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, 
         iFrontLocalEdge = UG%Line%Cell(iEdge, 1, 2)
         iBackCell =  UG%Line%Cell(iEdge, 2, 1)
         iBackLocalEdge =UG%Line%Cell(iEdge, 2, 2)
-        length = AbsVector(UG%GM%Width(iFrontCell, iFrontLocalEdge, :)) + AbsVector(UG%GM%Width(iBackCell, iBackLocalEdge))
+        length = AbsVector(UG%GM%Width(iFrontCell, iFrontLocalEdge, :)) + AbsVector(UG%GM%Width(iBackCell, iBackLocalEdge, :))
 
     return
 end subroutine UCentralDifferencePrepareAroundFace

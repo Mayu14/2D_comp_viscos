@@ -40,13 +40,13 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
     else if(UConf%UseMUSCL == 1) then
         if(UConf%UseFluxMethod == 0) then
             call UUpwindFlux_Dim2(UG,UCE)
-        else if (UCOnf%UseFluxMethod == 1) then
-            call USlau2(UG, UCE, UCC)
+        else if (UConf%UseFluxMethod == 1) then
+            call USlau2(UConf, UG, UCC, UCE)
         end if
     end if
 
     if(UConf%TurbulenceModel == 1) then
-        call UBaldwinLomax_main(UConf, UG, UCC)
+        call UBaldwinLomax_main(UConf, UG, UCC, UCE)
     end if
 
 return

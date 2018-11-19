@@ -1,4 +1,4 @@
-subroutine UOutput_Characteristics(UAC)
+subroutine UOutput_Characteristics(UConf, UAC)
     use StructVar_Mod
     implicit none
     type(Configulation), intent(in) :: UConf

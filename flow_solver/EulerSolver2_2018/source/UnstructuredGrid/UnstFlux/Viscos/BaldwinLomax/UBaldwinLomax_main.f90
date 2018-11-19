@@ -22,7 +22,7 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
     integer :: iWall, iMember    ! for Loop
-    !double precision :: front_tangent_velocity, back_tangent_velocity, vertical_distance
+
     double precision :: Wall_Density, Wall_Viscosity, Wall_dudy ! dudy is vertical direction gradient of tangential velocity on wall
     double precision :: yMax, Fmax, Udif, Fwake
     double precision, parameter :: Cwk = 0.25d0
@@ -35,13 +35,16 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
     ! Calc Strain Rate Tensor & AbsoluteVortisity
+
     call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
 
 ! Baldwin-Lomax
+
     ! loop of wall
     do iWall=1, UG%GM%BC%iWallTotal
         ! get density, shear_stress, and viscosity on wall
-        call GetWallVariable(UG, UCC, iWall, Wall_Density, Wall_Viscosity, Wall_dudy)
+
+        call GetWallVariable(UG, UCC, UCE, iWall, Wall_Density, Wall_Viscosity, Wall_dudy)
 
         allocate(mixing_length(UG%GM%BC%VW(iWall)%iNumberOfMemberEdge))
         ! get y_plus & mixing_length
@@ -64,24 +67,25 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     return
 contains
 
-    double precision function set_y_plus(rho_w, mu_w, dudy_w, y) result(y_plus)
+    function set_y_plus(rho_w, mu_w, dudy_w, y) result(y_plus)
         implicit none
         double precision, intent(in) :: rho_w, mu_w, dudy_w, y   ! 壁表面での密度，せん断応力，粘性係数，壁からの垂直距離
-        !double precision :: y_plus
-
+        double precision :: y_plus
+        ! スタック積み上げ過ぎ(関数深すぎ)て使えない説
         y_plus = sqrt(rho_w / mu_w * dudy_w) * y ! 定義確認!
 
         return
     end function set_y_plus
 
 
-    double precision function set_mixing_length(rho_w, mu_w, dudy_w, y) result (l_mix)
+    function set_mixing_length(rho_w, mu_w, dudy_w, y) result (l_mix)
         implicit none
         double precision, intent(in) :: rho_w, dudy_w, mu_w, y   ! 壁表面での密度，せん断応力，粘性係数，壁からの垂直距離
+        double precision :: l_mix
         double precision :: A_plus = 26.0d0
 
         l_mix = KC * y * (1.0d0 - exp(-set_y_plus(rho_w, mu_w, dudy_w, y) / A_plus))
-
+        !l_mix = KC * y * (1.0d0 - exp(-(sqrt(rho_w / mu_w * dudy_w) * y) / A_plus))
         return
     end function set_mixing_length
 
@@ -103,7 +107,7 @@ contains
         do iMem = 1, VW%iNumberOfMemberEdge
             iEdgeNum = VW%iMemberEdge(iMem)
             tmpF = Vortisity(VW%iMemberEdge(iMem)) * l_mix(iMem) / KC
-            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum))　+ AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum))) ! 界面裏表速度の単純平均値にしている(不安定になるかも)
+            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum)) + AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum)))  ! 界面裏表速度の単純平均値にしている(不安定になるかも)
 
             if(tmpF > Fmax) then
                 Fmax = tmpF

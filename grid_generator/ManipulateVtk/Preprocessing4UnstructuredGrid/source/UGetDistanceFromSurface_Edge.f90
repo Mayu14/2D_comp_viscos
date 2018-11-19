@@ -19,7 +19,7 @@ subroutine UGetDistanceFromSurface_Edge(UG)
     type(UnstructuredGrid), intent(inout) :: UG
 
     integer :: iSurfaceCell ! 物体表面セルの総数 = 物体表面界面の数
-    integer, allocatable :: iSurfaceEdge(:) ! surface edge number → edge number
+
     double precision :: tmp_de_num
     double precision, allocatable :: dDistance(:, :)    ! iCell, 1:所属界面，2:距離
 
@@ -106,17 +106,18 @@ contains
         double precision :: tmpDistance
         integer :: iTmpEdge
         minDistance = 100000
+
         do iTmpEdge = 1, iSurfaceCell   ! 物体表面の界面すべてについて
-            tmpDistance = get_distance_e2c(UG%CD%Edge(iSurfaceEdge(iTmpEdge), :), UG%CD%Edge(iEdgeNum, :))  ! 与えられた辺との距離を計算
+            tmpDistance = get_distance_e2c(UG%CD%Edge(UG%GM%BC%VW(iTmpEdge)%iGlobalEdge, :), UG%CD%Edge(iEdgeNum, :))  ! 与えられた辺との距離を計算
             if(tmpDistance < minDistance) then  ! 最小値が更新されたときのみ
                 minDistance = tmpDistance
                 de_num = dble(iTmpEdge)
             end if
         end do
 
-        minDistance = AbsCrossProduct(UG%CD%Edge(iEdgeNum, :) - UG%CD%Edge(iSurfaceEdge(int(de_num)), :),&
-                                    & UG%CD%Point(UG%Line%Point(iSurfaceEdge(int(de_num)), 1), :) - UG%CD%Point(UG%Line%Point(iSurfaceEdge(int(de_num)), 2), :)) &
-                                    & / UG%GM%Area(iSurfaceEdge(int(de_num)))    ! 物体表面の辺と，界面中心からセル中心を結ぶ辺とがなす平行四辺形の高さを求める
+        minDistance = AbsCrossProduct(UG%CD%Edge(iEdgeNum, :) - UG%CD%Edge(UG%GM%BC%VW(int(de_num))%iGlobalEdge, :),&
+                                    & UG%CD%Point(UG%Line%Point(UG%GM%BC%VW(int(de_num))%iGlobalEdge, 1), :) - UG%CD%Point(UG%Line%Point(UG%GM%BC%VW(int(de_num))%iGlobalEdge, 2), :)) &
+                                    & / UG%GM%Area(UG%GM%BC%VW(int(de_num))%iGlobalEdge)    ! 物体表面の辺と，界面中心からセル中心を結ぶ辺とがなす平行四辺形の高さを求める
 
         return
     end subroutine get_minimum_distance_bruteforce_edge

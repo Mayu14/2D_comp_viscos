@@ -114,7 +114,7 @@
             allocate(UCC%LaminarViscosity(UG%GI%AllCells, 1, 1))
 
             allocate(UCE%AbsoluteVortisity(UG%GI%Edges, 1, 1))
-            allocate(UCE%LaminarViscosity(UG%GI%Edges))
+            allocate(UCE%LaminarViscosity(UG%GI%Edges, 1, 1))
             allocate(UCE%TurbulenceViscosity(UG%GI%Edges, 1, 1))
             allocate(UCE%StrainRateTensor(iDim, iDim, UG%GI%Edges, 1, 1))
             allocate(UG%GM%BC%VW(UG%VC%Total - UG%GI%OutlineCells))
