@@ -99,6 +99,7 @@ implicit none
         integer :: UseVariableTime !1で各時間ごとの時間刻み幅が可変になる
         integer :: UseLocalTimeStep = 0 !1で局所時間刻みを使用
         integer :: UseSteadyCalc = 0 !1で定常計算
+        integer :: UseFluxMethod = 1    ! 0でRoe法，1でSLAU2
         integer :: UseRRK2 = 0  !1で2段階有理ルンゲクッタ法による時間2次精度計算を実行
         integer :: UseMUSCL = 0   !1でRoeの流束差分離法による空間2次精度計算を実行
             integer :: KindLimiter = 1 !1:Venkatakrishnan, 2(未実装)
