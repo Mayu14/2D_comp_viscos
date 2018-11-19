@@ -26,8 +26,9 @@ program EulerEQ1D
     WatchTime = 0.0d0
     call ReadConfigulation(Conf)
     !iSwitch = 3
-    write(6,*) "Please input use CPU number."
-    read(5,*) CoreNumberOfCPU
+    !write(6,*) "Please input use CPU number."
+    !read(5,*) CoreNumberOfCPU
+    CoreNumberOfCPU = 4
 
     if(Conf%SwitchProgram == 0) then
         call StructEulerEQ(Conf)
@@ -40,10 +41,10 @@ program EulerEQ1D
 
     else if(Conf%SwitchProgram == 4) then
         call SteadUnstructEuler(Conf)
-    end if
 
     else if(Conf%SwitchProgram == 5) then
-        ! call JobParallelNS(Conf)
+        call JobParallelNS(Conf)
+    end if
     stop
 
 contains
@@ -525,8 +526,8 @@ contains
     type(UnstructuredGrid) :: UG
     type(StopWatch) :: SW
     integer :: iLoop,iSplit !時間分割
-    type(NumericalExperiment) :: NE
-    integer :: ExactSolResolution
+    !type(NumericalExperiment) :: NE
+    !integer :: ExactSolResolution
     type(MoveGrid) :: MG
     type(MotionWait) :: MW
     type(AeroCharacteristics) :: UAC
@@ -547,9 +548,8 @@ contains
         write(6,*) CoreNumberOfCPU,"Parallel"
         UCC%iEndFlag = 0
         allocate(MW%StepDistance(1:3))
-        allocate(AC%coefficient(2, int(IterationNumber/OutputInterval))))
+        allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
         do iStep = iStartStep, IterationNumber
-
             if(UConf%UseLocalTimeStep == 0) then
                 call UCheckCFL4FixedTime(UG,UCC,iSplit)
                 FixedTimeStep = FixedTimeStep / dble(iSplit)
@@ -577,8 +577,10 @@ contains
                     iStep4Plot = iStep / OutputInterval
                     call UOutput(UConf,UG,UCC,iStep4Plot)
                     call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
+                    write(6,*) UAC%coefficient(1, iStep4Plot), UAC%coefficient(2, iStep4Plot)
                 end if
             end if
+
             if(UCC%iEndFlag == 2) exit
 
             !call NumericalExperimentation(iStep,UConf,NE,UCC,UG%GM,UG)
@@ -586,7 +588,7 @@ contains
         end do
 
         call UOutput(UConf,UG,UCC,iStep)
-        call UOutput_Characteristics(UAC)
+        call UOutput_Characteristics(UConf, UAC)
     return
     end subroutine SteadUnstructEuler
 

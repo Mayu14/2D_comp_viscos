@@ -23,16 +23,16 @@ subroutine URansCommon(UConf, UG, UCC, UCE)
     type(CellEdge), intent(inout) :: UCE
     ! RANS common
     ! Calc Laminar Viscosity from Sutherland's Law
-    call UGetLaminarViscosity_mk2(UConf, UG, UCC)
+    call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
     ! Calc Strain Rate Tensor & AbsoluteVortisity
-    call UGetStrainRateTensor_edge(UG, UCC)
+    call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
 
     if(UConf%TurbulenceModel == 1) then
         call UBaldwinLomax_main(UConf, UG, UCC, UCE)
     end if
 
-    call URansFlux
+    call URansFlux(UG, UCC, UCE)
 
     return
 
@@ -63,7 +63,7 @@ contains
 
             average_velocity = 0.5d0 *(UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) + UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge))
 
-            call UCentralDifferencePrepareAroundFace(UG, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
+            call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
             dTdeta = (UCC%Temparature(iFrontCell, 1, 1) - UCC%Temparature(iBackCell, 1, 1)) / length
 
@@ -78,16 +78,16 @@ contains
             beta_y = average_velocity(1) * tau_xy + average_velocity(2) * tau_yy + ThermalConductivity * invGmin1Mach2Pr * dTdy
 
             UCE%NormalFluxDiff(2, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(2, 1, 1, 1, iEdge) &
-                                                   & + invRe * (tau_xx * UG%GM%Normal(iEdge, 1) + tau_xy * UG%GM%Normal(iEdge, 2)
+                                                   & + invRe * (tau_xx * UG%GM%Normal(iEdge, 1) + tau_xy * UG%GM%Normal(iEdge, 2))
 
             UCE%NormalFluxDiff(3, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(3, 1, 1, 1, iEdge) &
-                                                   & + invRe * (tau_xy * UG%GM%Normal(iEdge, 1) + tau_yy * UG%GM%Normal(iEdge, 2)
+                                                   & + invRe * (tau_xy * UG%GM%Normal(iEdge, 1) + tau_yy * UG%GM%Normal(iEdge, 2))
 
             UCE%NormalFluxDiff(5, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(5, 1, 1, 1, iEdge) &
-                                                   & + invRe * (beta_x * UG%GM%Normal(iEdge, 1) + beta_y * UG%GM%Normal(iEdge, 2)
+                                                   & + invRe * (beta_x * UG%GM%Normal(iEdge, 1) + beta_y * UG%GM%Normal(iEdge, 2))
         end do
 
         return
     end subroutine URansFlux
 
-end subroutine UBaldwinLomax_main
+end subroutine URansCommon

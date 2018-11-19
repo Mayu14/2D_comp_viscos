@@ -11,22 +11,23 @@
 !	Update:
 !	Other:
 !***********************************/
-subroutine USlau2(UG,UCE,UCC) !MUSCL経由の場合CEのみ，1次精度の場合CCを渡す
+subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精度の場合CCを渡す
     use StructVar_Mod
     use LoopVar_Mod
     use ConstantVar_Mod, Gamma => SpecificOfHeatRatio, Epsilon => EntropyCorrection
     implicit none
+    type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
+    type(CellCenter), intent(in) :: UCC
     type(CellEdge), intent(inout) :: UCE
-    type(CellCenter), intent(in), optional :: UCC
 
     double precision, allocatable :: PhaiLR(:, :), Normal(:)    ! (1:密度，x速度，y速度，z速度, エンタルピー, 2:L(minus)=1, R(plus)=2
     double precision :: PresL, PresR, VelNormL, VelNormR
     double precision :: SoundV_Ave !,SoundV_L, SoundV_R
     double precision :: NormalVelocity_L, NormalVelocity_R
     double precision :: AbsNormalVelocity_ave, AbsNormalVelocity_P, AbsNormalVelocity_M   ! PMはプラスマイナスの意味
-    double precision :: Mach_L, Mach_R, Mach_ave, Mach_hat
-    double precision :: param_Chi, Pressure_ave, param_g   ! Chi =　カイ = xの筆記体は文献によってLambdaと表記されることがある
+    double precision :: Mach_L, Mach_R, Mach_hat
+    double precision :: param_Chi, param_g   ! Chi =　カイ = xの筆記体は文献によってLambdaと表記されることがある
     double precision :: pres_P_a, pres_M_a, gamma_hr
     double precision :: mass_flux, pressure_flux
     iDim = UG%GM%Dimension
@@ -36,25 +37,27 @@ subroutine USlau2(UG,UCE,UCC) !MUSCL経由の場合CEのみ，1次精度の場�
 
     do iEdge=1, UG%GI%Edges !すべての界面について
         ! set quantity of cell between surface iEdge
+        !if(UConf%UseMUSCL == 1) then
         PresL = UCE%RebuildQunatity(5,1,1,2,iEdge)
-        VelNormL = sum(UCE%RebuildQunatity(2:4,1,1,2,iEdge)**2
+        VelNormL = sum(UCE%RebuildQunatity(2:4,1,1,2,iEdge)**2)
 
         PhaiLR(1,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)
         PhaiLR(2,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(2,1,1,2,iEdge)
         PhaiLR(3,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(3,1,1,2,iEdge)
         PhaiLR(4,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(4,1,1,2,iEdge)
-        PhaiLR(5,1) = InverseGmin1 * Gamma * PresL / UCE%RebuildQunatity(1,1,1,2,iEdge) &
-            & + 0.5d0 * VelNormL)
+        PhaiLR(5,1) = InverseGmin1 * Gamma * PresL / UCE%RebuildQunatity(1,1,1,2,iEdge) + 0.5d0 * VelNormL
 
         PresR = UCE%RebuildQunatity(5,1,1,1,iEdge)
-        VelNormR = sum(UCE%RebuildQunatity(2:4,1,1,1,iEdge)**2
+        VelNormR = sum(UCE%RebuildQunatity(2:4,1,1,1,iEdge)**2)
+
         PhaiLR(1,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)
         PhaiLR(2,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(2,1,1,1,iEdge)
         PhaiLR(3,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(3,1,1,1,iEdge)
         PhaiLR(4,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(4,1,1,1,iEdge)
-        PhaiLR(5,2) = InverseGmin1 * Gamma * UCE%RebuildQunatity(5,1,1,1,iEdge) / UCE%RebuildQunatity(1,1,1,1,iEdge) &
-            & + 0.5d0 * VelNormR)
+        PhaiLR(5,2) = InverseGmin1 * Gamma * PresR / UCE%RebuildQunatity(1,1,1,1,iEdge) + 0.5d0 * VelNormR
 
+        !else   ! UCC%PrimitiveVariablesからPhaiを計算する場合はこっちを利用(空間1次精度計算用)
+        !end if
         Normal(2:4) = UG%GM%Normal(iEdge, :)
 
         ! get sound veocity average
@@ -74,7 +77,7 @@ subroutine USlau2(UG,UCE,UCC) !MUSCL経由の場合CEのみ，1次精度の場�
 
         ! calc parameter param_Chi and param_g
         param_Chi = (1.0d0 - Mach_hat) ** 2
-        param_g = -max((min(Mach_L, 0), -1)) * min(max(Mach_R, 0), 1)
+        param_g = -max(min(Mach_L, 0.0d0), -1.0d0) * min(max(Mach_R, 0.0d0), 1.0d0)
 
 
         ! calc absolute normal velocity Plus and Minus
@@ -102,7 +105,7 @@ subroutine USlau2(UG,UCE,UCC) !MUSCL経由の場合CEのみ，1次精度の場�
         !gamma_hr = ! high resolution化は後回し
 
         pressure_flux = 0.5d0 * (PresL + PresR) + 0.5d0 * (pres_P_a - pres_M_a) * (PresL - PresR) &
-                        & + sqrt(0.5d0 * (VelNormL + VelNormR) * (pres_P_a + pres_M_a) * (0.5d0*(PhaiLR(1,1) + phai(1,2))) * SoundV_Ave)
+                        & + sqrt(0.5d0 * (VelNormL + VelNormR) * (pres_P_a + pres_M_a) * (0.5d0*(PhaiLR(1,1) + PhaiLR(1,2))) * SoundV_Ave)
 
 
         UCE%NormalFluxDiff(:,1,1,1,iEdge) = &

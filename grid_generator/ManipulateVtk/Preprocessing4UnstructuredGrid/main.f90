@@ -75,7 +75,7 @@ program Preprocessing4UnstructuredGrid
 
 !物体表面からの距離を与える
     call UGetDistanceFromSurface(UG)
-
+    call UGetDistanceFromSurface_Edge(UG)
 !テスト出力
     !call UCheckGrid(UG)
 
@@ -119,7 +119,7 @@ contains
         allocate(UG%Tri%Distance(UG%GI%RealCells))
 
         allocate(UG%Line%Belongs2Wall(UG%GI%Edges))
-        allocate(UG%Line%Distance(UG%GI%RealCells))
+        allocate(UG%Line%Distance(UG%GI%Edges))
     return
     end subroutine AllocVariables_P4U
 
