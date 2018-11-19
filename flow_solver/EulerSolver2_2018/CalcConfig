@@ -1,6 +1,6 @@
 計算の設定：CalculateConfigulation
 
-4 計算に用いるプログラム(0:構造格子Euler，1:非構造格子Euler,3:構造+非構造重合格子Euler)
+5 計算に用いるプログラム(0:構造格子Euler，1:非構造格子Euler,3:構造+非構造重合格子Euler)
 
 1 データから格子情報読み出し:UseReadRegion
 

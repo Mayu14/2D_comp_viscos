@@ -29,25 +29,51 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         end subroutine UUpwindFlux_Dim2
     end interface
 
-    if(UConf%UseMUSCL == 1) then
-        call UMUSCL(UConf,UG,UCC,UCE)
-    end if
+    if(UConf%UseJobParallel == 1) then
+        call JPUCalcFlux(UConf, UG, UCC, UCE)
+    else
+        if(UConf%UseMUSCL == 1) then
+            call UMUSCL(UConf,UG,UCC,UCE)
+        end if
 
 
-    if(UConf%UseMUSCL == 0) then
-        call UUpwindFlux_Dim2(UG,UCE,UCC)
+        if(UConf%UseMUSCL == 0) then
+            call UUpwindFlux_Dim2(UG,UCE,UCC)
 
-    else if(UConf%UseMUSCL == 1) then
-        if(UConf%UseFluxMethod == 0) then
-            call UUpwindFlux_Dim2(UG,UCE)
-        else if (UConf%UseFluxMethod == 1) then
-            call USlau2(UConf, UG, UCC, UCE)
+        else if(UConf%UseMUSCL == 1) then
+            if(UConf%UseFluxMethod == 0) then
+                call UUpwindFlux_Dim2(UG,UCE)
+            else if (UConf%UseFluxMethod == 1) then
+                call USlau2(UConf, UG, UCC, UCE)
+            end if
+        end if
+
+        if(UConf%TurbulenceModel == 1) then
+            call UBaldwinLomax_main(UConf, UG, UCC, UCE)
         end if
     end if
 
-    if(UConf%TurbulenceModel == 1) then
-        call UBaldwinLomax_main(UConf, UG, UCC, UCE)
-    end if
+    return
+contains
 
-return
+    subroutine JPUCalcFlux(UConf,UG,UCC,UCE)
+    implicit none
+        type(Configulation), intent(in) :: UConf
+        type(UnstructuredGrid), intent(in) :: UG
+        type(CellCenter), intent(inout) :: UCC
+        type(CellEdge), intent(inout) :: UCE
+
+        if(UConf%UseMUSCL == 0) then
+            write(6,*) "Job parallel mode only support use MUSCL"
+            stop
+        end if
+
+        call JPUMUSCL(UConf, UG, UCC, UCE)
+        call USlau2(UConf, UG, UCC, UCE)
+        if(UConf%TurbulenceModel == 1) then
+            call UBaldwinLomax_main(UConf, UG, UCC, UCE)
+        end if
+        return
+    end subroutine JPUCalcFlux
+
 end subroutine UCalcFlux

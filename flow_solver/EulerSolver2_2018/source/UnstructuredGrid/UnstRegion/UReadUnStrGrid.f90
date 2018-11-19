@@ -21,11 +21,11 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(UnstructuredGrid), intent(inout) :: UG
     character(len=64) cFileName,cAnnotate
 
-    write(6,*) "Please input file name of *.mayu"
-    read(5,*) cFileName
+    !write(6,*) "Please input file name of *.mayu"
+    !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
-    !cFileName = "D1a0542.mayu"
+    cFileName = "tri_sample.mayu"
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
     open(unit=1,file=trim(adjustl(cFileName)),status='unknown')
@@ -203,7 +203,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 read(1,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
                 allocate(UG%GM%BC%VW(iLoop)%iMemberEdge(UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge))
                 do iEdge = 1, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-                    read(1,*) UG%GM%BC%VW(iLoop)%iMemberCell(iEdge)
+                    read(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
                 end do
             end do
         end if
