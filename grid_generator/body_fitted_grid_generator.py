@@ -802,7 +802,7 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
     
 def main():
-    z1, size = get_complex_coords(type = 3, naca4 = "0012", size = 50)
+    z1, size = get_complex_coords(type = 3, naca4 = "0012", size = 100)
     # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1)
@@ -817,5 +817,5 @@ def makeGridLoop():
         make_grid(fname, type=3, naca4=naca4)
 
 if __name__ == '__main__':
-    #main()
-    makeGridLoop()
+    main()
+    #makeGridLoop()
