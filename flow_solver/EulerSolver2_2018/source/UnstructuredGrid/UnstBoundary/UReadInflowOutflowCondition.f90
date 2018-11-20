@@ -50,14 +50,14 @@ implicit none
             !UG%GM%BC%OutFlowVariable(2:4) = UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量
     close(1)
 
-    call ChangeAngle(angle, UG%GM%BC%InFlowVariable(2:4))
-    call ChangeAngle(angle, UG%GM%BC%OutFlowVariable(2:4))
+    call ChangeAngle(dAttackAngle, UG%GM%BC%InFlowVariable(2:4))
+    call ChangeAngle(dAttackAngle, UG%GM%BC%OutFlowVariable(2:4))
 
     return
 
 contains
 
-    subroutine ChangeAngle(Angle, Velocity)
+    subroutine ChangeAngle(AttackAngle, Velocity)
         implicit none
         double precision, intent(in) :: AttackAngle
         double precision, intent(inout) :: Velocity(:)

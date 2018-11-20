@@ -228,17 +228,39 @@
 		<Unit filename="source/NumericalExperimentation/UOutputExact.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="source/Routine4JobParallel/JPCalcCaseAutoFill.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/JPUUpwindFlux_Dim2.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUGetLimiter.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUGetQuantityOnSurface.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUMUSCL.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUFindVariation.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUGetNormalGradient.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUVenkatakrishnan.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstTimeIntegral/JPUCalcTimeWidth.f90" />
-		<Unit filename="source/Routine4JobParallel/JPUnstTimeIntegral/JPUCheckCFL4FixedTime.f90" />
-		<Unit filename="source/Routine4JobParallel/JobParallelControler.f90" />
+		<Unit filename="source/Routine4JobParallel/JPCalcCaseAutoFill.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/JPUUpwindFlux_Dim2.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUGetLimiter.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUGetQuantityOnSurface.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/JPUMUSCL.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUFindVariation.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUGetNormalGradient.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstFlux/MUSCL/Venkatakrishnan/JPUVenkatakrishnan.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstTimeIntegral/JPUCalcTimeWidth.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUnstTimeIntegral/JPUCheckCFL4FixedTime.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JobParallelControler.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/StructVar_Mod.f90">
 			<Option weight="0" />
 		</Unit>
@@ -370,7 +392,9 @@
 		<Unit filename="source/StructuredGrid/TimeIntegral/TimeIntegral.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/JobParallelNS.f90" />
+		<Unit filename="source/UnstructuredGrid/JobParallelNS.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/UnstructuredGrid/UConserve2Primitive.f90">
 			<Option weight="1" />
 		</Unit>
@@ -378,12 +402,14 @@
 			<Option weight="1" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstBoundary/UReadInflowOutflowCondition.f90">
-			<Option weight="1" />
+			<Option weight="2" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstBoundary/USetBoundary.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Invicid/USlau2.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Invicid/USlau2.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstFlux/MUSCL/UGetGradient.f90">
 			<Option weight="1" />
 		</Unit>
@@ -424,14 +450,23 @@
 			<Option weight="1" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/BaldwinLomax/UBaldwinLomax_main.f90">
-			<Option weight="1" />
+			<Option weight="2" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetLaminarViscosity_mk2.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/BaldwinLomax/UGetWallVariable.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetLaminarViscosity_mk2.f90">
+			<Option weight="2" />
+		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor.f90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_edge.f90" />
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/URansCommon.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_edge.f90">
+			<Option weight="2" />
+		</Unit>
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/URansCommon.f90">
+			<Option weight="2" />
+		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstInitialize/UReadInitialCondition.f90">
 			<Option weight="1" />
 		</Unit>
@@ -444,7 +479,9 @@
 		<Unit filename="source/UnstructuredGrid/UnstOutput/UOutput.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstOutput/UOutput_Characteristics.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstOutput/UOutput_Characteristics.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstRegion/UAllocVariables.f90">
 			<Option weight="1" />
 		</Unit>
@@ -472,8 +509,12 @@
 		<Unit filename="source/UnstructuredGrid/UnstTimeIntegral/UTimeIntegral.f90">
 			<Option weight="1" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstTools/UCalcAeroCharacteristics.f90" />
-		<Unit filename="source/UnstructuredGrid/UnstTools/UCentralDifferencePrepareAroundEdge.f90" />
+		<Unit filename="source/UnstructuredGrid/UnstTools/UCalcAeroCharacteristics.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/UnstructuredGrid/UnstTools/UCentralDifferencePrepareAroundEdge.f90">
+			<Option weight="2" />
+		</Unit>
 		<Unit filename="source/main.f90">
 			<Option weight="2" />
 		</Unit>

@@ -26,6 +26,7 @@ implicit none
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
     integer :: RetryFlag = 0 !音速が負になる等の問題が発生するとこのフラグが点灯し，再計算を実施する．フラグが点灯した状態で再度フラグ点灯しようとすると強制終了させる
+    double precision :: dAttackAngle = 0.0d0
     !Constant value for Calculate
     logical :: invicid = .true.
     double precision, parameter :: Gmin1 = SpecificOfHeatRatio - 1.0d0

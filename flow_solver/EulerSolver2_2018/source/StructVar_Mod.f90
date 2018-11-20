@@ -109,6 +109,8 @@ implicit none
         integer :: UseJobParallel = 0   ! 0:not use, 1:use
         double precision :: dAttackAngle    ! 迎角(JobParallel用)
         character(len=32) :: cGridName  ! mayuファイル名(JobParallel用)
+        integer :: my_rank  ! for MPI
+        integer :: my_thread    ! for OpenMP
     end type
 
     type RoeAverage !Roe平均

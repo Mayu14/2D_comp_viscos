@@ -24,7 +24,7 @@ program EulerEQ1D
     allocate(WatchTime(3,3))
     TotalTime = 0.0d0
     WatchTime = 0.0d0
-    call ReadConfigulation(Conf)
+    call ReadConfigulation(Conf, 1)
     !iSwitch = 3
     !write(6,*) "Please input use CPU number."
     !read(5,*) CoreNumberOfCPU

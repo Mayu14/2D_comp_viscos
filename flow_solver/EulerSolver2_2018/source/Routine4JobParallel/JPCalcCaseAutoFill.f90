@@ -25,7 +25,7 @@ subroutine JPCalcCaseAutoFill(UConf, my_rank, PETOT, my_thread, Total_threads)
     character(len=32) :: cGridName, cResultName
 
     iParallelTotal = int(PETOT * Total_threads)
-
+    write(6,*) iParallelTotal
     do i4digit = 1, 9999, 2
         write(cGridName, '("NACA", i4.4, ".mayu")') i4digit
         do iAngleDeg = 0, 39, 3
