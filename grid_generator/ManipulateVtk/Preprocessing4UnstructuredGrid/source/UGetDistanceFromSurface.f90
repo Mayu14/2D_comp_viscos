@@ -11,12 +11,13 @@
 !	Update:2018.11.13
 !	Other:
 !***********************************/
-subroutine UGetDistanceFromSurface(UG)
+subroutine UGetDistanceFromSurface(UG, ExistInnerBoundary)
     use StructVar_Mod
     use LoopVar_Mod
     use FrequentOperation
     implicit none
     type(UnstructuredGrid), intent(inout) :: UG
+    logical, intent(out)  :: ExistInnerBoundary
 
     integer :: iSurfaceCell ! 物体表面セルの総数 = 物体表面界面の数
     integer, allocatable :: iSurfaceEdge(:) ! surface edge number → edge number
@@ -30,59 +31,65 @@ subroutine UGetDistanceFromSurface(UG)
     iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells  ! 物体表面界面数の特定
     UG%GM%BC%iWallTotal = iSurfaceCell
 
-    allocate(iSurfaceEdge(iSurfaceCell))    ! 物体表面の局所界面番号→大域界面番号
-    allocate(UG%GM%BC%VW(iSurfaceCell))     ! 粘性壁登録変数の動的確保
+    if(iSurfaceCell == 0) then
+        write(6,*) "No Internal Boundary"
+        ExistInnerBoundary = .false.
+    else
+        ExistInnerBoundary = .true.
+        allocate(iSurfaceEdge(iSurfaceCell))    ! 物体表面の局所界面番号→大域界面番号
+        allocate(UG%GM%BC%VW(iSurfaceCell))     ! 粘性壁登録変数の動的確保
 
-    iEdge = 1   ! 局所界面番号の初期化
-    do iCell = UG%GI%RealCells+1, UG%GI%AllCells    ! すべての仮想セルについて巡回
-        if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
-            iSurfaceEdge(iEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
-            UG%GM%BC%VW(iEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
-            iEdge = iEdge + 1
-        end if
-    end do
-    ! この時点で物体表面の辺を順不同に全格納完了
-
-    ! すべてのセルについて、所属表面および所属表面からの距離を求める
-    allocate(dDistance(UG%GI%RealCells, 2))
-    ! UG%GM%BC%VW内部のメンバ総数の初期化
-    call viscosity_wall_initialize(UG%GM%BC, iSurfaceCell)
-
-    do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
-        call get_minimum_distance_bruteforce(iCell, tmp_de_num, dDistance(iCell, 2))    ! 直線距離が最短となる界面の局所界面番号tmp_de_numと，垂直方向距離dDistance(iCell, 2)を格納
-        dDistance(iCell, 1) = int(tmp_de_num)    ! 局所界面番号であることに注意されたし
-        UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember = UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember + 1 ! 局所界面に所属するセルの総数を+1
-    end do
-    UG%Tri%Belongs2Wall = int(dDistance(:, 1))  ! 三角形要素番号→所属する壁の局所界面番号
-    UG%Tri%Distance = dDistance(:, 2)   ! 三角形要素番号→所属する壁までの距離
-    ! ここまでで各界面に所属するセルの総数が得られたため，壁→セルの検索用配列を用意する
-    call viscosity_wall_malloc(UG%GM%BC, iSurfaceCell)
-    ! 壁にセルを仮登録(順不同)
-    allocate(iCount(iSurfaceCell))  ! 入力済み確認配列
-    iCount = 1
-    do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
-        iTmpWall = UG%Tri%Belongs2Wall(iCell)   ! 所属壁番号を仮置きして
-        UG%GM%BC%VW(iTmpWall)%iMemberCell(iCount(iTmpWall)) = iCell ! 壁番号→所属要素
-        iCount(iTmpWall) = iCount(iTmpWall) + 1 ! 入力した回数を反映する
-    end do
-
-    ! 距離準並び替えを実施(もうめんどいしバブルソートでええやろ(適当))(そもそも入力がほぼ整列済みである可能性が高いから...(震え声))
-    do iTmpWall = 1, iSurfaceCell   ! すべての界面について
-        iFlag = 0
-        do while(iFlag == 0)
-            iFlag = 1   ! 終了フラグを点灯
-            iTermination = 1
-            do iMember = 1, UG%GM%BC%VW(iTmpWall)%iNumberOfMember - iTermination
-                iMem1 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember)  ! iMember番目のメンバセルのセル番号
-                iMem2 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1)  ! iMember + 1番目のメンバセルのセル番号
-                if (UG%Tri%Distance(iMem1) > UG%Tri%Distance(iMem2)) then   ! iMem1の距離の方がiMem2より遠いならば
-                    iFlag = 0   ! 終了フラグを消灯し
-                    call SwapInteger(UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember), UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1))    ! メンバセルの登録順序を変更
-                end if
-            end do
-            iTermination = iTermination + 1 ! ソート済み領域をソート対象から外す
+        iEdge = 1   ! 局所界面番号の初期化
+        do iCell = UG%GI%RealCells+1, UG%GI%AllCells    ! すべての仮想セルについて巡回
+            if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
+                iSurfaceEdge(iEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
+                UG%GM%BC%VW(iEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
+                iEdge = iEdge + 1
+            end if
         end do
-    end do
+        ! この時点で物体表面の辺を順不同に全格納完了
+
+        ! すべてのセルについて、所属表面および所属表面からの距離を求める
+        allocate(dDistance(UG%GI%RealCells, 2))
+        ! UG%GM%BC%VW内部のメンバ総数の初期化
+        call viscosity_wall_initialize(UG%GM%BC, iSurfaceCell)
+
+        do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
+            call get_minimum_distance_bruteforce(UG, iCell, iSurfaceEdge, tmp_de_num, dDistance(iCell, 2))    ! 直線距離が最短となる界面の局所界面番号tmp_de_numと，垂直方向距離dDistance(iCell, 2)を格納
+            dDistance(iCell, 1) = int(tmp_de_num)    ! 局所界面番号であることに注意されたし
+            UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember = UG%GM%BC%VW(int(tmp_de_num))%iNumberOfMember + 1 ! 局所界面に所属するセルの総数を+1
+        end do
+        UG%Tri%Belongs2Wall = int(dDistance(:, 1))  ! 三角形要素番号→所属する壁の局所界面番号
+        UG%Tri%Distance = dDistance(:, 2)   ! 三角形要素番号→所属する壁までの距離
+        ! ここまでで各界面に所属するセルの総数が得られたため，壁→セルの検索用配列を用意する
+        call viscosity_wall_malloc(UG%GM%BC, iSurfaceCell)
+        ! 壁にセルを仮登録(順不同)
+        allocate(iCount(iSurfaceCell))  ! 入力済み確認配列
+        iCount = 1
+        do iCell = 1, UG%GI%RealCells   ! すべてのセルについて
+            iTmpWall = UG%Tri%Belongs2Wall(iCell)   ! 所属壁番号を仮置きして
+            UG%GM%BC%VW(iTmpWall)%iMemberCell(iCount(iTmpWall)) = iCell ! 壁番号→所属要素
+            iCount(iTmpWall) = iCount(iTmpWall) + 1 ! 入力した回数を反映する
+        end do
+
+        ! 距離準並び替えを実施(もうめんどいしバブルソートでええやろ(適当))(そもそも入力がほぼ整列済みである可能性が高いから...(震え声))
+        do iTmpWall = 1, iSurfaceCell   ! すべての界面について
+            iFlag = 0
+            do while(iFlag == 0)
+                iFlag = 1   ! 終了フラグを点灯
+                iTermination = 1
+                do iMember = 1, UG%GM%BC%VW(iTmpWall)%iNumberOfMember - iTermination
+                    iMem1 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember)  ! iMember番目のメンバセルのセル番号
+                    iMem2 = UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1)  ! iMember + 1番目のメンバセルのセル番号
+                    if (UG%Tri%Distance(iMem1) > UG%Tri%Distance(iMem2)) then   ! iMem1の距離の方がiMem2より遠いならば
+                        iFlag = 0   ! 終了フラグを消灯し
+                        call SwapInteger(UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember), UG%GM%BC%VW(iTmpWall)%iMemberCell(iMember + 1))    ! メンバセルの登録順序を変更
+                    end if
+                end do
+                iTermination = iTermination + 1 ! ソート済み領域をソート対象から外す
+            end do
+        end do
+    end if
 
     return
 contains
@@ -111,8 +118,10 @@ contains
         return
     end subroutine get_edge_id
 
-    subroutine get_minimum_distance_bruteforce(iCellNum, de_num, minDistance)
+    subroutine get_minimum_distance_bruteforce(UG, iCellNum, iSurfaceEdge, de_num, minDistance)
+        type(UnstructuredGrid), intent(in) :: UG
         integer, intent(in) :: iCellNum
+        integer, intent(in) :: iSurfaceEdge(:)
         double precision, intent(out) :: de_num, minDistance
         double precision :: tmpDistance
         minDistance = 100000

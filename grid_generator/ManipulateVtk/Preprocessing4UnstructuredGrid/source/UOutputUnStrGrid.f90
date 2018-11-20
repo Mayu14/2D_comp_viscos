@@ -11,13 +11,13 @@
 !	Update:2018.02.03
 !	Other:GJKアルゴリズムによる接触判定を実行するため凸包出力を追加/複数の境界条件へ対応
 !***********************************/
-subroutine UOutputUnStrGrid(UG,cFileName)
+subroutine UOutputUnStrGrid(UG,cFileName, ExistBound)
     use StructVar_Mod
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid), intent(in) :: UG
     character(len=64), intent(inout) :: cFileName
-
+    logical, intent(in) :: ExistBound
     !write(6,*) "Please input filename of the Computed Grid Data"
     !read(5,*) cFileName
     cFileName = trim(adjustl(cFileName))//".mayu" !調べたら.usgも.ccdもなんか既に使われてるみたいだったのでキレた
@@ -154,49 +154,52 @@ subroutine UOutputUnStrGrid(UG,cFileName)
             write(1,*) UG%CH%PointNum(iPoint)
         end do
 
-! セルから最も近い物体表面セル
-        write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
-        do iCell = 1, UG%Tri%Total
-            write(1, *) UG%Tri%Belongs2Wall(iCell)
-        end do
-
-! 物体表面からの距離
-        write(1, *) "DistanceFromObjectSurface ", UG%Tri%Total
-        do iCell = 1, UG%Tri%Total
-            write(1, *) UG%Tri%Distance(iCell)
-        end do
-        write(1,*) ""
-
-! 界面から最も近い物体表面
-        write(1, *) "NearestSurfaceBoundaryEdgeNum4Edge ", UG%Line%Total
-        do iEdge = 1, UG%Line%Total
-            write(1, *) UG%Line%Belongs2Wall(iEdge)
-        end do
-
-! 物体表面からの距離
-        write(1, *) "DistanceFromObjectSurface4Edge ", UG%Line%Total
-        do iEdge = 1, UG%Line%Total
-            write(1, *) UG%Line%Distance(iEdge)
-        end do
-        write(1,*) ""
-
-! 各壁に対応する
-        write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
-        do iEdge = 1, UG%GM%BC%iWallTotal
-            write(1, *) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
-            do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                write(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+        if(ExistBound == .true.) then
+    ! セルから最も近い物体表面セル
+            write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
+            do iCell = 1, UG%Tri%Total
+                write(1, *) UG%Tri%Belongs2Wall(iCell)
             end do
-        end do
 
-        write(1,*) "Wall2Edge_data ", UG%GM%BC%iWallTotal
-        do iLoop = 1, UG%GM%BC%iWallTotal
-            write(1, *) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-            do iEdge = 1,  UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-                write(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
+    ! 物体表面からの距離
+            write(1, *) "DistanceFromObjectSurface ", UG%Tri%Total
+            do iCell = 1, UG%Tri%Total
+                write(1, *) UG%Tri%Distance(iCell)
             end do
-        end do
+            write(1,*) ""
+
+    ! 界面から最も近い物体表面
+            write(1, *) "NearestSurfaceBoundaryEdgeNum4Edge ", UG%Line%Total
+            do iEdge = 1, UG%Line%Total
+                write(1, *) UG%Line%Belongs2Wall(iEdge)
+            end do
+
+    ! 物体表面からの距離
+            write(1, *) "DistanceFromObjectSurface4Edge ", UG%Line%Total
+            do iEdge = 1, UG%Line%Total
+                write(1, *) UG%Line%Distance(iEdge)
+            end do
+            write(1,*) ""
+
+    ! 各壁に対応する
+            write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
+            do iEdge = 1, UG%GM%BC%iWallTotal
+                write(1, *) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    write(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                end do
+            end do
+
+            write(1,*) "Wall2Edge_data ", UG%GM%BC%iWallTotal
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                write(1, *) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                do iEdge = 1,  UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                    write(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
+                end do
+            end do
+        end if
+
     close(1)
 
-return
+    return
 end subroutine UOutputUnStrGrid

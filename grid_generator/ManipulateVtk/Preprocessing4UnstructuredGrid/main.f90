@@ -17,7 +17,7 @@ program Preprocessing4UnstructuredGrid
     implicit none
     type(UnstructuredGrid) :: UG
     character(len=64) :: cFileName
-
+    logical :: ExistBound
     write(6,*) "Please input the name of VTK file that defined region.(***.vtk's ***)"
     read(5,*) cFileName
     !cFileName = 'Square2DMeshRough'
@@ -74,13 +74,15 @@ program Preprocessing4UnstructuredGrid
     end if
 
 !物体表面からの距離を与える
-    call UGetDistanceFromSurface(UG)
-    call UGetDistanceFromSurface_Edge(UG)
+    call UGetDistanceFromSurface(UG, ExistBound)
+    if(ExistBound == .True.) then
+        call UGetDistanceFromSurface_Edge(UG)
+    end if
 !テスト出力
     !call UCheckGrid(UG)
 
 !中間ファイルの出力
-    call UOutputUnStrGrid(UG,cFileName)
+    call UOutputUnStrGrid(UG,cFileName, ExistBound)
 
 !do iCell=UG%GI%RealCells+1, UG%GI%AllCells
 !    write(6,*) "Length2",dot_product(UG%CD%Cell(iCell,:), UG%CD%Cell(iCell,:)), UG%GM%CellType(iCell,1,1)

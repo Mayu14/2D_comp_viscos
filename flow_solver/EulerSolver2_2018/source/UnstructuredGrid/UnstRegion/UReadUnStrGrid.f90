@@ -26,10 +26,10 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
     if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName
-    cFileName = "tri_sample.mayu"
+    cFileName = "tri_SquareGrid.mayu"
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
-    open(unit=1,file=trim(adjustl(cFileName)),status='unknown')
+    open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
 !格子の基本情報
         read(1,*) cAnnotate, UG%GI%Points
         read(1,*) cAnnotate, UG%GI%Edges
@@ -169,46 +169,47 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             end do
         end if
 
-        read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
-        do iCell = 1, UG%Tri%Total
-            read(1, *) UG%Tri%Belongs2Wall(iCell)
-        end do
-
-        read(1, *) cAnnotate !"DistanceFromObjectSurface "
-        do iCell = 1, UG%Tri%Total
-            read(1, *) UG%Tri%Distance(iCell)
-        end do
-
-        read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
-        do iEdge = 1, UG%Line%Total
-            read(1, *) UG%Line%Belongs2Wall(iEdge)
-        end do
-
-        read(1, *) cAnnotate !"DistanceFromObjectSurface4Edge "
-        do iEdge = 1, UG%Line%Total
-            read(1, *) UG%Line%Distance(iEdge)
-        end do
-
-        read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
-        if(UConf%TurbulenceModel /= 0) then
-            do iEdge = 1, UG%GM%BC%iWallTotal
-                read(1,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
-                do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                    read(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
-                end do
+        if(UG%GI%AllCells - UG%GI%RealCells - UG%GI%OutlineCells /= 0) then
+            read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+            do iCell = 1, UG%Tri%Total
+                read(1, *) UG%Tri%Belongs2Wall(iCell)
             end do
 
-            read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
-            do iLoop = 1, UG%GM%BC%iWallTotal
-                read(1,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-                allocate(UG%GM%BC%VW(iLoop)%iMemberEdge(UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge))
-                do iEdge = 1, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-                    read(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
-                end do
+            read(1, *) cAnnotate !"DistanceFromObjectSurface "
+            do iCell = 1, UG%Tri%Total
+                read(1, *) UG%Tri%Distance(iCell)
             end do
+
+            read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+            do iEdge = 1, UG%Line%Total
+                read(1, *) UG%Line%Belongs2Wall(iEdge)
+            end do
+
+            read(1, *) cAnnotate !"DistanceFromObjectSurface4Edge "
+            do iEdge = 1, UG%Line%Total
+                read(1, *) UG%Line%Distance(iEdge)
+            end do
+
+            read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
+            if(UConf%TurbulenceModel /= 0) then
+                do iEdge = 1, UG%GM%BC%iWallTotal
+                    read(1,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
+                    do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                        read(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                    end do
+                end do
+
+                read(1,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
+                do iLoop = 1, UG%GM%BC%iWallTotal
+                    read(1,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                    allocate(UG%GM%BC%VW(iLoop)%iMemberEdge(UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge))
+                    do iEdge = 1, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                        read(1,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
+                    end do
+                end do
+            end if
         end if
-
 
         close(1)
 

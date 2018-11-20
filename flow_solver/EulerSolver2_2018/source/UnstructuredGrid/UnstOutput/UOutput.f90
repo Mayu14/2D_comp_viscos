@@ -20,7 +20,7 @@ subroutine UOutput(UConf,UG,UCC,iStep)
     cDirectory = "ResultU/" !UConf%SaveDirectiry
     cFileName = trim(adjustl(cDirectory))//"PrimitiveVariables"//trim(adjustl(cStep))//"th_Result.vtk"
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
-    open(unit = 1, file =trim(adjustl(cFileName)), status = 'unknown')
+    open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
         write(1,"('# vtk DataFile Version 3.0')")
         write(1,*) cCaseName
         write(1,"('ASCII')")
