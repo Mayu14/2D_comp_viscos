@@ -29,7 +29,8 @@ subroutine JPCalcCaseAutoFill(UConf, my_rank, PETOT, my_thread, Total_threads)
     do i4digit = 1, 9999, 2
         write(cGridName, '("NACA", i4.4, ".mayu")') i4digit
         do iAngleDeg = 0, 39, 3
-            write(cResultName, '("NACA""_", i2.2, ".mayu")') i4digit
+            write(cResultName, '("NACA", i4.4, "_", i2.2, ".mayu")') i4digit, iAngleDeg
+            !access()
         end do
     end do
 
