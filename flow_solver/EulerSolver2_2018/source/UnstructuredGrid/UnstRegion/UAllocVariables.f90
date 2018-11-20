@@ -36,7 +36,7 @@
         allocate(UG%VC%Edge(UG%GI%RealCells+1:UG%GI%AllCells))   !仮想要素の共有界面番号
         allocate(UG%CD%Point(UG%GI%Points,4)) !点の座標は(点の総数,3方向)
         allocate(UG%CD%Edge(UG%GI%Edges,3))   !界面の中心座標は(界面総数,3方向)
-        allocate(UG%CD%Cell(UG%GI%AllCells,4)) !要素の中心座標は(要素数,3方向)
+        allocate(UG%CD%Cell(UG%GI%AllCells,4)) !要素の中心座標は(要素数,3方向)   !4つめのパラメータはアフィン変換用
         allocate(UG%GM%Area(UG%GI%Edges))      !界面の面積は(界面の数)
         allocate(UG%GM%Bound(2,3))
         allocate(UG%GM%Volume(UG%GI%RealCells)) !要素の体積は(要素の数)
