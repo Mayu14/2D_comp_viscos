@@ -15,11 +15,14 @@ subroutine JobParallelNS(UConf)
     use StructVar_Mod
     use ConstantVar_Mod
     implicit none
-    type(Configulation), intent(in) :: UConf
+    type(Configulation), intent(inout) :: UConf
     type(CellCenter) :: UCC
     type(CellEdge) :: UCE
     type(UnstructuredGrid) :: UG
-    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot !時間分割
+    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot, iCalcStep !時間分割
+    integer :: iAccel = 1
+    double precision :: NondimensionTime=0.0d0, AccelTimeRange = 0.5d0
+    double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
 
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
@@ -28,25 +31,46 @@ subroutine JobParallelNS(UConf)
     call UReadInflowOutflowCondition(UG, UConf)
     call JPUOutput(UConf,UG,UCC,iStep)
 
+
     allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
+    allocate(obj_velocity(3))
+
+    ! for accelaration area
+    UConf%UseLocalTimeStep = 0
+    UConf%UseMUSCL = 0
+    UConf%TurbulenceModel = 0
+    !
+    iCalcStep = 0
     iStartStep = 1
     do iStep = iStartStep, IterationNumber
-        if(UConf%UseLocalTimeStep == 0) then
+        if(UConf%UseLocalTimeStep /= 0 .and. iAccel == 0) then  ! steady area
+            iCalcStep = iCalcStep + 1   ! tmp
+            call UnstNS(iStep,UConf,UG,UCC,UCE)
+            call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
+
+        else    ! accelaration area
             call JPUCheckCFL4FixedTime(UG,UCC,iSplit)
             FixedTimeStep = FixedTimeStep / dble(iSplit)
-        else
-            iSplit = 1
+
+            do iLoop=1, iSplit
+                iCalcStep = iCalcStep + 1
+                obj_velocity(:) = - min(0.01d0 * dble(iCalcStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
+
+                if(iLoop == 1) call RelativeCoordinateTransform(obj_velocity)
+                    call UnstNS(iStep,UConf,UG,UCC,UCE)
+                    call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
+                if(iLoop == iSplit) call RelativeCoordinateTransform(-obj_velocity)
+            end do
+            FixedTimeStep = DefaultTimeStep
         end if
 
-        !MW%StepDistance(1:3) = - UG%GM%BC%InFlowVariable(2:4)*FixedTimeStep
-        !call VelocityCorrection(1,UG,MG,UCC,MW,FixedTimeStep,99.0d0)
-
-        do iLoop=1, iSplit
-            call UnstNS(iStep,UConf,UG,UCC,UCE)
-        end do
-
-        !call VelocityCorrection(2,UG,MG,UCC,MW,FixedTimeStep,99.0d0)
-        FixedTimeStep = DefaultTimeStep
+        if(iCalcStep > 100) then
+            iAccel = 0  ! 加速区間終了
+            UConf%UseLocalTimeStep = 1
+            UConf%UseMUSCL = 0
+            UConf%TurbulenceModel = 1
+            obj_velocity = - UG%GM%BC%InFlowVariable(2:4)
+        end if
 
         if(mod(iStep,OutputInterval) == 0) then
             iStep4Plot = iStep / OutputInterval
@@ -76,6 +100,34 @@ contains
 
         return
     end subroutine UnstNS
+
+    subroutine RelativeCoordinateTransform(ObjectVelocity)
+        implicit none
+        double precision, intent(in) :: ObjectVelocity(:)
+
+        do iCell=1, UG%GI%AllCells
+
+            CC4MB%ConservedQuantity(2:4,iCell,1,1) = CC4MB%ConservedQuantity(1,iCell,1,1)&
+                &  * (CC4MB%PrimitiveVariable(2:4,iCell,1,1) - ObjectVelocity(1:3))
+
+            CC4MB%ConservedQuantity(5,iCell,1,1) = &
+                & InverseGmin1*CC4MB%PrimitiveVariable(5,iCell,1,1) + 0.5d0*CC4MB%ConservedQuantity(1,iCell,1,1) &
+                & * (dot_product(CC4MB%PrimitiveVariable(2:4,iCell,1,1) - ObjectVelocity(1:3),CC4MB%PrimitiveVariable(2:4,iCell,1,1) - ObjectVelocity(1:3)))
+
+        end do
+
+        return
+    end subroutine RelativeCoordinateTransform
+
+    function accel_area_velocity(velocity_gradient, time, steady_velocity) result(velocity)
+        implicit none
+        double precision, intent(in) :: velocity_gradient, time, steady_velocity
+        double precision :: velocity
+
+        velocity = min(velocity_gradient * time, steady_velocity)
+
+        return
+    end function accel_area_velocity
 
 end subroutine JobParallelNS
 
