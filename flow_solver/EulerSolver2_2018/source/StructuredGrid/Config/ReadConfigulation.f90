@@ -89,6 +89,8 @@ contains
             write(6,*) "ReynoldsNumber", ReynoldsNumber
         end if
 
+        if(Conf%UseJobParallel == 0) Conf%my_rank = 0
+        Conf%UseFluxMethod = 0
         return
     end subroutine Show_Configulation
 

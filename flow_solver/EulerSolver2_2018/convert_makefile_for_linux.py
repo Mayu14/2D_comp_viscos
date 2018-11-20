@@ -2,7 +2,11 @@
 import os
 import re
 
-def main():
+def main(mode):
+    if mode == "MPI":
+        compiler = "mpif90"
+    else:
+        compiler = "ifort"
     CFLAGS_ifort = "CFLAGS = -Wall -check uninit -check pointers -check bounds -check all -inline-level=0 -O0 -traceback -warn all -ftrapuv -debug full -zero -check uninit -check pointers -check bounds -check all -O0 -traceback -warn interfaces -warn all -ftrapuv -debug full -qopenmp -module $(OBJS_DIR) $(IDIR)\n"
     LFLAGS_ifort = "LFLAGS = -qopenmp -s\n"
 
@@ -15,14 +19,14 @@ def main():
                     line = row
 
                     if line.startswith("EXE"):
-                        line = line.replace(".exe", "")
+                        line = "EXE = EulerSolver2\n"
                         flag = 1
 
                     if flag == 1:
                         if line.startswith("FC"):
-                            line = "FC = mpif90\n"
+                            line = "FC = " + compiler + "\n"
                         if line.startswith("LD"):
-                            line = "LD = mpif90\n"
+                            line = "LD = " + compiler + "\n"
                         if line.startswith("CFLAGS"):
                             line = CFLAGS_ifort
 
@@ -33,4 +37,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    mode = "ifort"
+    #mode = "MPI"
+    main(mode)

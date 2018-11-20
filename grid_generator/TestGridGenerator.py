@@ -3,7 +3,7 @@ import numpy as np
 
 def main(xi_max, eta_max):
     def output_vtk_tri(fname, path):
-        fname = path + "tri_" + fname + ".vtk"
+        fname = path + fname + str(xi_max).zfill(3) + "_" + str(eta_max).zfill(3) + ".vtk"
         with open(fname, 'w') as f:
             point_number = str((xi_max) * eta_max)
             cell_number = str(2 * (xi_max - 1) * (eta_max - 1))
@@ -74,7 +74,7 @@ def main(xi_max, eta_max):
     
     
 if __name__ == '__main__':
-    Nx = 100
-    Ny = 100
+    Nx = 50
+    Ny = 25
     main(Nx, Ny)
     

@@ -365,8 +365,9 @@ contains
 
             do iLoop=1, iSplit
                 call OUnstEuler(iStep,UConf,UG,UCC,UCE,SW)
+                !call UOutput(UConf, UG, UCC, iLoop)
             end do
-
+            !stop
             FixedTimeStep = DefaultTimeStep
 
             if(mod(iStep,OutputInterval) == 0) then

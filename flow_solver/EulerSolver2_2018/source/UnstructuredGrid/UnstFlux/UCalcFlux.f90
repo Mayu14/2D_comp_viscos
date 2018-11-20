@@ -29,6 +29,15 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         end subroutine UUpwindFlux_Dim2
     end interface
 
+    interface
+        subroutine JPUUpwindFlux_Dim2(UG,UCE,UCC) !MUSCL経由の場合CEのみ，1次精度の場合CCを渡す
+            use StructVar_Mod
+            type(UnstructuredGrid), intent(in) :: UG
+            type(CellEdge), intent(inout) :: UCE
+            type(CellCenter), intent(in), optional :: UCC
+        end subroutine JPUUpwindFlux_Dim2
+    end interface
+
     if(UConf%UseJobParallel == 1) then
         call JPUCalcFlux(UConf, UG, UCC, UCE)
     else
@@ -69,7 +78,8 @@ contains
         end if
 
         call JPUMUSCL(UConf, UG, UCC, UCE)
-        call USlau2(UConf, UG, UCC, UCE)
+        call JPUUpwindFlux_Dim2(UG, UCE, UCC)
+        !call USlau2(UConf, UG, UCC, UCE)
 
         if(UConf%TurbulenceModel == 1) then
             call UBaldwinLomax_main(UConf, UG, UCC, UCE)

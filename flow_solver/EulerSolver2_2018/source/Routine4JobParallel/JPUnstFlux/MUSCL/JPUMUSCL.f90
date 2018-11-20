@@ -20,7 +20,7 @@ subroutine JPUMUSCL(UConf,UG,UCC,UCE)
     type(CellEdge), intent(inout) :: UCE
 
 !基礎変数型式への変換
-        call UConserve2Primitive(UG,UCC)
+        call JPUConserve2Primitive(UG,UCC)
     !end if
 !勾配の計算
         call UGetGradient(UG,UCC)
