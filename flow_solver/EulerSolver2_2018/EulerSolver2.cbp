@@ -231,6 +231,12 @@
 		<Unit filename="source/Routine4JobParallel/JPCalcCaseAutoFill.f90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPOutput/JPUOutput.f90">
+			<Option weight="1" />
+		</Unit>
+		<Unit filename="source/Routine4JobParallel/JPUConserve2Primitive.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/Routine4JobParallel/JPUnstFlux/JPUUpwindFlux_Dim2.f90">
 			<Option weight="1" />
 		</Unit>

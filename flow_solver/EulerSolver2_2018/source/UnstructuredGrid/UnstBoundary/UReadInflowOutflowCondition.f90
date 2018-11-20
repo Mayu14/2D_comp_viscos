@@ -11,13 +11,14 @@
 !	Update:
 !	Other:
 !***********************************/
-subroutine UReadInflowOutflowCondition(UG)
+subroutine UReadInflowOutflowCondition(UG, Uconf)
 use StructVar_Mod
 use LoopVar_Mod
 use ConstantVar_Mod, Gamma => SpecificOfHeatRatio
 use FrequentOperation
 implicit none
     type(UnstructuredGrid), intent(inout) :: UG
+    type(Configulation), intent(in) :: Uconf
     character(len=64) :: cFileName
     character :: cAnnotate
 
@@ -25,10 +26,10 @@ implicit none
     !read(5,*) cFileName
     cFileName = "InOutFlowCondition"
 
-    open(unit=1,file=trim(adjustl(cFileName)),status='unknown')
-        read(1,*) cAnnotate
+    open(unit=Uconf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
+        read(Uconf%my_rank+100,*) cAnnotate
         do iLoop=1,5
-            read(1,*) cAnnotate, UG%GM%BC%InFlowVariable(iLoop)
+            read(Uconf%my_rank+100,*) cAnnotate, UG%GM%BC%InFlowVariable(iLoop)
         end do
             MachNumber = AbsVector(UG%GM%BC%InFlowVariable(2:4))
             UG%GM%BC%InFlowVariable(5) = UG%GM%BC%InFlowVariable(1)/Gamma !無次元化
@@ -38,9 +39,9 @@ implicit none
 
             !UG%GM%BC%InFlowVariable(2:4) = UG%GM%BC%InFlowVariable(2:4)*UG%GM%BC%InFlowVariable(1) !速度→運動量
 
-        read(1,*) cAnnotate
+        read(Uconf%my_rank+100,*) cAnnotate
         do iLoop=1,5
-            read(1,*) cAnnotate, UG%GM%BC%OutFlowVariable(iLoop)
+            read(Uconf%my_rank+100,*) cAnnotate, UG%GM%BC%OutFlowVariable(iLoop)
         end do
             UG%GM%BC%OutFlowVariable(5) = UG%GM%BC%OutFlowVariable(1)/Gamma !圧力の無次元化
             !UG%GM%BC%OutFlowVariable(5) = &
@@ -48,7 +49,7 @@ implicit none
             !&   * dot_product(UG%GM%BC%OutFlowVariable(2:4),UG%GM%BC%OutFlowVariable(2:4)) !圧力→エネルギー
 
             !UG%GM%BC%OutFlowVariable(2:4) = UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量
-    close(1)
+    close(Uconf%my_rank+100)
 
     call ChangeAngle(dAttackAngle, UG%GM%BC%InFlowVariable(2:4))
     call ChangeAngle(dAttackAngle, UG%GM%BC%OutFlowVariable(2:4))

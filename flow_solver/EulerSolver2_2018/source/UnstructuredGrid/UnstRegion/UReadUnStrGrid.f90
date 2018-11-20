@@ -212,7 +212,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             end if
         end if
 
-        close(1)
+        close(UConf%my_rank+100)
 
         UG%GM%Bound(1,1) = minval(UG%CD%Point(:,1),1)
         UG%GM%Bound(2,1) = maxval(UG%CD%Point(:,1),1)
