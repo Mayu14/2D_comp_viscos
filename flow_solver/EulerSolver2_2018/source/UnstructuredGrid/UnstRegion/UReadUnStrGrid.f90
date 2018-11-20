@@ -25,9 +25,10 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
-    if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName
+    !if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName
     !cFileName = "tri_SquareGrid.mayu"
-    cFileName = "SquareGrid050_025.mayu"
+    cFileName = "NACA0012.mayu"
+    write(6,*) trim(adjustl(cFileName))
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
     open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
@@ -171,24 +172,24 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
         end if
 
         if(UG%GI%AllCells - UG%GI%RealCells - UG%GI%OutlineCells /= 0) then
-            read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+            read(UConf%my_rank+100, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
             do iCell = 1, UG%Tri%Total
-                read(1, *) UG%Tri%Belongs2Wall(iCell)
+                read(UConf%my_rank+100, *) UG%Tri%Belongs2Wall(iCell)
             end do
 
-            read(1, *) cAnnotate !"DistanceFromObjectSurface "
+            read(UConf%my_rank+100, *) cAnnotate !"DistanceFromObjectSurface "
             do iCell = 1, UG%Tri%Total
-                read(1, *) UG%Tri%Distance(iCell)
+                read(UConf%my_rank+100, *) UG%Tri%Distance(iCell)
             end do
 
-            read(1, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+            read(UConf%my_rank+100, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
             do iEdge = 1, UG%Line%Total
-                read(1, *) UG%Line%Belongs2Wall(iEdge)
+                read(UConf%my_rank+100, *) UG%Line%Belongs2Wall(iEdge)
             end do
 
-            read(1, *) cAnnotate !"DistanceFromObjectSurface4Edge "
+            read(UConf%my_rank+100, *) cAnnotate !"DistanceFromObjectSurface4Edge "
             do iEdge = 1, UG%Line%Total
-                read(1, *) UG%Line%Distance(iEdge)
+                read(UConf%my_rank+100, *) UG%Line%Distance(iEdge)
             end do
 
             read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "

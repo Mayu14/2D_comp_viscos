@@ -21,7 +21,6 @@ subroutine JobParallelNS(UConf)
     type(UnstructuredGrid) :: UG
     integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot, iCalcStep !時間分割
     integer :: iAccel = 1
-    double precision :: NondimensionTime=0.0d0, AccelTimeRange = 0.5d0
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
 
@@ -43,10 +42,13 @@ subroutine JobParallelNS(UConf)
     iCalcStep = 0
     iStartStep = 1
     do iStep = iStartStep, IterationNumber
+
         if(UConf%UseLocalTimeStep /= 0 .and. iAccel == 0) then  ! steady area
             iCalcStep = iCalcStep + 1   ! tmp
             call UnstNS(iStep,UConf,UG,UCC,UCE)
+            call RelativeCoordinateTransform(UG, UCC, obj_velocity)
             call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
+            call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
 
         else    ! accelaration area
             call JPUCheckCFL4FixedTime(UG,UCC,iSplit)
@@ -56,10 +58,10 @@ subroutine JobParallelNS(UConf)
                 iCalcStep = iCalcStep + 1
                 obj_velocity(:) = - min(0.01d0 * dble(iCalcStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
 
-                if(iLoop == 1) call RelativeCoordinateTransform(obj_velocity)
+                if(iLoop == 1) call RelativeCoordinateTransform(UG, UCC, obj_velocity)
                     call UnstNS(iStep,UConf,UG,UCC,UCE)
                     call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
-                if(iLoop == iSplit) call RelativeCoordinateTransform(-obj_velocity)
+                if(iLoop == iSplit) call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
             end do
             FixedTimeStep = DefaultTimeStep
         end if
@@ -101,9 +103,12 @@ contains
         return
     end subroutine UnstNS
 
-    subroutine RelativeCoordinateTransform(ObjectVelocity)
+    subroutine RelativeCoordinateTransform(UG, CC4MB, ObjectVelocity)
         implicit none
+        type(UnstructuredGrid), intent(in) :: UG
+        type(CellCenter), intent(inout) :: CC4MB
         double precision, intent(in) :: ObjectVelocity(:)
+        integer :: iCell
 
         do iCell=1, UG%GI%AllCells
 
