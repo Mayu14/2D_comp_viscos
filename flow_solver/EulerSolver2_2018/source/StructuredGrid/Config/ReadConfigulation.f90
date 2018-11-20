@@ -58,10 +58,10 @@ subroutine ReadConfigulation(Conf, my_rank)
 
     if(Conf%my_rank == 0) then
         Conf%UseFluxMethod = 1
-        Conf%cGridName = "SLAU2_shocktube"
+        !Conf%cGridName = "SLAU2_shocktube"
     else
         Conf%UseFluxMethod = 0
-        Conf%cGridName = "Roe_shocktube"
+        !Conf%cGridName = "Roe_shocktube"
     end if
 
     call Show_Configulation(debug)
