@@ -62,11 +62,12 @@ SRC_DIR_f90d3 =
 OBJS_DIR = obj/Debug/grid_generator/ManipulateVtk/Preprocessing4UnstructuredGrid/source/
 EXE_DIR = bin/Debug/
 
-EXE = Preprocessing4UnstructuredGrid.exe
-FC = 
-LD = IDIR = 
+EXE = Preprocessing4UnstructuredGrid
+FC = ifort
+LD = ifort
+IDIR = 
 CFLAGS = -warn all -i8 -check uninit -check pointers -check bounds -stand f90 -O0 -traceback -warn all -debug full -check all  -J$(OBJS_DIR) $(IDIR)
-LFLAGS = 
+LFLAGS = -s
 LIBS = 
 
 VPATH = $(SRC_DIR_f90d1):$(OBJS_DIR):$(SRC_DIR_f90d2):$(OBJS_DIR):$(SRC_DIR_f90d3):$(OBJS_DIR)
