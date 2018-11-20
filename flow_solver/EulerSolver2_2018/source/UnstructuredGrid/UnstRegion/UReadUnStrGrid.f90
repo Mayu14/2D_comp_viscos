@@ -26,7 +26,8 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
     if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName
-    cFileName = "tri_SquareGrid.mayu"
+    !cFileName = "tri_SquareGrid.mayu"
+    cFileName = "SquareGrid050_025.mayu"
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
     open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')

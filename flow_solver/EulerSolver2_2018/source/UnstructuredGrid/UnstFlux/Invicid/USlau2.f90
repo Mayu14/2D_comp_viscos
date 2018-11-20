@@ -38,22 +38,18 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
     do iEdge=1, UG%GI%Edges !すべての界面について
         ! set quantity of cell between surface iEdge
         !if(UConf%UseMUSCL == 1) then
+        ! L = + = 1
         PresL = UCE%RebuildQunatity(5,1,1,2,iEdge)
         VelNormL = sum(UCE%RebuildQunatity(2:4,1,1,2,iEdge)**2)
 
-        PhaiLR(1,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)
-        PhaiLR(2,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(2,1,1,2,iEdge)
-        PhaiLR(3,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(3,1,1,2,iEdge)
-        PhaiLR(4,1) = UCE%RebuildQunatity(1,1,1,2,iEdge)*UCE%RebuildQunatity(4,1,1,2,iEdge)
+        PhaiLR(1:4,1) = UCE%RebuildQunatity(1:4,1,1,2,iEdge)
         PhaiLR(5,1) = InverseGmin1 * Gamma * PresL / UCE%RebuildQunatity(1,1,1,2,iEdge) + 0.5d0 * VelNormL
 
+        ! R = - = 2
         PresR = UCE%RebuildQunatity(5,1,1,1,iEdge)
         VelNormR = sum(UCE%RebuildQunatity(2:4,1,1,1,iEdge)**2)
 
-        PhaiLR(1,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)
-        PhaiLR(2,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(2,1,1,1,iEdge)
-        PhaiLR(3,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(3,1,1,1,iEdge)
-        PhaiLR(4,2) = UCE%RebuildQunatity(1,1,1,1,iEdge)*UCE%RebuildQunatity(4,1,1,1,iEdge)
+        PhaiLR(1:4,2) = UCE%RebuildQunatity(1:4,1,1,1,iEdge)
         PhaiLR(5,2) = InverseGmin1 * Gamma * PresR / UCE%RebuildQunatity(1,1,1,1,iEdge) + 0.5d0 * VelNormR
 
         !else   ! UCC%PrimitiveVariablesからPhaiを計算する場合はこっちを利用(空間1次精度計算用)
@@ -61,6 +57,7 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
         Normal(2:4) = UG%GM%Normal(iEdge, :)
 
         ! get sound veocity average
+
         SoundV_Ave = 0.5d0 * (sqrt(Gamma * PresL / PhaiLR(1, 1)) + sqrt(Gamma * PresR / PhaiLR(1, 2)))
 
         ! get absolute normal velocity of each cell
@@ -105,7 +102,7 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
         !gamma_hr = ! high resolution化は後回し
 
         pressure_flux = 0.5d0 * (PresL + PresR) + 0.5d0 * (pres_P_a - pres_M_a) * (PresL - PresR) &
-                        & + sqrt(0.5d0 * (VelNormL + VelNormR) * (pres_P_a + pres_M_a) * (0.5d0*(PhaiLR(1,1) + PhaiLR(1,2))) * SoundV_Ave)
+                        & + sqrt(0.5d0 * (VelNormL + VelNormR)) * (pres_P_a + pres_M_a - 1.0d0) * (0.5d0 * (PhaiLR(1,1) + PhaiLR(1,2)) / SoundV_Ave)
 
 
         UCE%NormalFluxDiff(:,1,1,1,iEdge) = &
