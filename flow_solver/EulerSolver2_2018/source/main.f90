@@ -89,7 +89,7 @@ contains
             LG%UG(iGrid)%InternalBoundary = iBody
         end if
         call URegistCellType(LG%UG(iGrid))
-        call UReadInflowOutflowCondition(LG%UG(iGrid))
+        call UReadInflowOutflowCondition(LG%UG(iGrid), MConf)
     end do
 
     allocate(LG%CC4MB(iBody))
@@ -342,7 +342,7 @@ contains
         !call UTestAlloc(UCC,UCE,UG)
         call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
         iStep = 0
-        call UReadInflowOutflowCondition(UG)
+        call UReadInflowOutflowCondition(UG, UConf)
         call UOutput(UConf,UG,UCC,iStep)
 
         !max(UG%GM%Bound(2,1)-UG%GM%Bound(1,1),UG%GM%Bound(2,2)-UG%GM%Bound(1,2)/
@@ -365,9 +365,7 @@ contains
 
             do iLoop=1, iSplit
                 call OUnstEuler(iStep,UConf,UG,UCC,UCE,SW)
-                !call UOutput(UConf, UG, UCC, iLoop)
             end do
-            !stop
             FixedTimeStep = DefaultTimeStep
 
             if(mod(iStep,OutputInterval) == 0) then
@@ -539,7 +537,7 @@ contains
         !call UTestAlloc(UCC,UCE,UG)
         call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
         iStep = 0
-        call UReadInflowOutflowCondition(UG)
+        call UReadInflowOutflowCondition(UG, UConf)
         call UOutput(UConf,UG,UCC,iStep)
 
         !max(UG%GM%Bound(2,1)-UG%GM%Bound(1,1),UG%GM%Bound(2,2)-UG%GM%Bound(1,2)/

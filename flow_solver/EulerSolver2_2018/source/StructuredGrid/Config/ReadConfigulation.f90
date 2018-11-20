@@ -15,7 +15,7 @@ subroutine ReadConfigulation(Conf, my_rank)
     use StructVar_Mod
     use ConstantVar_Mod
     implicit none
-    type(Configulation), intent(out) :: Conf
+    type(Configulation), intent(inout) :: Conf
     integer :: my_rank
     character :: cAnnotate
     logical :: debug = .true.
@@ -46,10 +46,23 @@ subroutine ReadConfigulation(Conf, my_rank)
         read(my_rank+100,*) CourantFriedrichsLewyCondition, cAnnotate
         read(my_rank+100,*) Conf%TurbulenceModel, cAnnotate
         read(my_rank+100,*) ReynoldsNumber, cAnnotate
-    close(1)
+    close(my_rank+100)
+
     if(Conf%TurbulenceModel /= 0) invicid = .false.
     if(Conf%UseRRK2 == 1) IterationNumber = 2*IterationNumber
     DefaultTimeStep = FixedTimeStep
+
+    if(Conf%UseJobParallel == 0) then
+        Conf%my_rank = 0
+    end if
+
+    if(Conf%my_rank == 0) then
+        Conf%UseFluxMethod = 1
+        Conf%cGridName = "SLAU2_shocktube"
+    else
+        Conf%UseFluxMethod = 0
+        Conf%cGridName = "Roe_shocktube"
+    end if
 
     call Show_Configulation(debug)
 
@@ -89,8 +102,6 @@ contains
             write(6,*) "ReynoldsNumber", ReynoldsNumber
         end if
 
-        if(Conf%UseJobParallel == 0) Conf%my_rank = 0
-        Conf%UseFluxMethod = 1
         return
     end subroutine Show_Configulation
 
