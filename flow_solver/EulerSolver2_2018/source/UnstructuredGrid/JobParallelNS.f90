@@ -38,11 +38,14 @@ subroutine JobParallelNS(UConf)
             iSplit = 1
         end if
 
+        !MW%StepDistance(1:3) = - UG%GM%BC%InFlowVariable(2:4)*FixedTimeStep
+        !call VelocityCorrection(1,UG,MG,UCC,MW,FixedTimeStep,99.0d0)
+
         do iLoop=1, iSplit
             call UnstNS(iStep,UConf,UG,UCC,UCE)
-            call JPUOutput(UConf,UG,UCC,iLoop)
         end do
-        stop
+
+        !call VelocityCorrection(2,UG,MG,UCC,MW,FixedTimeStep,99.0d0)
         FixedTimeStep = DefaultTimeStep
 
         if(mod(iStep,OutputInterval) == 0) then
