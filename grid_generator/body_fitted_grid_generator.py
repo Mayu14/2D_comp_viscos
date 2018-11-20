@@ -351,7 +351,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                     + g11(i, j) * y_etaeta(i, j) + control_Q[i, j] * y_eta(i, j))
 
     def output_vtk(fname, path):
-        fname = path + fname + ".vtk"
+        fname = path + "quad_" + fname + ".vtk"
         with open(fname, 'w') as f:
             point_number = str(xi_max * eta_max)
             cell_number = str((xi_max) * (eta_max - 1))
@@ -388,7 +388,7 @@ def make_grid_seko(z1, path = "", fname="sample", mg2=True, vtk=True, bdm=True, 
                     f.write("9\n")
 
     def output_vtk_tri(fname, path):
-        fname = path + "tri_" + fname + ".vtk"
+        fname = path + fname + ".vtk"
         with open(fname, 'w') as f:
             point_number = str(xi_max * eta_max)
             cell_number = str(2 * (xi_max) * (eta_max - 1))
@@ -796,7 +796,7 @@ def write_out_mayugrid2(fname, path, grid_x, grid_y, point2wall, wall2point):
                 f.write(str(wall2point[edge][p]).replace("[", "").replace(",", "").replace("]", "") + "\n")
 
 
-def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=True, vtk=True, bdm=True, trianglation=True, path = ""):
+def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08, mayugrid2=False, vtk=False, bdm=False, trianglation=True, path = ""):
     z1, size = get_complex_coords(type = type, center_x = center_x, center_y=center_y, naca4 = naca4, size = size)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
@@ -809,5 +809,13 @@ def main():
     # plt.plot(np.real(z1), np.imag(z1))
     # plt.show()
 
+def makeGridLoop():
+    header = "NACA"
+    for i in range(1, 9999, 2):
+        naca4 = str(i).zfill(4)
+        fname = header + naca4
+        make_grid(fname, type=3, naca4=naca4)
+
 if __name__ == '__main__':
-    main()
+    #main()
+    makeGridLoop()
