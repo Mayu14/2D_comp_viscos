@@ -8,7 +8,7 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 0 データから境界条件読み出し:UseReadBoundaryCond
 1 各時間段階ごとにCFL条件を満たす最大の時間刻み幅を用いる:UseVariableTimeWidth
 0 0:非定常計算，1:定常計算
-0 局所時間刻みを使用:UseLocalTimeStep 
+1 局所時間刻みを使用:UseLocalTimeStep 
 0 2段階有理ルンゲクッタ法による時間2次精度計算:UseRRK2
 1 MUSCLによる空間2次精度計算:UseMUSCL
 1 勾配制限関数の種類(1:Venkatakrishnanの制限関数，2:(未実装))
@@ -20,7 +20,7 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 0.5 影響域余裕k(影響域の大きさをk倍に見積もる)
 0.3 エントロピー補正量
 0.3 Venkatakrishnanの振動許容量
-0.1 クーラン数
-0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
+0.4 クーラン数
+1	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
 10000 レイノルズ数	
 
