@@ -72,18 +72,16 @@ contains
         type(CellCenter), intent(inout) :: UCC
         type(CellEdge), intent(inout) :: UCE
 
-        if(UConf%UseMUSCL == 0) then
-            write(6,*) "Job parallel mode only support use MUSCL"
-            stop
+        if(UConf%UseMUSCL == 1) then
+            call JPUMUSCL(UConf, UG, UCC, UCE)
         end if
 
-        call JPUMUSCL(UConf, UG, UCC, UCE)
-        call JPUUpwindFlux_Dim2(UG, UCE, UCC)
-        !call USlau2(UConf, UG, UCC, UCE)
+        call USlau2(UConf, UG, UCC, UCE)
 
         if(UConf%TurbulenceModel == 1) then
             call UBaldwinLomax_main(UConf, UG, UCC, UCE)
         end if
+
         return
     end subroutine JPUCalcFlux
 

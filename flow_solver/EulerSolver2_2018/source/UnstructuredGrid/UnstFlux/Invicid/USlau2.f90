@@ -18,7 +18,7 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
     implicit none
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
-    type(CellCenter), intent(in) :: UCC
+    type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
 
     double precision, allocatable :: PhaiLR(:, :), Normal(:)    ! (1:密度，x速度，y速度，z速度, エンタルピー, 2:L(minus)=1, R(plus)=2
@@ -37,26 +37,46 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
 
     do iEdge=1, UG%GI%Edges !すべての界面について
         ! set quantity of cell between surface iEdge
-        !if(UConf%UseMUSCL == 1) then
-        PhaiLR(1, 1:2) = 1.0d0
-        ! R = - = Phai1 = ReQ1 (Surface Front Cell)
-        PresR = UCE%RebuildQunatity(5,1,1,1,iEdge)
-        DensR = UCE%RebuildQunatity(1,1,1,1,iEdge)
-        VelNormR = sum(UCE%RebuildQunatity(2:4,1,1,1,iEdge)**2)
+        if(UConf%UseMUSCL == 1) then
+            PhaiLR(1, 1:2) = 1.0d0
+            ! R = - = Phai1 = ReQ1 (Surface Front Cell)
+            PresR = UCE%RebuildQunatity(5,1,1,1,iEdge)
+            DensR = UCE%RebuildQunatity(1,1,1,1,iEdge)
+            VelNormR = sum(UCE%RebuildQunatity(2:4,1,1,1,iEdge)**2)
 
-        PhaiLR(2:4,1) = UCE%RebuildQunatity(2:4,1,1,1,iEdge)
-        PhaiLR(5,1) = InverseGmin1 * Gamma * PresR / UCE%RebuildQunatity(1,1,1,1,iEdge) + 0.5d0 * VelNormR
+            PhaiLR(2:4,1) = UCE%RebuildQunatity(2:4,1,1,1,iEdge)
+            PhaiLR(5,1) = InverseGmin1 * Gamma * PresR / UCE%RebuildQunatity(1,1,1,1,iEdge) + 0.5d0 * VelNormR
 
-        ! L = + = Phai2 = ReQ2 (Surface Back Cell)
-        PresL = UCE%RebuildQunatity(5,1,1,2,iEdge)
-        DensL = UCE%RebuildQunatity(1,1,1,2,iEdge)
-        VelNormL = sum(UCE%RebuildQunatity(2:4,1,1,2,iEdge)**2)
+            ! L = + = Phai2 = ReQ2 (Surface Back Cell)
+            PresL = UCE%RebuildQunatity(5,1,1,2,iEdge)
+            DensL = UCE%RebuildQunatity(1,1,1,2,iEdge)
+            VelNormL = sum(UCE%RebuildQunatity(2:4,1,1,2,iEdge)**2)
 
-        PhaiLR(2:4,2) = UCE%RebuildQunatity(2:4,1,1,2,iEdge)
-        PhaiLR(5,2) = InverseGmin1 * Gamma * PresL / UCE%RebuildQunatity(1,1,1,2,iEdge) + 0.5d0 * VelNormL
+            PhaiLR(2:4,2) = UCE%RebuildQunatity(2:4,1,1,2,iEdge)
+            PhaiLR(5,2) = InverseGmin1 * Gamma * PresL / UCE%RebuildQunatity(1,1,1,2,iEdge) + 0.5d0 * VelNormL
 
-        !else   ! UCC%PrimitiveVariablesからPhaiを計算する場合はこっちを利用(空間1次精度計算用)
-        !end if
+        else   ! UCC%PrimitiveVariablesからPhaiを計算する場合はこっちを利用(空間1次精度計算用)
+            call JPUConserve2Primitive(UG, UCC)
+            iCell = UG%Line%Cell(iEdge, 1, 1)
+            iAdjacentCell = UG%Line%Cell(iEdge, 2, 1)
+
+            PhaiLR(1, 1:2) = 1.0d0
+            ! R = - = Phai1 = ReQ1 (Surface Front Cell)
+            PresR = UCC%PrimitiveVariable(5,iCell,1,1)
+            DensR = UCC%PrimitiveVariable(1,iCell,1,1)
+            VelNormR = sum(UCC%PrimitiveVariable(2:4,iCell,1,1)**2)
+
+            PhaiLR(2:4,1) = UCC%PrimitiveVariable(2:4,iCell,1,1)
+            PhaiLR(5,1) = InverseGmin1 * Gamma * PresR / UCC%PrimitiveVariable(1,iCell,1,1) + 0.5d0 * VelNormR
+
+            ! L = + = Phai2 = ReQ2 (Surface Back Cell)
+            PresL = UCC%PrimitiveVariable(5,iAdjacentCell,1,1)
+            DensL = UCC%PrimitiveVariable(1,iAdjacentCell,1,1)
+            VelNormL = sum(UCC%PrimitiveVariable(2:4,iAdjacentCell,1,1)**2)
+
+            PhaiLR(2:4,2) = UCC%PrimitiveVariable(2:4,iAdjacentCell,1,1)
+            PhaiLR(5,2) = InverseGmin1 * Gamma * PresL / UCC%PrimitiveVariable(1,iAdjacentCell,1,1) + 0.5d0 * VelNormL
+        end if
         Normal(2:4) = UG%GM%Normal(iEdge, :)
 
         ! get sound veocity average
