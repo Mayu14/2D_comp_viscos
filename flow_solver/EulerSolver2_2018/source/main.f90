@@ -538,8 +538,9 @@ contains
         call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
         iStep = 0
         call UReadInflowOutflowCondition(UG, UConf)
+        call UPrepareBoundary(UG, UCC)
         call UOutput(UConf,UG,UCC,iStep)
-
+        stop
         !max(UG%GM%Bound(2,1)-UG%GM%Bound(1,1),UG%GM%Bound(2,2)-UG%GM%Bound(1,2)/
 
         iStartStep = 1

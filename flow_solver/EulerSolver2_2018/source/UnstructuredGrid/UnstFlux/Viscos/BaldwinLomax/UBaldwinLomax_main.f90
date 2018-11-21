@@ -38,7 +38,8 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
 
 ! Baldwin-Lomax
-
+!$omp parallel num_threads(CoreNumberOfCPU), default(private), shared(UConf, UG, UCC, UCE), firstprivate(iWall, iMember)
+!$omp do
     ! loop of wall
     do iWall=1, UG%GM%BC%iWallTotal
         ! get density, shear_stress, and viscosity on wall
@@ -67,7 +68,8 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
         call GetTurbulenceViscosity(UG%GM%BC%VW(iWall), mixing_length**2, Fwake, yMax, UG%Line%Distance(:), UCE)
         deallocate(mixing_length)
     end do
-
+!$omp end do
+!$omp end parallel
     return
 contains
 
