@@ -25,7 +25,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
-    if(UConf%UseJobParallel == 1) cFileName = UConf%cGridName//".mayu"
+    if(UConf%UseJobParallel == 1) cFileName = trim(adjustl(UConf%cGridName))//".mayu"
     !cFileName = "tri_SquareGrid.mayu"
     !cFileName = "NACA0012.mayu"
     write(6,*) trim(adjustl(cFileName))
