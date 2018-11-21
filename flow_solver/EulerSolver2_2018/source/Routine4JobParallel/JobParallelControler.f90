@@ -32,7 +32,7 @@ subroutine JobParallelControler(UConf)
         !UConf%my_thread = omp_get_thread_num()
         call ReadConfigulation(UConf, UConf%my_rank)
         write(6,*) UConf%my_rank, UConf%cGridName
-        call JPCalcCaseAutoFill(UConf, UConf%my_rank, PETOT, UConf%my_thread, Total_threads)
+        call JPCalcCaseAutoFill(UConf, PETOT)
         call JobParallelNS(Uconf)
 
     !!$omp end parallel
