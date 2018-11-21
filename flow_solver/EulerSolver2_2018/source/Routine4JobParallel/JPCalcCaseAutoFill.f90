@@ -22,7 +22,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: iParallelTotal
     integer :: i4digit, iAngleDeg, iLoop
     double precision :: AttackAngleRad
-    character(len=32) :: cGridName, cResultName, cLoop
+    character(len=32) :: cGridName, cResultName, cLoop, cAngle
 
     write(6,*) iParallelTotal
     do i4digit = 1, 9999, 2
@@ -35,6 +35,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
     UConf%cGridName = "NACA0012"
     UConf%dAttackAngle = 180 * dPi * ((dble(UConf%my_rank) - 1.0d0) * 2.0d0)
+    write(cAngle, *) trim(adjustl(str(2*(UConf%my_rank - 1))))
+    UConf%cGridName = trim(adjustl(UConf%cGridName))//trim("_")//trim(adjustl(cAngle))
 
     return
 contains
