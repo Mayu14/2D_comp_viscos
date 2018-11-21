@@ -38,6 +38,7 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         end subroutine JPUUpwindFlux_Dim2
     end interface
 
+
     if(UConf%UseJobParallel == 1) then
         call JPUCalcFlux(UConf, UG, UCC, UCE)
     else
