@@ -34,7 +34,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     end do
 
     UConf%cGridName = "NACA0012"
-    UConf%dAttackAngle = 180 * dPi * ((dble(UConf%my_rank) - 1.0d0) * 2.0d0)
+    UConf%dAttackAngle = 180 * dPi * 16.0d0 !((dble(UConf%my_rank) - 1.0d0) * 2.0d0)
     write(cAngle, *) int(2*(UConf%my_rank - 1))
     Uconf%cFileName = trim(adjustl(UConf%cGridName))//trim("_")//trim(adjustl(cAngle))
 

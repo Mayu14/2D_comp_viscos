@@ -45,9 +45,8 @@ subroutine JobParallelNS(UConf)
 
         if(UConf%UseLocalTimeStep /= 0 .and. iAccel == 0) then  ! steady area
             iCalcStep = iCalcStep + 1   ! tmp
-            call UnstNS(iStep,UConf,UG,UCC,UCE)
             call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
-            !call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
+            call UnstNS(iStep,UConf,UG,UCC,UCE)
             call RelativeCoordinateTransform(UG, UCC, obj_velocity)
 
         else    ! accelaration area
@@ -60,7 +59,6 @@ subroutine JobParallelNS(UConf)
 
                 if(iLoop == 1) call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
                     call UnstNS(iStep,UConf,UG,UCC,UCE)
-                    !call JPUOutput(UConf, UG, UCC, iCalcStep)   ! tmp
                 if(iLoop == iSplit) call RelativeCoordinateTransform(UG, UCC, obj_velocity)
             end do
             FixedTimeStep = DefaultTimeStep
