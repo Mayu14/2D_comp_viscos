@@ -28,7 +28,7 @@ program EulerEQ1D
     !iSwitch = 3
     !write(6,*) "Please input use CPU number."
     !read(5,*) CoreNumberOfCPU
-    CoreNumberOfCPU = 4
+    CoreNumberOfCPU = 16
 
     if(Conf%SwitchProgram == 0) then
         call StructEulerEQ(Conf)
