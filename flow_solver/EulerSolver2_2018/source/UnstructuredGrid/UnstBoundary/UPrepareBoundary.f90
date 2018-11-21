@@ -19,8 +19,6 @@ implicit none
     type(UnstructuredGrid), intent(inout) :: UG
     type(CellCenter), intent(inout) :: UCC
 
-    iDim = UG%GM%Dimension
-
     do iCell = UG%GI%RealCells+1, UG%GI%AllCells
         if(UG%GM%CellType(iCell,1,1) == 1) then !Inflow and Outflow
             iEdge = UG%VC%Edge(iCell)
@@ -29,6 +27,8 @@ implicit none
             end if
         end if
     end do
+
+
 
     return
 end subroutine UPrepareBoundary

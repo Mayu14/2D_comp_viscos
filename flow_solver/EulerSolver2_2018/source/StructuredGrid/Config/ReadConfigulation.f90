@@ -57,13 +57,13 @@ subroutine ReadConfigulation(Conf, my_rank)
     end if
 
     if(Conf%my_rank == 17) then
-        Conf%UseFluxMethod = 1
+        Conf%UseFluxMethod = 0
         !Conf%cGridName = "Roe_shocktube"
     else
-        Conf%UseFluxMethod = 0
+        Conf%UseFluxMethod = 1
         !Conf%cGridName = "SLAU2_shocktube"
     end if
-
+    Conf%UseFluxMethod = 1
     call Show_Configulation(debug)
 
     return
@@ -100,6 +100,7 @@ contains
             write(6,*) "CourantFriedrichsLewyCondition", CourantFriedrichsLewyCondition
             write(6,*) "Conf%TurbulenceModel", Conf%TurbulenceModel
             write(6,*) "ReynoldsNumber", ReynoldsNumber
+            write(6,*) "UseFluxMethod", Conf%UseFluxMethod
         end if
 
         return
