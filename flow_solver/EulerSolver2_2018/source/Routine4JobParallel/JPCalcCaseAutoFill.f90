@@ -24,7 +24,6 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop
 
-    iParallelTotal = int(PETOT * Total_threads)
     write(6,*) iParallelTotal
     do i4digit = 1, 9999, 2
         write(cGridName, '("NACA", i4.4, ".mayu")') i4digit
