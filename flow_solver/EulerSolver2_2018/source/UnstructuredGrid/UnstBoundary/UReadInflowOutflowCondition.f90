@@ -37,7 +37,7 @@ implicit none
             !&   UG%GM%BC%InFlowVariable(5)/Gmin1 + 0.5d0 * UG%GM%BC%InFlowVariable(1) &
             !&   * dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%BC%InFlowVariable(2:4))
 
-            !UG%GM%BC%InFlowVariable(2:4) = UG%GM%BC%InFlowVariable(2:4)*UG%GM%BC%InFlowVariable(1) !速度→運動量
+            !UG%GM%BC%InFlowVariable(2:4) = -UG%GM%BC%InFlowVariable(2:4)*UG%GM%BC%InFlowVariable(1) !速度→運動量 & 座標変換! 従来は物体の進行速度を入力していたため正負が反転
 
         read(Uconf%my_rank+100,*) cAnnotate
         do iLoop=1,5
@@ -48,7 +48,7 @@ implicit none
             !&   UG%GM%BC%OutFlowVariable(5)/Gmin1 + 0.5d0 * UG%GM%BC%OutFlowVariable(1) &
             !&   * dot_product(UG%GM%BC%OutFlowVariable(2:4),UG%GM%BC%OutFlowVariable(2:4)) !圧力→エネルギー
 
-            !UG%GM%BC%OutFlowVariable(2:4) = UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量
+            !UG%GM%BC%OutFlowVariable(2:4) = -UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量 & 座標変換(符号反転はそのため)
     close(Uconf%my_rank+100)
 
     call ChangeAngle(Uconf%dAttackAngle, UG%GM%BC%InFlowVariable(2:4))

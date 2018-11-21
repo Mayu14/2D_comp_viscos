@@ -99,7 +99,8 @@ VelocityCorrection.f90
 SRCS_f90d16 = \
 UPrepareBoundary.f90 \
 UReadInflowOutflowCondition.f90 \
-USetBoundary.f90 
+USetBoundary.f90 \
+UNonReflectBoundary.f90 
 
 SRCS_f90d17 = \
 OutputResultWithVC.f90 \
@@ -351,7 +352,8 @@ VelocityCorrection.o
 OBJS_f90d16 = \
 UPrepareBoundary.o \
 UReadInflowOutflowCondition.o \
-USetBoundary.o 
+USetBoundary.o \
+UNonReflectBoundary.o 
 
 OBJS_f90d17 = \
 OutputResultWithVC.o \
@@ -1373,6 +1375,11 @@ USetBoundary.o: \
 JPCalcCaseAutoFill.o: \
     JPCalcCaseAutoFill.f90 \
     ConstantVar_Mod.o \
+    StructVar_Mod.o
+UNonReflectBoundary.o: \
+    UNonReflectBoundary.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
     StructVar_Mod.o
 UCentralDifferencePrepareAroundEdge.o: \
     UCentralDifferencePrepareAroundEdge.f90 \

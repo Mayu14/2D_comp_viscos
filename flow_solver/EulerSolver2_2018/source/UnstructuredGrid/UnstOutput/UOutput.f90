@@ -15,7 +15,6 @@ subroutine UOutput(UConf,UG,UCC,iStep)
 
     call UConserve2Primitive(UG,UCC)
 
-
     write(cStep,*) iStep
     cDirectory = "ResultU/" !UConf%SaveDirectiry
     cFileName = trim(adjustl(cDirectory))//"PrimitiveVariables"//trim(adjustl(cStep))//"th_Result.vtk"
