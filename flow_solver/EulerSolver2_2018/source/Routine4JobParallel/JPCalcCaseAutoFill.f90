@@ -34,43 +34,57 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         end do
     end do
 
-
-    if(UConf%my_rank == 0) then
-        UConf%cGridName = "NACA0012"
-    else if(UConf%my_rank == 1) then
-        UConf%cGridName = "NACA0111"
-    else if(UConf%my_rank == 2) then
-        UConf%cGridName = "NACA0223"
-    else if(UConf%my_rank == 3) then
-        UConf%cGridName = "NACA0115"
-    else if(UConf%my_rank == 4) then
-        UConf%cGridName = "NACA0117"
-    else if(UConf%my_rank == 5) then
-        UConf%cGridName = "NACA0119"
-    else if(UConf%my_rank == 6) then
-        UConf%cGridName = "NACA1111"
-    else if(UConf%my_rank == 7) then
-        UConf%cGridName = "NACA1113"
-    else if(UConf%my_rank == 8) then
-        UConf%cGridName = "NACA1115"
-    else if(UConf%my_rank == 9) then
-        UConf%cGridName = "NACA1117"
-    else if(UConf%my_rank == 10) then
-        UConf%cGridName = "NACA1119"
-    else if(UConf%my_rank == 11) then
-        UConf%cGridName = "NACA1517"
-    else if(UConf%my_rank == 12) then
-        UConf%cGridName = "NACA1519"
-    else if(UConf%my_rank == 13) then
-        UConf%cGridName = "NACA1611"
-    else if(UConf%my_rank == 14) then
-        UConf%cGridName = "NACA2013"
-    else if(UConf%my_rank == 15) then
-        UConf%cGridName = "NACA2015"
-    else if(UConf%my_rank == 16) then
-        UConf%cGridName = "NACA2017"
-    end if
+    UConf%cGridName = "NACA0012"
+    UConf%dAttackAngle = 180 * dPi * ((dble(UConf%my_rank) - 1.0d0) * 2.0d0)
 
     return
+contains
+    subroutine grid_change(Uconf)
+        implicit none
+        type(Configulation), intent(inout) :: UConf
+
+            if(UConf%my_rank == 0) then
+                UConf%cGridName = "NACA0012"
+                UConf%dAttackAngle = 0.0d0 / 180.0d0 * dPi
+            else if(UConf%my_rank == 1) then
+                UConf%cGridName = "NACA0012"
+                UConf%dAttackAngle = 10.0d0 / 180.0d0 * dPi
+            else if(UConf%my_rank == 2) then
+                UConf%cGridName = "NACA0223"
+            else if(UConf%my_rank == 3) then
+                UConf%cGridName = "NACA0115"
+            else if(UConf%my_rank == 4) then
+                UConf%cGridName = "NACA0117"
+            else if(UConf%my_rank == 5) then
+                UConf%cGridName = "NACA0119"
+            else if(UConf%my_rank == 6) then
+                UConf%cGridName = "NACA1111"
+            else if(UConf%my_rank == 7) then
+                UConf%cGridName = "NACA1113"
+            else if(UConf%my_rank == 8) then
+                UConf%cGridName = "NACA1115"
+            else if(UConf%my_rank == 9) then
+                UConf%cGridName = "NACA1117"
+            else if(UConf%my_rank == 10) then
+                UConf%cGridName = "NACA1119"
+            else if(UConf%my_rank == 11) then
+                UConf%cGridName = "NACA1517"
+            else if(UConf%my_rank == 12) then
+                UConf%cGridName = "NACA1519"
+            else if(UConf%my_rank == 13) then
+                UConf%cGridName = "NACA1611"
+            else if(UConf%my_rank == 14) then
+                UConf%cGridName = "NACA2013"
+            else if(UConf%my_rank == 15) then
+                UConf%cGridName = "NACA2015"
+            else if(UConf%my_rank == 16) then
+                UConf%cGridName = "NACA2017"
+            end if
+
+        return
+    end subroutine grid_change
+
+
+
 end subroutine JPCalcCaseAutoFill
 

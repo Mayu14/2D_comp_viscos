@@ -51,8 +51,8 @@ implicit none
             !UG%GM%BC%OutFlowVariable(2:4) = UG%GM%BC%OutFlowVariable(2:4)*UG%GM%BC%OutFlowVariable(1) !速度→運動量
     close(Uconf%my_rank+100)
 
-    call ChangeAngle(dAttackAngle, UG%GM%BC%InFlowVariable(2:4))
-    call ChangeAngle(dAttackAngle, UG%GM%BC%OutFlowVariable(2:4))
+    call ChangeAngle(Uconf%dAttackAngle, UG%GM%BC%InFlowVariable(2:4))
+    call ChangeAngle(Uconf%dAttackAngle, UG%GM%BC%OutFlowVariable(2:4))
 
     return
 
