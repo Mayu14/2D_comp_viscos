@@ -16,86 +16,25 @@ program Preprocessing4UnstructuredGrid
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid) :: UG
-    character(len=64) :: cFileName
+    character(len=64) :: cFileName, cWing
     logical :: ExistBound
-    write(6,*) "Please input the name of VTK file that defined region.(***.vtk's ***)"
-    read(5,*) cFileName
-    !cFileName = 'Square2DMeshRough'
-    !write(6,*) "Please input Dimension to calculate."
-    !read(5,*) UG%GM%Dimension
-    UG%GM%Dimension = 2
+    integer :: MultipleConvertMode = 0, iWing
 
-!vtkの読み込み
-    call UReadRegionVTK(UG,cFileName)
+    MultipleConvertMode = 1    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
-!共有辺の抽出
-    call UMakeEdgeNumber(UG)
+    if(MultipleConvertMode /= 1) then
+        write(6,*) "Please input the name of VTK file that defined region.(***.vtk's ***)"
+        read(5,*) cFileName
+        UG%GM%Dimension = 2
+        call main_process(UG, cFileName)
 
-!ここでとりあえず必要なデータが全部揃うのでデータ格納用配列を全部割り当て
-    call AllocVariables_P4U
-
-!各種幾何学的量を求める
-!座標の中心
-    call UCalcElementCenter(UG)
-
-!セル体積
-    call UCalcCellVolume(UG)
-
-!界面面積
-    call UCalcEdgeArea(UG)
-
-!要素中心から界面までの距離ベクトル
-    call UCalcWidthCell2Edge(UG)
-
-!要素界面における法線ベクトルの計算
-    call UCalcNormalVector(UG)
-
-!Inscribed Circle Raduis !need to Volume and Area
-    call UCalcInscribedCircleOfCell(UG)
-
-!並べ替えの基準に用いる仮の仮想セル中心を求める
-    !call UDataPointOfVirtualCell(1) !Preprocess
-
-!仮想セルの並べ替え(外周部から内周部へ)
-    !call UReSortVirtualCell(UG)
-
-!実際の仮想セル中心を計算する
-    call UDataPointOfVirtualCell(2) !MainProcess
-
-!仮想セルの属性付け
-    call UMarkingVirtualCell(UG)
-
-!格子外周の凸包の点列を作成
-    call UMakeConvexHull(UG)
-
-    if(UG%VC%Total /= UG%GI%OutlineCells) then
-        !内部に物体を持つ格子のみ，"物体"っぽく見えるものを出力する
-        call UMakeInternalObject(UG)
+    else
+        do iWing = 1, 9999, 2
+            write(cWing, '("NACA", i4.4, ".vtk")') iWing
+            call main_process(UG, cFileName)
+            call deallocate_UG
+        end do
     end if
-
-!物体表面からの距離を与える
-    call UGetDistanceFromSurface(UG, ExistBound)
-    if(ExistBound == .True.) then
-        call UGetDistanceFromSurface_Edge(UG)
-    end if
-!テスト出力
-    !call UCheckGrid(UG)
-
-!中間ファイルの出力
-    call UOutputUnStrGrid(UG,cFileName, ExistBound)
-
-!do iCell=UG%GI%RealCells+1, UG%GI%AllCells
-!    write(6,*) "Length2",dot_product(UG%CD%Cell(iCell,:), UG%CD%Cell(iCell,:)), UG%GM%CellType(iCell,1,1)
-!    write(6,*) "AdjReCell/Edge",UG%VC%Cell(iCell,1),UG%VC%Cell(iCell,2)
-!    write(6,*) "EdgeNum,CellNum",UG%VC%Edge(iCell),UG%Tri%Edge(UG%VC%Cell(iCell,1),UG%VC%Cell(iCell,2))
-!    write(6,*) "VCx,y",UG%CD%Cell(iCell,1),UG%CD%Cell(iCell,2)
-!    write(6,*) "RCx,y",UG%CD%Cell(UG%VC%Cell(iCell,1),1),UG%CD%Cell(UG%VC%Cell(iCell,1),2)
-!    write(6,*) "REx,y",UG%CD%Edge(UG%VC%Edge(iCell),1),UG%CD%Edge(UG%VC%Edge(iCell),2)
-!    write(6,*) ""
-!end do
-!再構成済みファイル
-
-    print *, "Optimized Grid Data Generated!"
     stop
 
 contains
@@ -156,6 +95,123 @@ contains
 
     return
     end subroutine UDataPointOfVirtualCell
+
+    subroutine main_process(UG, cFileName)
+        implicit none
+        type(UnstructuredGrid), intent(inout) :: UG
+        character(len=64), intent(inout) :: cFileName
+
+
+    !vtkの読み込み
+        call UReadRegionVTK(UG,cFileName)
+
+    !共有辺の抽出
+        call UMakeEdgeNumber(UG)
+
+    !ここでとりあえず必要なデータが全部揃うのでデータ格納用配列を全部割り当て
+        call AllocVariables_P4U
+
+    !各種幾何学的量を求める
+    !座標の中心
+        call UCalcElementCenter(UG)
+
+    !セル体積
+        call UCalcCellVolume(UG)
+
+    !界面面積
+        call UCalcEdgeArea(UG)
+
+    !要素中心から界面までの距離ベクトル
+        call UCalcWidthCell2Edge(UG)
+
+    !要素界面における法線ベクトルの計算
+        call UCalcNormalVector(UG)
+
+    !Inscribed Circle Raduis !need to Volume and Area
+        call UCalcInscribedCircleOfCell(UG)
+
+    !並べ替えの基準に用いる仮の仮想セル中心を求める
+        !call UDataPointOfVirtualCell(1) !Preprocess
+
+    !仮想セルの並べ替え(外周部から内周部へ)
+        !call UReSortVirtualCell(UG)
+
+    !実際の仮想セル中心を計算する
+        call UDataPointOfVirtualCell(2) !MainProcess
+
+    !仮想セルの属性付け
+        call UMarkingVirtualCell(UG)
+
+    !格子外周の凸包の点列を作成
+        call UMakeConvexHull(UG)
+
+        if(UG%VC%Total /= UG%GI%OutlineCells) then
+            !内部に物体を持つ格子のみ，"物体"っぽく見えるものを出力する
+            call UMakeInternalObject(UG)
+        end if
+
+    !物体表面からの距離を与える
+        call UGetDistanceFromSurface(UG, ExistBound)
+        if(ExistBound == .True.) then
+            call UGetDistanceFromSurface_Edge(UG)
+        end if
+    !テスト出力
+        !call UCheckGrid(UG)
+
+    !中間ファイルの出力
+        call UOutputUnStrGrid(UG,cFileName, ExistBound)
+
+    !再構成済みファイル
+        print *, "Optimized Grid Data Generated!"
+
+        return
+    end subroutine main_process
+
+    subroutine deallocate_UG
+        implicit none
+
+        if(allocated(UG%CD%Cell)) deallocate(UG%CD%Cell)
+        if(allocated(UG%CD%Edge)) deallocate(UG%CD%Edge)
+
+        if(allocated(UG%GM%Area)) deallocate(UG%GM%Area)
+        if(allocated(UG%GM%Volume)) deallocate(UG%GM%Volume)
+        if(allocated(UG%GM%Width)) deallocate(UG%GM%Width)
+
+        if(allocated(UG%GM%Normal)) deallocate(UG%GM%Normal)
+        if(allocated(UG%GM%AverageWidth)) deallocate(UG%GM%AverageWidth)
+
+        if(allocated(UG%GM%CellType)) deallocate(UG%GM%CellType)
+        if(allocated(UG%GM%CellType)) deallocate(UG%VC%Type)
+
+        if(allocated(UG%GM%CellType)) deallocate(UG%InscribedCircle)
+        ! for test
+        if(allocated(UG%Tri%Belongs2Wall)) deallocate(UG%Tri%Belongs2Wall)
+        if(allocated(UG%Tri%Distance)) deallocate(UG%Tri%Distance)
+
+        if(allocated(UG%Line%Belongs2Wall)) deallocate(UG%Line%Belongs2Wall)
+        if(allocated(UG%Line%Distance)) deallocate(UG%Line%Distance)
+
+        if(allocated(UG%GM%BC%VW)) deallocate(UG%GM%BC%VW)
+        if(allocated(UG%CH%PointNum)) deallocate(UG%CH%PointNum)
+        if(allocated(UG%Tri%Cell)) deallocate(UG%Tri%Cell)
+        if(allocated(UG%Tri%Edge)) deallocate(UG%Tri%Edge)
+        if(allocated(UG%Line%Cell)) deallocate(UG%Line%Cell)
+        if(allocated(UG%Line%Point)) deallocate(UG%Line%Point)
+        if(allocated(UG%VC%Cell)) deallocate(UG%VC%Cell)
+        if(allocated(UG%IO%PointNum)) deallocate(UG%IO%PointNum)
+        if(allocated(UG%CD%Point)) deallocate(UG%CD%Point)
+        if(allocated(UG%Tri%Point)) deallocate(UG%Tri%Point)
+
+        if(allocated(UG%GM%BC%VW)) then
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                deallocate(UG%GM%BC%VW(iLoop)%iMemberCell)
+                deallocate(UG%GM%BC%VW(iLoop)%iMemberEdge)
+            end do
+            deallocate(UG%GM%BC%VW)
+        end if
+
+        return
+    end subroutine deallocate_UG
 
 end program
 

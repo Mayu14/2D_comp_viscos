@@ -30,7 +30,6 @@ subroutine UReadRegionVTK(UG,cFileName)
     !三角形要素の総数
     !三角形要素を構成する点の番号
 
-
     cVTK =  trim(adjustl(cFileName))//".vtk"
     open(unit=1, file=cVTK, status='unknown') !配列確保用
     open(unit=2, file=cVTK, status='unknown') !データ読み出し用
@@ -86,5 +85,5 @@ subroutine UReadRegionVTK(UG,cFileName)
 
     close(1)
     close(2)
-return
+    return
 end subroutine UReadRegionVTK
