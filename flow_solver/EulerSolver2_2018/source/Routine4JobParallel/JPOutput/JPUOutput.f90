@@ -17,7 +17,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
 
     write(cStep,*) iStep
     cDirectory = "ResultU/" !UConf%SaveDirectiry
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cGridName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
     open(unit = UConf%my_rank + 100, file =trim(adjustl(cFileName)), status = 'unknown')
         write(UConf%my_rank + 100,"('# vtk DataFile Version 3.0')")
