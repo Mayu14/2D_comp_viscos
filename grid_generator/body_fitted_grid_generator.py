@@ -731,23 +731,18 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
 
     eta_max = len(pts_x)
     
-    for j in range(1, theta_j):
+    for j in range(1, eta_max-1):
+        print(str(j) + "_line")
         z1_eq = pts_x[j] + 1j * pts_y[j]
         z2_eq = pts_x[j+1] + 1j * pts_y[j+1]
         total_point = np.concatenate([total_point, np.vstack([np.real(z2_eq), np.imag(z2_eq)]).T])
         simplices, new_edge = eta_next(z1_eq, z2_eq, cum_p)
         cum_p += z1_eq.shape[0]
         total_simplices = np.concatenate([total_simplices, simplices])
-        if j == 5:
-            plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
-            plt.xlim(0.9, 1.1)
-            plt.ylim(0.45,0.55)
-            plt.show()
-            plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
-            plt.show()
-        
+
+    Tri2vtk(path = path, fname = fname, Tri_points = total_point, Tri_simplices = total_simplices)
+    """
     obj_center = np.array([np.real(get_object_center(z2_eq)), np.imag(get_object_center(z2_eq))])
-    
     for j in range(theta_j, eta_max - 1):
         z1_eq = pts_x[j] + 1j * pts_y[j]
         z2_eq = pts_x[j+1] + 1j * pts_y[j+1]
@@ -767,7 +762,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
         plt.show()
  
-    Tri2vtk(path = path, fname = fname, Tri_points = total_point, Tri_simplices = total_simplices)
+    """
     """
     new_edge_num = new_edge.shape[0]
     z1_xy = make_point(z1_eq)
@@ -867,7 +862,7 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
 
 def main():
-    z1, size = get_complex_coords(type=3, naca4="2113", size=50)
+    z1, size = get_complex_coords(type=3, naca4="9925", size=25)
     # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1)
@@ -878,14 +873,16 @@ def main():
 def makeGridLoop():
     header = "NACA"
     path = "G:\\Toyota\\Data\\grid_vtk\\NACA4\\"
-    start = 9940
-    print(str(start + 1) + "_to_" + str(start+500))
-    for i in range(start + 1, start+500, 2):
-        naca4 = str(i).zfill(4)
-        fname = header + naca4
-        make_grid(fname, type=3, naca4=naca4, path = path, size=50)
-
+    i1 = 9
+    print(i1)
+    # for i1 in range(start + 1, start+500, 2):
+    for i2 in range(5):
+        for i34 in range(40):
+            naca4 = str(i1) + str(i2) + str(i34).zfill(2)
+            fname = header + naca4
+            make_grid(fname, type=3, naca4=naca4, path = path, size=40)
+        
 
 if __name__ == '__main__':
-    main()
-    # makeGridLoop()
+    # main()
+    makeGridLoop()
