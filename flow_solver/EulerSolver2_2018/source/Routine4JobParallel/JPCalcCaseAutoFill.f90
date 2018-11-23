@@ -19,24 +19,22 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     implicit none
     type(Configulation), intent(inout) :: UConf
     integer, intent(in) :: PETOT
-    integer :: iParallelTotal
-    integer :: i4digit, iAngleDeg, iLoop
+    integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
 
-    write(6,*) iParallelTotal
-    do i4digit = 1, 9999, 2
-        write(cGridName, '("NACA", i4.4, ".mayu")') i4digit
-        do iAngleDeg = 0, 39, 3
-            write(cResultName, '("NACA", i4.4, "_", i2.2, ".mayu")') i4digit, iAngleDeg
-            !access()
+    do i1digit = 0, 9
+        do i2digit = 0, 9
+            do i34digit = 1, 40
+                write(cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
+                do iAngleDeg = 0, 39, 3
+                    UConf%dAttackAngle = 180 * dPi * dble(iAngleDeg)
+                    write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                    call JobParallelNS(Uconf)
+                end do
+            end do
         end do
     end do
-
-    UConf%cGridName = "NACA0012"
-    UConf%dAttackAngle = 180 * dPi * 16.0d0 !((dble(UConf%my_rank) - 1.0d0) * 2.0d0)
-    write(cAngle, *) int(2*(UConf%my_rank - 1))
-    Uconf%cFileName = trim(adjustl(UConf%cGridName))//trim("_")//trim(adjustl(cAngle))
 
     return
 contains
@@ -84,8 +82,6 @@ contains
 
         return
     end subroutine grid_change
-
-
 
 end subroutine JPCalcCaseAutoFill
 
