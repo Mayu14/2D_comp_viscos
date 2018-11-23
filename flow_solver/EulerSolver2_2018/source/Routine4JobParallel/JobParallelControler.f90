@@ -33,7 +33,6 @@ subroutine JobParallelControler(UConf)
         call ReadConfigulation(UConf, UConf%my_rank)
         write(6,*) UConf%my_rank, UConf%cGridName
         call JPCalcCaseAutoFill(UConf, PETOT)
-        call JobParallelNS(Uconf)
 
     !!$omp end parallel
 

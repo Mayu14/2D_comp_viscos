@@ -7,7 +7,7 @@ from numpy.linalg import norm
 from naca_4digit_test import Naca_4_digit, Naca_5_digit
 from joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
 import matplotlib.pyplot as plt
-
+import os
 
 
 # 物体表面の複素座標を取得する
@@ -289,7 +289,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         return -np.real(z1 * 1j * z2)
     
     # 物体表面を押し出す(η格子線の複素座標，オフセット方向(外側or内側)，最大のオフセット量，オフセット倍率(遠方領域で1以上の値を与えて計算領域を効率的に広げる))
-    def offset_surface(z, outer=False, max_incremental=0.1, accel=1.0, restriction=True, del_wedge=160, min_theta_output=False):
+    def offset_surface(z, outer=False, max_incremental=0.1, accel=1.0, restriction=True, del_wedge=160, min_theta_output=False, long_axis="x"):
         size = z.shape[0]
 
         delta = np.zeros(size, dtype=complex)
@@ -325,7 +325,12 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
             
         phai = np.arctan2(np.imag(-delta1), np.real(-delta1))
         angle = phai + np.pi - 0.5 * theta
-        normal = np.exp(1j * angle)
+        if long_axis == "x":
+            coef = 1.3 + 1j
+        else:
+            coef = 1.0 + 1j * 1.5
+            
+        normal = np.exp(1j * angle) * coef
         """
         # 格子の裏返り防止(隣接する格子点から外向きξ方向へ伸びる2つの格子線がなす角度が90°以上開いている場合に，新しいη格子線が既存のη格子線と被らないように角度を修正する)
         def prevent_turn_over_cell(i, imp1, downwind=True):
@@ -507,15 +512,15 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                     break
         return z2
 
-    print("calc base grid-line")
+    # print("calc base grid-line")
     model_length = get_model_length(z1)
     theta_j = 0
     for j in range(1, eta_max):
-        print(j, z2.shape)
+        # print(j, z2.shape)
         pts_x.append(np.real(z2))
         pts_y.append(np.imag(z2))
         plot_complex(z2)
-        if j < 3:
+        if theta_j == 0:
             restrict = False
         else:
             restrict = True
@@ -524,7 +529,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         # z2_orthogonal, m_theta = offset_surface(z2, outer=True, max_incremental=max_incremental, accel=set_accel(j, accel_parameter))
         if theta_j == 0 and theta_flag == 1:
             theta_j = j
-
+        
         fix_z2 = merge_edge(z2_equidistant) # (1.0 - mix_rate) * z2_orthogonal + mix_rate * z2_equidistant
         # delta_j__ = np.hstack((z2[1:] - z2[:z2.shape[0] - 1], z2[0] - z2[z2.shape[0] - 1]))
         # delta_jp1 = np.hstack((fix_z2[1:] - fix_z2[:fix_z2.shape[0] - 1], fix_z2[0] - fix_z2[fix_z2.shape[0] - 1]))
@@ -539,6 +544,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
             flag = -1
         """
         z2 = delete_edge(fix_z2)
+        plot_complex(z2)
         
 
         if (np.max(np.real(z2)) - np.min(np.real(z2)) > 40.0 * model_length):
@@ -640,7 +646,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     plt.ylim(-0.1, 1.1)
     plt.show()
     """
-    print("genearate eta1")
+    # print("genearate eta1")
     # 追加する点の総数が分かった時点で，物体表面→η=1線の格子を先に切る
     # 物体表面のη=0線と物体表面から少し外側のη=1格子線を三角形で繋ぐ
     def eta_next(z1_eq, z2_eq, cum_p):
@@ -655,7 +661,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         z1_xy = make_point(z1_eq)
         z2_xy = make_point(z2_eq)
 
-        print("0th step")
+        # print("0th step")
         # 0.物体表面における辺の長さの最大値と比較して長すぎるものを除外
         ave = np.max(np.abs(z1_eq[1:] - z1_eq[:z1_eq.shape[0] - 1]))
         
@@ -664,7 +670,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                 if length[i, j] > 4.0 * ave:
                     edge_mask[i, j] = 0
                 
-        print("1st step")
+        # print("1st step")
         # 1.そもそも物体表面と交差してるのを除外
         for i in range(num0):
             for j in range(num1):
@@ -676,7 +682,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                         if line_intersect(z1_xy[i], z2_xy[j], z1_xy[k], z1_xy[kp1]):
                             edge_mask[i, j] = 0
 
-        print("2nd step")
+        # print("2nd step")
         # 2.線分同士で交差してるのを除外(bluteforth)
         for i in range(num0):    # p1
             for j in range(num1):    # p2
@@ -691,7 +697,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                                                 edge_mask[i, j] = 0
                                             else:
                                                 edge_mask[k, l] = 0
-        print("3rd step")
+        # print("3rd step")
         # 3.残った辺から三角形を構築
         simplices = []  # 最終的な格子に登録する用
         for i in range(num0):    # p1
@@ -862,7 +868,7 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
 
 def main():
-    z1, size = get_complex_coords(type=3, naca4="9925", size=25)
+    z1, size = get_complex_coords(type=3, naca4="4501", size=25)
     # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1)
@@ -873,14 +879,17 @@ def main():
 def makeGridLoop():
     header = "NACA"
     path = "G:\\Toyota\\Data\\grid_vtk\\NACA4\\"
+    fin_path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_finish\\"
     i1 = 9
     print(i1)
     # for i1 in range(start + 1, start+500, 2):
-    for i2 in range(5):
-        for i34 in range(40):
+    for i2 in range(5, 10):
+        for i34 in range(1, 40):
             naca4 = str(i1) + str(i2) + str(i34).zfill(2)
             fname = header + naca4
-            make_grid(fname, type=3, naca4=naca4, path = path, size=40)
+            if os.path.exists(fin_path + fname + ".vtk") == False:
+                print(fname)
+                make_grid(fname, type=3, naca4=naca4, path = path, size=50)
         
 
 if __name__ == '__main__':
