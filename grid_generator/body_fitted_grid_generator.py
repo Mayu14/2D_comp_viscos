@@ -189,7 +189,6 @@ def Tri2vtk(path, fname, Tri_points, Tri_simplices):
         cell_vertex_number = 4 * Tri_simplices.shape[0]
         #cell_vertex_number = str(2 * 4 * (xi_max) * (eta_max - 1))
 
-
         f.write("# vtk DataFile Version 3.0\n")
         f.write("Unstructured Grid tri example\n")
         f.write("ASCII\nDATASET UNSTRUCTURED_GRID\n")
@@ -286,8 +285,11 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     def dot_product_c(z1, z2):
         return np.real(z1 * np.conjugate(z2))
     
+    def cross_product_c(z1, z2):
+        return -np.real(z1 * 1j * z2)
+    
     # 物体表面を押し出す(η格子線の複素座標，オフセット方向(外側or内側)，最大のオフセット量，オフセット倍率(遠方領域で1以上の値を与えて計算領域を効率的に広げる))
-    def offset_surface(z, outer=False, max_incremental=0.1, accel=1.0, restriction=True):
+    def offset_surface(z, outer=False, max_incremental=0.1, accel=1.0, restriction=True, del_wedge=160, min_theta_output=False):
         size = z.shape[0]
 
         delta = np.zeros(size, dtype=complex)
@@ -300,6 +302,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         delta1[:size - 1] = z[1:] - z[:size - 1]
         delta1[size - 1] = z[0] - z[size - 1]
         len1 = np.abs(delta1)
+        
         theta = np.zeros(size)
         for i in range(size - 1):
             ab_ab = dot_product_c(-delta1[i], delta1[i + 1]) / (len1[i] * len1[i + 1])  # arccosのoverflow対策
@@ -314,10 +317,16 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         else:
             theta[0] = np.arccos(dot_product_c(-delta1[size - 1], delta1[0]) / (len1[size - 1] * len1[0]))
         
+        outside = np.where(cross_product_c(np.concatenate([z[1:], [z[0]]]), z) > 0, True, False)
+        # sum(pi - theta) ~ 2.0*piで円に近づいたとみなす
+        theta_flag = 0
+        if np.min(theta) > 0.95 * np.pi:
+            theta_flag = 1
+            
         phai = np.arctan2(np.imag(-delta1), np.real(-delta1))
         angle = phai + np.pi - 0.5 * theta
         normal = np.exp(1j * angle)
-
+        """
         # 格子の裏返り防止(隣接する格子点から外向きξ方向へ伸びる2つの格子線がなす角度が90°以上開いている場合に，新しいη格子線が既存のη格子線と被らないように角度を修正する)
         def prevent_turn_over_cell(i, imp1, downwind=True):
             dot_normal = np.real(normal[i] * np.conj(normal[imp1]))  # 隣接する格子線同士の内積を取る
@@ -334,8 +343,6 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                     normal[i] += (angle1 - angle0) / 100 * 5  # 角度差の5%だけ寄せる
             return flag
 
-        get_positive_angle = lambda angle: np.where(np.angle(angle) < 0.0, np.angle(angle) + 2.0 * np.pi,
-                                                    np.angle(angle))
         flag = 0
         count = 0
         tmp_normal = normal.copy()
@@ -353,29 +360,45 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
 
         if flag:
             normal = tmp_normal
-
-        # 内積を計算して，
-        dz = np.concatenate([z[1:] - z[:z.shape[0] - 1], np.array([z[0] - z[z.shape[0] - 1]])])
-        chk = np.sort(np.argwhere(np.where(theta < 0.85 * np.pi, True, False)))[::-1]
-
+        """
+        # 凹部から点を削除
+        
+        # if restriction:
+        dmask = np.where(theta > del_wedge / 180 * np.pi, True, False)
+            
         if restriction == False:
+            # 解像度が厳しいところに点を追加
+            chk = np.sort(np.argwhere(np.where(theta < 0.95 * np.pi, True, False)))[::-1]
             if chk.shape[0] != 0:
+                dmask = np.where(theta == theta, True, False)
                 for id in chk.flatten():
-                    z = np.concatenate([z[:id], [z[id]], [z[id]], [z[id]], z[id:]])
-                    normal = np.concatenate([normal[:id], [0.5 * (normal[id-1] + normal[id])], [normal[id]], [0.5 * (normal[id] + normal[id+1])], [normal[id+1]], normal[id+1:]])
-
+                    if dmask[id]:
+                        if outside[id]:
+                            z = np.concatenate([z[:id], [z[id]], [z[id]], [z[id]], z[id:]])
+                            normal = np.concatenate([normal[:id], [0.5 * (normal[id-1] + normal[id])], [normal[id]], [0.5 * (normal[id] + normal[id+1])], [normal[id+1]], normal[id+1:]])
+                            dmask = np.concatenate([dmask[:id], [dmask[id]], [dmask[id]], [dmask[id]], dmask[id:]])
+                            outside = np.concatenate([outside[:id], [outside[id]], [outside[id]], [outside[id]], outside[id:]])
+    
         if np.min(np.abs(delta)) > 0.1 * np.average(np.abs(delta)):
             incremental = accel * min(min(2.0 / np.pi * np.min(np.abs(delta)), np.average(np.abs(delta))),
                                       max_incremental)  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
         else:
             incremental = accel * 0.5 * np.average(np.abs(delta))  # obj sizeとboundaryサイズを均等に分割したときの幅で置換すべき(0.1)
+        # print(z.shape, ((z - normal * incremental) * dmask).shape)
 
-        if outer == True:
-            return z - normal * incremental
+        if min_theta_output:
+            if outer == True:
+                return (z - normal * incremental)[dmask], theta_flag
+            else:
+                return (z + normal * incremental)[dmask], theta_flag
         else:
-            return z + normal * incremental
+            if outer == True:
+                return (z - normal * incremental)[dmask]
+            else:
+                return (z + normal * incremental)[dmask]
+            
 
-    def get_equidistant_curve(z2, add=0):
+    def get_equidistant_curve(z2, add=0, rate=0.5):
         def func2(x, rate):
             a = 3.0 / (2 + rate)
             b = a * rate
@@ -384,16 +407,21 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                                      np.where(x < 4 / 6, a * (x - 2 / 6) + (a + b) / 6,
                                               np.where(x < 5 / 6, b * (x - 4 / 6) + (3 * a + b) / 6,
                                                        a * (x - 5 / 6) + (3 * a + 2 * b) / 6))))
-    
+
         t, total_len = get_length_rate(z2, output_total_length=True)
         fx = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.real(np.hstack((z2, z2[0]))))
         fy = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.imag(np.hstack((z2, z2[0]))))
-        equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], 0.5)
+        equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], rate)
         return fx(equidistant_t) + 1j * fy(equidistant_t)
 
-    def equidistant_offset(z2, max_incremental, accel, add=0, restriction=True):
-        z2 = offset_surface(z2, outer=True, max_incremental=max_incremental, accel=accel, restriction=restriction)
-        return get_equidistant_curve(z2, add)
+    def equidistant_offset(z2, max_incremental, accel, add=0, restriction=True, rate=0.5, min_theta_output=False):
+        if min_theta_output:
+            z2, theta_flag = offset_surface(z2, outer=True, max_incremental=max_incremental, accel=accel, restriction=restriction, min_theta_output=min_theta_output)
+            return get_equidistant_curve(z2, add, rate), theta_flag
+        else:
+            z2 = offset_surface(z2, outer = True, max_incremental = max_incremental, accel = accel,
+                                            restriction = restriction, min_theta_output = min_theta_output)
+            return get_equidistant_curve(z2, add, rate)
 
     get_object_center = lambda z2: np.average(np.real(z2)) + 1j * np.average(np.imag(z2))
 
@@ -415,37 +443,103 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     pts_y.append(np.imag(z1_eq))
     xi_max += 2
     # z2 = equidistant_offset(z1_eq, max_incremental, accel=1.0, add = 2)
-    z2 = equidistant_offset(z1_eq, max_incremental, accel=1.0, restriction = False)
+    z2= equidistant_offset(z1_eq, max_incremental, accel=1.0, restriction = False, rate = 0.5)
     # z2 = offset_surface(z1_eq, True, max_incremental, accel = 1.0, restriction = False)
     z2_eq = z2
+
     # z2 = np.hstack((z2[1:], z2[0]))
+    def get_im1_im0_ip1_ip2(i, size):
+        if i == 0:
+            return size - 1, 0, 1, 2
+        elif i == size - 1:
+            return size - 2, size - 1, 0, 1
+        elif i == size - 2:
+            return size - 3, size - 2, size - 1, 0
+        else:
+            return i - 1, i, i + 1, i + 2
+
+    def safe_concatenate(z2, size, im0, ip1, ip2):
+        if ip2 == 0:
+            return np.concatenate([z2[:im0], [0.5 * (z2[im0] + z2[ip1])]])
+        elif ip1 == 0:
+            return np.concatenate([z2[ip2:im0], [0.5 * (z2[im0] + z2[ip1])]])
+        elif im0 == 0:
+            return np.concatenate([[0.5 * (z2[im0] + z2[ip1])], z2[ip2:]])
+        else:
+            return np.concatenate([z2[:im0], [0.5 * (z2[im0] + z2[ip1])], z2[ip2:]])
+
+
+    def merge_edge(z2):
+        size = z2.shape[0]
+        z2_xy = make_point(z2)
+        merge = np.zeros(size)
+        
+        for i in range(size):
+            im1, im0, ip1, ip2 = get_im1_im0_ip1_ip2(i, size)
+            if (dot_product_c(z2[ip2] - z2[im1], z2[ip1] - z2[im0]) / (np.abs(z2[ip2] - z2[im1]) * np.abs(z2[ip1] - z2[im0])) < 0.0) or (
+                    line_intersect(z2_xy[im1], z2_xy[ip2], z2_xy[im0], z2_xy[ip1])):
+                merge[i] = 1
+
+        for i in range(size - 1, -1, -1):
+            if merge[i] == 1:
+                im1, im0, ip1, ip2 = get_im1_im0_ip1_ip2(i, size)
+                z2 = safe_concatenate(z2, size, im0, ip1, ip2)
+                size -= 1
+        return z2
+    
+    def delete_edge(z2, param=0.6):
+        size = z2.shape[0]
+        flag = 1
+        const = 0
+        while flag != 0:
+            flag = 0
+            delta = np.concatenate([z2[1:] - z2[:size - 1], [z2[0] - z2[size - 1]]])
+            len = np.abs(delta)
+            if const == 0:
+                ave_len = np.average(len)
+                const = 1
+            for i in range(size):
+                if len[i] < param * ave_len:
+                    flag = 1
+                    im1, im0, ip1, ip2 = get_im1_im0_ip1_ip2(i, size)
+                    z2 = safe_concatenate(z2, size, im0, ip1, ip2)
+                    size -= 1
+                    break
+        return z2
+
     print("calc base grid-line")
     model_length = get_model_length(z1)
+    theta_j = 0
     for j in range(1, eta_max):
         print(j, z2.shape)
         pts_x.append(np.real(z2))
         pts_y.append(np.imag(z2))
+        plot_complex(z2)
+        if j < 3:
+            restrict = False
+        else:
+            restrict = True
+            
+        z2_equidistant, theta_flag = equidistant_offset(z2=z2, max_incremental=max_incremental, accel=set_accel(j, accel_parameter), add=0, rate = min(0.05 * j + 0.8, 1.0), restriction=restrict, min_theta_output = True)
+        # z2_orthogonal, m_theta = offset_surface(z2, outer=True, max_incremental=max_incremental, accel=set_accel(j, accel_parameter))
+        if theta_j == 0 and theta_flag == 1:
+            theta_j = j
 
-        flag = 0
-        mix_rate = 1.0  # 1.0 - max(np.exp(-0.18 * float(j - 1)),0.7)  # j番目のη線と直交するように与えたz2_orthogonalと，Δηが均等になるように与えたz2_equidistantの配合比率
-        while flag >= 0:
-            flag += 1
-            z2_equidistant = equidistant_offset(z2, max_incremental, set_accel(j, accel_parameter))
-            z2_orthogonal = offset_surface(z2, outer=True, max_incremental=max_incremental,
-                                           accel=set_accel(j, accel_parameter))
-            fix_z2 = (1.0 - mix_rate) * z2_orthogonal + mix_rate * z2_equidistant
-            delta_j__ = np.hstack((z2[1:] - z2[:z2.shape[0] - 1], z2[0] - z2[z2.shape[0] - 1]))
-            delta_jp1 = np.hstack((fix_z2[1:] - fix_z2[:fix_z2.shape[0] - 1], fix_z2[0] - fix_z2[fix_z2.shape[0] - 1]))
-
-            if np.any(np.real(delta_j__ * np.conj(delta_jp1)) < 0):
-                mix_rate = 1.0 - max(-0.18 * np.exp(-float(j - 2)), 0.7 - 0.1 * flag)
-                print(mix_rate)
-                if mix_rate > 0.9:
-                    z2 = fix_z2
-                    break
-            else:
-                flag = -1
+        fix_z2 = merge_edge(z2_equidistant) # (1.0 - mix_rate) * z2_orthogonal + mix_rate * z2_equidistant
+        # delta_j__ = np.hstack((z2[1:] - z2[:z2.shape[0] - 1], z2[0] - z2[z2.shape[0] - 1]))
+        # delta_jp1 = np.hstack((fix_z2[1:] - fix_z2[:fix_z2.shape[0] - 1], fix_z2[0] - fix_z2[fix_z2.shape[0] - 1]))
+        """
+        if np.any(np.real(delta_j__ * np.conj(delta_jp1)) < 0):
+            mix_rate = 1.0 - max(-0.18 * np.exp(-float(j - 2)), 0.7 - 0.1 * flag)
+            print(mix_rate)
+            if mix_rate > 0.9:
                 z2 = fix_z2
+                break
+        else:
+            flag = -1
+        """
+        z2 = delete_edge(fix_z2)
+        
 
         if (np.max(np.real(z2)) - np.min(np.real(z2)) > 40.0 * model_length):
             eta_max = j + 2
@@ -455,7 +549,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
 
     pts_x.append(np.real(z3))
     pts_y.append(np.imag(z3))
-    
+    """
     # ここまででおおよその点の追加が終了
     # このまま三角形を形成すると段階では物体を貫通していたり，都合のよくない線が存在している可能性がある
     # そこで、物体を三角形領域に分割し，その三角形群と格子線の接触判定を行う
@@ -485,12 +579,15 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
             tri_block[cell_total - 1, :] = np.array([set_r(i + 1), set_l(i + 1, size), set_l(i + 2, size)])
 
         return tri_point, tri_block
+    """
+    """
     print("object triangulation")
     # 物体内部の三角形化
     obj_tri_pts, obj_tri_spx = obj_trianglization(z1)
     # plt.triplot(obj_tri_pts[:, 0], obj_tri_pts[:, 1], obj_tri_spx)
     # plt.show()
-
+    """
+    """
     print("outside triangulation")
     # 物体外部+内部の三角形化
     points2D = np.vstack([np.array(pts_x[1]).flatten(), np.array(pts_y[1]).flatten()]).T # η=1線は独立させておく
@@ -542,11 +639,11 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     plt.xlim(-0.1, 1.1)
     plt.ylim(-0.1, 1.1)
     plt.show()
-
+    """
     print("genearate eta1")
     # 追加する点の総数が分かった時点で，物体表面→η=1線の格子を先に切る
     # 物体表面のη=0線と物体表面から少し外側のη=1格子線を三角形で繋ぐ
-    def eta_next(z1_eq, z2_eq):
+    def eta_next(z1_eq, z2_eq, cum_p):
         num0 = z1_eq.shape[0]
         num1 = z2_eq.shape[0]
         edge_mask = np.ones((num0, num1), dtype=int)
@@ -564,7 +661,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         
         for i in range(num0):
             for j in range(num1):
-                if length[i, j] > 2.0 * ave:
+                if length[i, j] > 4.0 * ave:
                     edge_mask[i, j] = 0
                 
         print("1st step")
@@ -605,7 +702,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                         jp1 = 0
     
                     if edge_mask[i, jp1] == 1:
-                        simplices.append([i + total_add_point, j, jp1])
+                        simplices.append([i + cum_p, j + cum_p + num0, jp1 + cum_p + num0])
 
         for i in range(num1):    # p2
             for j in range(num0):    # p1
@@ -614,7 +711,7 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                     if jp1 == num0:
                         jp1 = 0
                     if edge_mask[jp1, i] == 1:    # 次に生き残っている辺p2-p3について
-                        simplices.append([i, j + total_add_point, jp1 + total_add_point])
+                        simplices.append([i + cum_p + num0, j + cum_p, jp1 + cum_p])
 
         simplices = (np.array(simplices))
 
@@ -626,7 +723,52 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
         new_edge = np.array(new_edge)
         return simplices, new_edge
     
-    simplices, new_edge = eta_next(z1_eq, z2_eq)
+    cum_p = 0
+    total_simplices, new_edge = eta_next(z1_eq, z2_eq, cum_p)
+    cum_p = z1_eq.shape[0]
+    total_point = np.vstack([np.real(z1_eq), np.imag(z1_eq)]).T
+    total_point = np.concatenate([total_point, np.vstack([np.real(z2_eq), np.imag(z2_eq)]).T])
+
+    eta_max = len(pts_x)
+    
+    for j in range(1, theta_j):
+        z1_eq = pts_x[j] + 1j * pts_y[j]
+        z2_eq = pts_x[j+1] + 1j * pts_y[j+1]
+        total_point = np.concatenate([total_point, np.vstack([np.real(z2_eq), np.imag(z2_eq)]).T])
+        simplices, new_edge = eta_next(z1_eq, z2_eq, cum_p)
+        cum_p += z1_eq.shape[0]
+        total_simplices = np.concatenate([total_simplices, simplices])
+        if j == 5:
+            plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
+            plt.xlim(0.9, 1.1)
+            plt.ylim(0.45,0.55)
+            plt.show()
+            plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
+            plt.show()
+        
+    obj_center = np.array([np.real(get_object_center(z2_eq)), np.imag(get_object_center(z2_eq))])
+    
+    for j in range(theta_j, eta_max - 1):
+        z1_eq = pts_x[j] + 1j * pts_y[j]
+        z2_eq = pts_x[j+1] + 1j * pts_y[j+1]
+        total_point = np.concatenate([total_point, np.vstack([np.real(z2_eq), np.imag(z2_eq)]).T])
+        
+        local_point = np.concatenate([np.vstack([np.real(z2_eq), np.imag(z2_eq)]).T, [obj_center]])
+        last_pt = z2_eq.shape[0]
+        Tri_j = Delaunay(local_point)
+        mask = ~(Tri_j.simplices == last_pt).any(axis = 1)
+        total_simplices = np.concatenate([total_simplices, Tri_j.simplices[mask, :] + cum_p])
+        cum_p += z1_eq.shape[0]
+
+        plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
+        plt.xlim(0.9, 1.1)
+        plt.ylim(0.45,0.55)
+        plt.show()
+        plt.triplot(total_point[:, 0], total_point[:, 1], total_simplices)
+        plt.show()
+ 
+    Tri2vtk(path = path, fname = fname, Tri_points = total_point, Tri_simplices = total_simplices)
+    """
     new_edge_num = new_edge.shape[0]
     z1_xy = make_point(z1_eq)
     z2_xy = make_point(z2_eq)
@@ -712,9 +854,9 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     pointj0 = np.vstack([np.real(z1_eq).flatten(), np.imag(z1_eq).flatten()]).T
     grid_pts = np.concatenate([points2D, pointj0])
     grid_simplices = np.concatenate([Tri2.simplices[~mask, :], simplices])
-
+    
     Tri2vtk(path=path, fname=fname, Tri_points=grid_pts, Tri_simplices=grid_simplices)
-
+    """
     return
 
 
@@ -725,7 +867,7 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
 
 def main():
-    z1, size = get_complex_coords(type=3, naca4="9925", size=50)
+    z1, size = get_complex_coords(type=3, naca4="2113", size=50)
     # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
     make_grid_seko(z1)
