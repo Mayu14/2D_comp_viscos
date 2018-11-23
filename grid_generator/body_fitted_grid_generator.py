@@ -546,85 +546,91 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
     print("genearate eta1")
     # 追加する点の総数が分かった時点で，物体表面→η=1線の格子を先に切る
     # 物体表面のη=0線と物体表面から少し外側のη=1格子線を三角形で繋ぐ
-    num0 = z1_eq.shape[0]
-    num1 = z2_eq.shape[0]
-    edge_mask = np.ones((num0, num1), dtype=int)
-    length = np.zeros((num0, num1), dtype=float)
-    for i in range(num0):
-        for j in range(num1):
-            length[i, j] = np.abs(z1_eq[i] - z2_eq[j])
+    def eta_next(z1_eq, z2_eq):
+        num0 = z1_eq.shape[0]
+        num1 = z2_eq.shape[0]
+        edge_mask = np.ones((num0, num1), dtype=int)
+        length = np.zeros((num0, num1), dtype=float)
+        for i in range(num0):
+            for j in range(num1):
+                length[i, j] = np.abs(z1_eq[i] - z2_eq[j])
 
+        z1_xy = make_point(z1_eq)
+        z2_xy = make_point(z2_eq)
+
+        print("0th step")
+        # 0.物体表面における辺の長さの最大値と比較して長すぎるものを除外
+        ave = np.max(np.abs(z1_eq[1:] - z1_eq[:z1_eq.shape[0] - 1]))
+        
+        for i in range(num0):
+            for j in range(num1):
+                if length[i, j] > 2.0 * ave:
+                    edge_mask[i, j] = 0
+                
+        print("1st step")
+        # 1.そもそも物体表面と交差してるのを除外
+        for i in range(num0):
+            for j in range(num1):
+                for k in range(num0):
+                    kp1 = k + 1
+                    if kp1 == num0:
+                        kp1 = 0
+                    if (i != k and i != kp1):
+                        if line_intersect(z1_xy[i], z2_xy[j], z1_xy[k], z1_xy[kp1]):
+                            edge_mask[i, j] = 0
+
+        print("2nd step")
+        # 2.線分同士で交差してるのを除外(bluteforth)
+        for i in range(num0):    # p1
+            for j in range(num1):    # p2
+                if edge_mask[i, j] != 0:    # まだ除外されてない線分p1-p2のうち
+                    for k in range(num0):    # p3
+                        if k != i:  # p1 = p3は交差してないことにする
+                            for l in range(num1):    # p4
+                                if l != j:  # p2 = p4も交差してないことにする
+                                    if(edge_mask[k, l] != 0):   # p3-p4がまだ除外されていなければ
+                                        if line_intersect(z1_xy[i], z2_xy[j], z1_xy[k], z2_xy[l]):  # 交差してたら長い方を消す
+                                            if length[i, j] > length[k, l]:
+                                                edge_mask[i, j] = 0
+                                            else:
+                                                edge_mask[k, l] = 0
+        print("3rd step")
+        # 3.残った辺から三角形を構築
+        simplices = []  # 最終的な格子に登録する用
+        for i in range(num0):    # p1
+            for j in range(num1):    # p3
+                if edge_mask[i, j] == 1:    # 辺p1-p3が生き残っていたときに
+                    jp1 = j + 1
+                    if jp1 == num1:
+                        jp1 = 0
+    
+                    if edge_mask[i, jp1] == 1:
+                        simplices.append([i + total_add_point, j, jp1])
+
+        for i in range(num1):    # p2
+            for j in range(num0):    # p1
+                if edge_mask[j, i] == 1:    # 辺p1-p2が生き残っており
+                    jp1 = j + 1
+                    if jp1 == num0:
+                        jp1 = 0
+                    if edge_mask[jp1, i] == 1:    # 次に生き残っている辺p2-p3について
+                        simplices.append([i, j + total_add_point, jp1 + total_add_point])
+
+        simplices = (np.array(simplices))
+
+        new_edge = []
+        for i in range(num0):
+            for j in range(num1):
+                if edge_mask[i, j] == 1:
+                    new_edge.append([i, j])
+        new_edge = np.array(new_edge)
+        return simplices, new_edge
+    
+    simplices, new_edge = eta_next(z1_eq, z2_eq)
+    new_edge_num = new_edge.shape[0]
     z1_xy = make_point(z1_eq)
     z2_xy = make_point(z2_eq)
 
-    print("0th step")
-    # 0.物体表面における辺の長さの最大値と比較して長すぎるものを除外
-    ave = np.max(np.abs(z1_eq[1:] - z1_eq[:z1_eq.shape[0] - 1]))
-    
-    for i in range(num0):
-        for j in range(num1):
-            if length[i, j] > 2.0 * ave:
-                edge_mask[i, j] = 0
-                
-    print("1st step")
-    # 1.そもそも物体表面と交差してるのを除外
-    for i in range(num0):
-        for j in range(num1):
-            for k in range(num0):
-                kp1 = k + 1
-                if kp1 == num0:
-                    kp1 = 0
-                if (i != k and i != kp1):
-                    if line_intersect(z1_xy[i], z2_xy[j], z1_xy[k], z1_xy[kp1]):
-                        edge_mask[i, j] = 0
-
-    print("2nd step")
-    # 2.線分同士で交差してるのを除外(bluteforth)
-    for i in range(num0):    # p1
-        for j in range(num1):    # p2
-            if edge_mask[i, j] != 0:    # まだ除外されてない線分p1-p2のうち
-                for k in range(num0):    # p3
-                    if k != i:  # p1 = p3は交差してないことにする
-                        for l in range(num1):    # p4
-                            if l != j:  # p2 = p4も交差してないことにする
-                                if(edge_mask[k, l] != 0):   # p3-p4がまだ除外されていなければ
-                                    if line_intersect(z1_xy[i], z2_xy[j], z1_xy[k], z2_xy[l]):  # 交差してたら長い方を消す
-                                        if length[i, j] > length[k, l]:
-                                            edge_mask[i, j] = 0
-                                        else:
-                                            edge_mask[k, l] = 0
-    print("3rd step")
-    # 3.残った辺から三角形を構築
-    simplices = []  # 最終的な格子に登録する用
-    for i in range(num0):    # p1
-        for j in range(num1):    # p3
-            if edge_mask[i, j] == 1:    # 辺p1-p3が生き残っていたときに
-                jp1 = j + 1
-                if jp1 == num1:
-                    jp1 = 0
-
-                if edge_mask[i, jp1] == 1:
-                    simplices.append([i + total_add_point, j, jp1])
-
-    for i in range(num1):    # p2
-        for j in range(num0):    # p1
-            if edge_mask[j, i] == 1:    # 辺p1-p2が生き残っており
-                jp1 = j + 1
-                if jp1 == num0:
-                    jp1 = 0
-                if edge_mask[jp1, i] == 1:    # 次に生き残っている辺p2-p3について
-                    simplices.append([i, j + total_add_point, jp1 + total_add_point])
-
-    simplices = (np.array(simplices))
-
-    new_edge = []
-    new_edge_num = 0
-    for i in range(num0):
-        for j in range(num1):
-            if edge_mask[i, j] == 1:
-                new_edge.append([i, j])
-                new_edge_num += 1
-    new_edge = np.array(new_edge)
     # ここまで物体側
     print("extract cell near body")
     # 物体外部+内部の格子について物体近傍の三角形のみを取り出す(物体の大きさの1.1倍程度のboudanry box)
