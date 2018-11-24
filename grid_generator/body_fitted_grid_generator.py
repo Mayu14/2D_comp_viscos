@@ -891,7 +891,18 @@ def makeGridLoop():
                 print(fname)
                 make_grid(fname, type=3, naca4=naca4, path = path, size=50)
         
-
+def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0012", center_x = 0.08, center_y = 0.08):
+    path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv\\"
+    for i1 in range(10):
+        for i2 in range(10):
+            for i34 in range(1,40):
+                naca4 = str(i1) + str(i2) + str(i34).zfill(2)
+                z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca4, size = size)
+                fname = "NACA" +  naca4
+                np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
+                np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
+                
 if __name__ == '__main__':
     # main()
-    makeGridLoop()
+    # makeGridLoop()
+    output_coords_csv()
