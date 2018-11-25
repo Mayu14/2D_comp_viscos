@@ -29,6 +29,7 @@ subroutine JobParallelNS(UConf)
     iStep = 0
     call UReadInflowOutflowCondition(UG, UConf)
     call UPrepareBoundary(UG, UCC)
+    call JPUConserve2Primitive(UG, UCC)
 
     allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
     allocate(obj_velocity(3))
@@ -41,7 +42,6 @@ subroutine JobParallelNS(UConf)
     iCalcStep = 0
     iStartStep = 1
     do iStep = iStartStep, IterationNumber
-
         if(UConf%UseLocalTimeStep /= 0 .and. iAccel == 0) then  ! steady area
             iCalcStep = iCalcStep + 1   ! tmp
             call RelativeCoordinateTransform(UG, UCC, obj_velocity)
@@ -57,7 +57,9 @@ subroutine JobParallelNS(UConf)
                 obj_velocity(:) = - min(0.01d0 * dble(iCalcStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
 
                 if(iLoop == 1) call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+
                     call UnstNS(iStep,UConf,UG,UCC,UCE)
+
                 if(iLoop == iSplit) call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
             end do
             FixedTimeStep = DefaultTimeStep
@@ -66,21 +68,26 @@ subroutine JobParallelNS(UConf)
         if(iCalcStep > 100) then
             iAccel = 0  ! 加速区間終了
             UConf%UseLocalTimeStep = 1
-            UConf%UseMUSCL = 0
+            UConf%UseMUSCL = 1
             UConf%TurbulenceModel = 1
             obj_velocity = - UG%GM%BC%InFlowVariable(2:4)
         end if
 
         if(mod(iStep,OutputInterval) == 0) then
             iStep4Plot = iStep / OutputInterval
-            call JPUOutput(UConf,UG,UCC,iStep4Plot)
+            !call JPUOutput(UConf,UG,UCC,iStep4Plot)
             call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
-            write(6,*) UAC%coefficient(1, iStep4Plot), UAC%coefficient(2, iStep4Plot)
+            write(6,*) UConf%cFileName, UAC%coefficient(1, iStep4Plot), UAC%coefficient(2, iStep4Plot)
         end if
 
     end do
 
     call JPUOutput(UConf,UG,UCC,iStep)
+    call UOutput_Characteristics(UConf, UAC)
+
+    UConf%UseLocalTimeStep = 1
+    UConf%UseMUSCL = 1
+    UConf%TurbulenceModel = 1
 
     return
 contains
@@ -94,7 +101,9 @@ contains
         type(CellEdge), intent(inout) :: UCE
 
             call USetBoundary(UG,UCC)
+
             call UCalcFlux(OConf,UG,UCC,UCE)
+
             call UTimeIntegral(OConf,UG,UCE,UCC,iStep)
 
         return

@@ -601,10 +601,10 @@ OBJS_DIR = obj/Debug/source/UnstructuredGrid/UnstFlux/MUSCL/
 EXE_DIR = bin/Debug/
 
 EXE = EulerSolver2
-FC = mpif90
-LD = mpif90
+FC = mpiifort
+LD = mpiifort
 IDIR = 
-CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full  -J$(OBJS_DIR) $(IDIR)
+CFLAGS = -O3  -J$(OBJS_DIR) $(IDIR)
 LFLAGS = -qopenmp -s
 LIBS = 
 

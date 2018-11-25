@@ -24,12 +24,15 @@ implicit none
     do iCell = UG%GI%RealCells+1, UG%GI%AllCells
 
         if(UG%GM%CellType(iCell,1,1) == 1) then !Inflow and Outflow
+
             call InOutFlowBoundary
 
         else if(UG%GM%CellType(iCell, 1, 1) == 10) then ! Non-Reflect Boundary
+
             call UNonReflectBoundary(UG, UCC, iCell)
 
         else if(UG%GM%CellType(iCell,1,1) == 2) then !Wall
+
             if(invicid == .true.) then
                 call WallBoundary
             else

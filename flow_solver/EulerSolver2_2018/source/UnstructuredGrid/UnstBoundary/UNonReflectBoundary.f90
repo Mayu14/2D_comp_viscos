@@ -38,7 +38,6 @@ implicit none
         call set_alpha1_alpha2
 
         soundV = Gamma * Gmin1 * (UCC%ConservedQuantity(5,iWorkCell, 1, 1)/UCC%ConservedQuantity(1,iWorkCell,1,1) - 0.5d0 * sum(Velocity**2))
-
         kappa = sqrt(alpha1 ** 2 + alpha2 ** 2)
         r0 = alpha1 * Velocity(1) + alpha2 * Velocity(2)
         r(1) = r0 - kappa * soundV
@@ -55,7 +54,7 @@ implicit none
         drdt(:, 3) = Velocity(:)
 
         do iLoop = 1, 3
-            if(dot_product(drdt(1:2, iLoop), UG%GM%Normal(iEdge, 1:2)) <= 0.0d0) then
+            if(dot_product(drdt(1:2, iLoop), UG%GM%Normal(iAdjacentEdge, 1:2)) <= 0.0d0) then
                 r(iLoop) = 0.0d0
             end if
         end do
@@ -93,7 +92,7 @@ contains
 
         iAdjacentCell = UG%VC%Cell(iCell,1) !隣接する実セル
         iAdjacentEdge = UG%VC%Edge(iCell) !共有界面
-        iAdjacentLoaclEdge = UG%Line%Cell(iEdge, 1, 2)
+        iAdjacentLoaclEdge = UG%Line%Cell(iAdjacentEdge, 1, 2)
 
         length = 2.0d0 * sqrt(dot_product(UG%GM%Width(iAdjacentCell, iAdjacentLoaclEdge, :), UG%GM%Width(iAdjacentCell, iAdjacentLoaclEdge, :)))
 
@@ -110,8 +109,8 @@ contains
             &  - (UCC%ConservedQuantity(5,iAdjacentCell,1,1) - 0.5d0 * UCC%ConservedQuantity(1,iAdjacentCell,1,1) &
             &    * dot_product(AdjVelocity,AdjVelocity))) / length
 
-        dUdx = dUdn * UG%GM%Normal(iEdge, 1)
-        dUdy = -dUdn * UG%GM%Normal(iEdge, 2)
+        dUdx = dUdn * UG%GM%Normal(iAdjacentEdge, 1)
+        dUdy = -dUdn * UG%GM%Normal(iAdjacentEdge, 2)
 
         return
     end subroutine GradientBetweenBoundary

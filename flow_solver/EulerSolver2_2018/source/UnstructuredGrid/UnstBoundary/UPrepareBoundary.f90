@@ -28,7 +28,5 @@ implicit none
         end if
     end do
 
-
-
     return
 end subroutine UPrepareBoundary
