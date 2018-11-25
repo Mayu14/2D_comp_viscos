@@ -254,11 +254,12 @@ def set_long_axis_direction(z1):
 def split_surface(z):
     direction = set_long_axis_direction(z)
     if direction:
-        start = np.argmin(np.real(z))
-        end = np.argmax(np.real(z))
-    else:
         start = np.argmin(np.imag(z))
         end = np.argmax(np.imag(z))
+
+    else:
+        start = np.argmin(np.real(z))
+        end = np.argmax(np.real(z))
 
     if start < end:
         z_upper = z[start:end + 1]
