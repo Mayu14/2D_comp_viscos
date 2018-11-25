@@ -31,7 +31,6 @@ subroutine JobParallelControler(UConf)
         !Total_threads = omp_get_max_threads()
         !UConf%my_thread = omp_get_thread_num()
         call ReadConfigulation(UConf, UConf%my_rank)
-        write(6,*) UConf%my_rank, UConf%cGridName
         call JPCalcCaseAutoFill(UConf, PETOT)
 
     !!$omp end parallel
