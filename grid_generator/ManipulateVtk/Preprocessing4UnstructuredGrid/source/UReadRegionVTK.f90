@@ -14,7 +14,7 @@
 !	Other:一応3次元も行けるはず
 !***********************************/
 
-subroutine UReadRegionVTK(UG,cFileName)
+subroutine UReadRegionVTK(UG,cInPath, cFileName)
     use StructVar_Mod
     use LoopVar_Mod
     implicit none
@@ -22,7 +22,7 @@ subroutine UReadRegionVTK(UG,cFileName)
 
     integer :: iCellType, iPointNumber
     integer :: iTmp
-    character(len=64), intent(in) :: cFileName
+    character(len=64), intent(in) :: cFileName, cInPath
     character(len=64) :: cVTK,cAnnotate
     !点の番号と座標の対応
     !点の総数
@@ -30,7 +30,7 @@ subroutine UReadRegionVTK(UG,cFileName)
     !三角形要素の総数
     !三角形要素を構成する点の番号
 
-    cVTK =  trim(adjustl(cFileName))//".vtk"
+    cVTK = trim(adjustl(cInPath))//trim(adjustl(cFileName))//".vtk"
     open(unit=1, file=cVTK, status='unknown') !配列確保用
     open(unit=2, file=cVTK, status='unknown') !データ読み出し用
         do iLoop=1,4
