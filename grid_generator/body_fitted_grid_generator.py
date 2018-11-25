@@ -269,7 +269,7 @@ def split_surface(z):
         z_lower = np.concatenate([z[start:], z[:end + 1]])
     return z_upper, z_lower
 
-def get_equidistant_curve(z2, add=0, rate=0.5):
+def get_equidistant_curve(z2, add=0, rate=0.5, high_dens=True):
     def func2(x, rate):
         a = 3.0 / (2 + rate)
         b = a * rate
@@ -282,7 +282,10 @@ def get_equidistant_curve(z2, add=0, rate=0.5):
     t, total_len = get_length_rate(z2, output_total_length=True)
     fx = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.real(np.hstack((z2, z2[0]))))
     fy = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.imag(np.hstack((z2, z2[0]))))
-    equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], rate)
+    if high_dens:
+        equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], rate)
+    else:
+        equidistant_t = np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add]
     return fx(equidistant_t) + 1j * fy(equidistant_t)
 
 def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, trianglation=True):
@@ -900,7 +903,7 @@ def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0012", cent
                 z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca4, size = size)
                 z_u, z_l = split_surface(deduplication(z1)[::-1])
                 new_z_eq = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
-                z1 = get_equidistant_curve(new_z_eq)
+                z1 = get_equidistant_curve(new_z_eq, high_dens = False)
                 fname = "NACA" +  naca4
                 np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
                 np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
