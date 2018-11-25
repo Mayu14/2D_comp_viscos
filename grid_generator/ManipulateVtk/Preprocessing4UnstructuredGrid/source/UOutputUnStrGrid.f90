@@ -154,7 +154,7 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
             write(1,*) UG%CH%PointNum(iPoint)
         end do
 
-        if(ExistBound == .true.) then
+        if(ExistBound .eqv. .true.) then
     ! セルから最も近い物体表面セル
             write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
             do iCell = 1, UG%Tri%Total

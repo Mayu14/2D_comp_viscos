@@ -16,27 +16,56 @@ program Preprocessing4UnstructuredGrid
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid) :: UG
-    character(len=64) :: cFileName, c1, c2, c34, cWing, cInPath="", cOutPath=""
+    character(len=64) :: cFileName, cWing, cInPath="", cOutPath=""
     logical :: ExistBound
     integer :: MultipleConvertMode = 0, i1, i2, i34
+    integer :: i, length, status
+    character(:), allocatable :: arg
+    intrinsic :: command_argument_count, get_command_argument
 
-    MultipleConvertMode = 1    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    do i = 0, command_argument_count()
+        call get_command_argument(i, length = length, status = status)
+        if (status == 0) then
+            allocate (character(length) :: arg)
+              call get_command_argument(i, arg, status = status)
+              if (status == 0) then
+                if (i == 0) then
+                    write(6,*) arg
+                    !write(cWing,'(i4.4)') arg
+                else
+                    write(6,*) "error! too much arguments"
+                    stop
+                    !print *, 'Argument', i, '= "', arg, '"'
+                end if
+            end if
+        deallocate (arg)
+        end if
+        if (status /= 0) print *, 'Error', status, 'on argument', i
+    end do
 
-    if(MultipleConvertMode /= 1) then
+    MultipleConvertMode = 2    ! このオプションを使う場合は以下のelse内を書き換えて使う
+
+    UG%GM%Dimension = 2
+    if(MultipleConvertMode == 0) then
         write(6,*) "Please input the name of VTK file that defined region.(***.vtk's ***)"
         read(5,*) cFileName
-        UG%GM%Dimension = 2
         call main_process(UG, cInPath, cOutPath, cFileName)
 
+    else if(MultipleConvertMode == 1) then
+        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
+        cFileName = "NACA"//cWing
+        call main_process(UG, cInPath, cOutPath, cFileName)
     else
-        cInPath = "G:/Toyota/Data/grid_vtk/NACA4_vtk/"
-        cOutPath = "G:/Toyota/Data/grid_vtk/NACA4_mayu/"
+        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
         do i1 = 0, 9
             do i2 =0, 9
-                do i34 = 1, 40
-                    write(cWing, '("NACA", i1, i1, i2, ".vtk")') i1, i2, i34
-                    cFileName = adjustl(trim(cPath))//adjustl(trim(cWing))
-                    call main_process(UG, cFileName)
+                do i34 = 41, 99
+                    write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
+                    cFileName = trim(adjustl(cWing))
+                    write(6,*) cFileName
+                    call main_process(UG, cInPath, cOutPath, cFileName)
                     call deallocate_UG
                 end do
             end do
@@ -105,9 +134,8 @@ contains
 
     subroutine main_process(UG, cInPath, cOutPath, cFileName)
         implicit none
-        type(UnstructuredGrid), intent(out) :: UG
+        type(UnstructuredGrid), intent(inout) :: UG
         character(len=64), intent(inout) :: cFileName, cInPath, cOutPath
-
     !vtkの読み込み
         call UReadRegionVTK(UG, cInPath, cFileName)
 
@@ -158,7 +186,7 @@ contains
 
     !物体表面からの距離を与える
         call UGetDistanceFromSurface(UG, ExistBound)
-        if(ExistBound == .True.) then
+        if(ExistBound .eqv. .True.) then
             call UGetDistanceFromSurface_Edge(UG)
         end if
     !テスト出力
@@ -203,10 +231,13 @@ contains
         if(allocated(UG%Tri%Edge)) deallocate(UG%Tri%Edge)
         if(allocated(UG%Line%Cell)) deallocate(UG%Line%Cell)
         if(allocated(UG%Line%Point)) deallocate(UG%Line%Point)
+        if(allocated(UG%VC%Type)) deallocate(UG%VC%Type)
         if(allocated(UG%VC%Cell)) deallocate(UG%VC%Cell)
+        if(allocated(UG%VC%Edge)) deallocate(UG%VC%Edge)
         if(allocated(UG%IO%PointNum)) deallocate(UG%IO%PointNum)
         if(allocated(UG%CD%Point)) deallocate(UG%CD%Point)
         if(allocated(UG%Tri%Point)) deallocate(UG%Tri%Point)
+        if(allocated(UG%InscribedCircle)) deallocate(UG%InscribedCircle)
 
         if(allocated(UG%GM%BC%VW)) then
             do iLoop = 1, UG%GM%BC%iWallTotal

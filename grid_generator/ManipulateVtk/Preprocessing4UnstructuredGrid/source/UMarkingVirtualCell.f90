@@ -34,7 +34,8 @@ subroutine UMarkingVirtualCell(UG)
     !格子形状
     write(6,*) "What is the criteria for deciding the cell attributes? ;"
     write(6,*) "1:Coordinate 2:Distance from Center, 3:Other"
-    read(5,*) iKind
+    ! read(5,*) iKind
+    iKind = 2
     if(iKind == 3) then
         write(6,*) "I can't do it! Let's write new Program for Preprocess!! YEAH!!!"
         stop
