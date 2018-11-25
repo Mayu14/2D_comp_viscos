@@ -206,39 +206,15 @@ contains
 
         if(allocated(UG%CD%Cell)) deallocate(UG%CD%Cell)
         if(allocated(UG%CD%Edge)) deallocate(UG%CD%Edge)
+        if(allocated(UG%CD%Point)) deallocate(UG%CD%Point)
+
+        if(allocated(UG%CH%PointNum)) deallocate(UG%CH%PointNum)
 
         if(allocated(UG%GM%Area)) deallocate(UG%GM%Area)
-        if(allocated(UG%GM%Volume)) deallocate(UG%GM%Volume)
-        if(allocated(UG%GM%Width)) deallocate(UG%GM%Width)
-
-        if(allocated(UG%GM%Normal)) deallocate(UG%GM%Normal)
         if(allocated(UG%GM%AverageWidth)) deallocate(UG%GM%AverageWidth)
 
-        if(allocated(UG%GM%CellType)) deallocate(UG%GM%CellType)
-        if(allocated(UG%GM%CellType)) deallocate(UG%VC%Type)
-
-        if(allocated(UG%GM%CellType)) deallocate(UG%InscribedCircle)
-        ! for test
-        if(allocated(UG%Tri%Belongs2Wall)) deallocate(UG%Tri%Belongs2Wall)
-        if(allocated(UG%Tri%Distance)) deallocate(UG%Tri%Distance)
-
-        if(allocated(UG%Line%Belongs2Wall)) deallocate(UG%Line%Belongs2Wall)
-        if(allocated(UG%Line%Distance)) deallocate(UG%Line%Distance)
-
-        if(allocated(UG%GM%BC%VW)) deallocate(UG%GM%BC%VW)
-        if(allocated(UG%CH%PointNum)) deallocate(UG%CH%PointNum)
-        if(allocated(UG%Tri%Cell)) deallocate(UG%Tri%Cell)
-        if(allocated(UG%Tri%Edge)) deallocate(UG%Tri%Edge)
-        if(allocated(UG%Line%Cell)) deallocate(UG%Line%Cell)
-        if(allocated(UG%Line%Point)) deallocate(UG%Line%Point)
-        if(allocated(UG%VC%Type)) deallocate(UG%VC%Type)
-        if(allocated(UG%VC%Cell)) deallocate(UG%VC%Cell)
-        if(allocated(UG%VC%Edge)) deallocate(UG%VC%Edge)
-        if(allocated(UG%IO%PointNum)) deallocate(UG%IO%PointNum)
-        if(allocated(UG%CD%Point)) deallocate(UG%CD%Point)
-        if(allocated(UG%Tri%Point)) deallocate(UG%Tri%Point)
-        if(allocated(UG%InscribedCircle)) deallocate(UG%InscribedCircle)
-
+        if(allocated(UG%GM%BC%InFlowVariable)) deallocate(UG%GM%BC%InFlowVariable)
+        if(allocated(UG%GM%BC%OutFlowVariable)) deallocate(UG%GM%BC%OutFlowVariable)
         if(allocated(UG%GM%BC%VW)) then
             do iLoop = 1, UG%GM%BC%iWallTotal
                 deallocate(UG%GM%BC%VW(iLoop)%iMemberCell)
@@ -246,6 +222,57 @@ contains
             end do
             deallocate(UG%GM%BC%VW)
         end if
+        if(allocated(UG%GM%Bound)) deallocate(UG%GM%Bound)
+        if(allocated(UG%GM%CellNumber)) deallocate(UG%GM%CellNumber)
+        if(allocated(UG%GM%CellType)) deallocate(UG%GM%CellType)
+        if(allocated(UG%GM%Normal)) deallocate(UG%GM%Normal)
+        if(allocated(UG%GM%Volume)) deallocate(UG%GM%Volume)
+        if(allocated(UG%GM%WallType)) deallocate(UG%GM%WallType)
+        if(allocated(UG%GM%Width)) deallocate(UG%GM%Width)
+
+        if(allocated(UG%InscribedCircle)) deallocate(UG%InscribedCircle)
+
+        if(allocated(UG%IO%PointNum)) deallocate(UG%IO%PointNum)
+
+
+        if(allocated(UG%Line%Belongs2Wall)) deallocate(UG%Line%Belongs2Wall)
+        if(allocated(UG%Line%Cell)) deallocate(UG%Line%Cell)
+        if(allocated(UG%Line%Distance)) deallocate(UG%Line%Distance)
+        if(allocated(UG%Line%Point)) deallocate(UG%Line%Point)
+
+        if(allocated(UG%Tri%Belongs2Wall)) deallocate(UG%Tri%Belongs2Wall)
+        if(allocated(UG%Tri%Cell)) deallocate(UG%Tri%Cell)
+        if(allocated(UG%Tri%Distance)) deallocate(UG%Tri%Distance)
+        if(allocated(UG%Tri%Edge)) deallocate(UG%Tri%Edge)
+        if(allocated(UG%Tri%Point)) deallocate(UG%Tri%Point)
+        if(allocated(UG%Tri%Type)) deallocate(UG%Tri%Type)
+
+        if(allocated(UG%VC%Cell)) deallocate(UG%VC%Cell)
+        if(allocated(UG%VC%Edge)) deallocate(UG%VC%Edge)
+        if(allocated(UG%VC%Type)) deallocate(UG%VC%Type)
+
+        ! zero fill
+        UG%CH%iTotal = 0
+
+        UG%GI%AllCells = 0
+        UG%GI%Edges = 0
+        UG%GI%OutlineCells =0
+        UG%GI%Points = 0
+        UG%GI%RealCells = 0
+
+        UG%GM%BC%iWallTotal = 0
+
+        UG%InternalBoundary = 0
+        UG%InternalRadius = 0
+
+        UG%IO%iMinNumber = 0
+        UG%IO%iTotal = 0
+
+        UG%Line%Total = 0
+        UG%Number = 0
+        UG%RoughRadius = 0
+        UG%Tri%Total = 0
+        UG%VC%Total = 0
 
         return
     end subroutine deallocate_UG

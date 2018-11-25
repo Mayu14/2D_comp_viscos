@@ -33,6 +33,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
 !点番号は1始まり
     open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
 !格子の基本情報
+
         read(UConf%my_rank+100,*) cAnnotate, UG%GI%Points
         read(UConf%my_rank+100,*) cAnnotate, UG%GI%Edges
         read(UConf%my_rank+100,*) cAnnotate, UG%GI%RealCells
@@ -163,35 +164,37 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 read(UConf%my_rank+100,*) UG%GM%AverageWidth(iCell)
             end do
         !end if
-
         read(UConf%my_rank+100,*) cAnnotate !"ConvexHull"
+
         if(UG%CH%iTotal /= 0) then
             do iCell=1,UG%CH%iTotal
                 read(UConf%my_rank+100,*) UG%CH%PointNum(iCell)
+                write(6,*) UConf%my_rank+100, iCell, UG%CH%PointNum(iCell)
             end do
+write(6,*) "03"
         end if
 
         if(UG%GI%AllCells - UG%GI%RealCells - UG%GI%OutlineCells /= 0) then
-            read(UConf%my_rank+100, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+            read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
             do iCell = 1, UG%Tri%Total
-                read(UConf%my_rank+100, *) UG%Tri%Belongs2Wall(iCell)
+                read(UConf%my_rank+100,*) UG%Tri%Belongs2Wall(iCell)
             end do
-
-            read(UConf%my_rank+100, *) cAnnotate !"DistanceFromObjectSurface "
+write(6,*) "R"
+            read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface "
             do iCell = 1, UG%Tri%Total
-                read(UConf%my_rank+100, *) UG%Tri%Distance(iCell)
+                read(UConf%my_rank+100,*) UG%Tri%Distance(iCell)
             end do
-
-            read(UConf%my_rank+100, *) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+write(6,*) "11"
+            read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
             do iEdge = 1, UG%Line%Total
-                read(UConf%my_rank+100, *) UG%Line%Belongs2Wall(iEdge)
+                read(UConf%my_rank+100,*) UG%Line%Belongs2Wall(iEdge)
             end do
-
-            read(UConf%my_rank+100, *) cAnnotate !"DistanceFromObjectSurface4Edge "
+write(6,*) "12"
+            read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface4Edge "
             do iEdge = 1, UG%Line%Total
-                read(UConf%my_rank+100, *) UG%Line%Distance(iEdge)
+                read(UConf%my_rank+100,*) UG%Line%Distance(iEdge)
             end do
-
+write(6,*) "13"
             read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
             if(UConf%TurbulenceModel /= 0) then
                 do iEdge = 1, UG%GM%BC%iWallTotal
@@ -201,7 +204,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                         read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
                     end do
                 end do
-
+write(6,*) "14"
                 read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
                 do iLoop = 1, UG%GM%BC%iWallTotal
                     read(UConf%my_rank+100,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
@@ -212,9 +215,9 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 end do
             end if
         end if
-
+write(6,*) "15"
         close(UConf%my_rank+100)
-
+write(6,*) "EE"
         UG%GM%Bound(1,1) = minval(UG%CD%Point(:,1),1)
         UG%GM%Bound(2,1) = maxval(UG%CD%Point(:,1),1)
         UG%GM%Bound(1,2) = minval(UG%CD%Point(:,2),1)
