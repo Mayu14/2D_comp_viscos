@@ -16,9 +16,9 @@ program Preprocessing4UnstructuredGrid
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid) :: UG
-    character(len=64) :: cFileName, cWing
+    character(len=64) :: cFileName, c1, c2, c34, cWing, cInPath="", cOutPath=""
     logical :: ExistBound
-    integer :: MultipleConvertMode = 0, iWing
+    integer :: MultipleConvertMode = 0, i1, i2, i34
 
     MultipleConvertMode = 1    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
@@ -26,13 +26,20 @@ program Preprocessing4UnstructuredGrid
         write(6,*) "Please input the name of VTK file that defined region.(***.vtk's ***)"
         read(5,*) cFileName
         UG%GM%Dimension = 2
-        call main_process(UG, cFileName)
+        call main_process(UG, cInPath, cOutPath, cFileName)
 
     else
-        do iWing = 1, 9999, 2
-            write(cWing, '("NACA", i4.4, ".vtk")') iWing
-            call main_process(UG, cFileName)
-            call deallocate_UG
+        cInPath = "G:/Toyota/Data/grid_vtk/NACA4_vtk/"
+        cOutPath = "G:/Toyota/Data/grid_vtk/NACA4_mayu/"
+        do i1 = 0, 9
+            do i2 =0, 9
+                do i34 = 1, 40
+                    write(cWing, '("NACA", i1, i1, i2, ".vtk")') i1, i2, i34
+                    cFileName = adjustl(trim(cPath))//adjustl(trim(cWing))
+                    call main_process(UG, cFileName)
+                    call deallocate_UG
+                end do
+            end do
         end do
     end if
     stop
@@ -96,14 +103,13 @@ contains
     return
     end subroutine UDataPointOfVirtualCell
 
-    subroutine main_process(UG, cFileName)
+    subroutine main_process(UG, cInPath, cOutPath, cFileName)
         implicit none
-        type(UnstructuredGrid), intent(inout) :: UG
-        character(len=64), intent(inout) :: cFileName
-
+        type(UnstructuredGrid), intent(out) :: UG
+        character(len=64), intent(inout) :: cFileName, cInPath, cOutPath
 
     !vtkの読み込み
-        call UReadRegionVTK(UG,cFileName)
+        call UReadRegionVTK(UG, cInPath, cFileName)
 
     !共有辺の抽出
         call UMakeEdgeNumber(UG)
@@ -159,7 +165,7 @@ contains
         !call UCheckGrid(UG)
 
     !中間ファイルの出力
-        call UOutputUnStrGrid(UG,cFileName, ExistBound)
+        call UOutputUnStrGrid(UG, cOutPath, cFileName, ExistBound)
 
     !再構成済みファイル
         print *, "Optimized Grid Data Generated!"

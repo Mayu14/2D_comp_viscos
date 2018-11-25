@@ -11,16 +11,16 @@
 !	Update:2018.02.03
 !	Other:GJKアルゴリズムによる接触判定を実行するため凸包出力を追加/複数の境界条件へ対応
 !***********************************/
-subroutine UOutputUnStrGrid(UG,cFileName, ExistBound)
+subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
     use StructVar_Mod
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid), intent(in) :: UG
-    character(len=64), intent(inout) :: cFileName
+    character(len=64), intent(inout) :: cFileName, cPath
     logical, intent(in) :: ExistBound
     !write(6,*) "Please input filename of the Computed Grid Data"
     !read(5,*) cFileName
-    cFileName = trim(adjustl(cFileName))//".mayu" !調べたら.usgも.ccdもなんか既に使われてるみたいだったのでキレた
+    cFileName = trim(adjustl(cPath))//trim(adjustl(cFileName))//".mayu" !調べたら.usgも.ccdもなんか既に使われてるみたいだったのでキレた
     !cFileName = "UnStrGrid"
 
 !点番号は1始まり
