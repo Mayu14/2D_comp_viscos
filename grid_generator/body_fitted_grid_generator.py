@@ -268,6 +268,22 @@ def split_surface(z):
         z_lower = np.concatenate([z[start:], z[:end + 1]])
     return z_upper, z_lower
 
+def get_equidistant_curve(z2, add=0, rate=0.5):
+    def func2(x, rate):
+        a = 3.0 / (2 + rate)
+        b = a * rate
+        return np.where(x < 1 / 6, a * x,
+                        np.where(x < 2 / 6, b * (x - 1 / 6) + a / 6,
+                                 np.where(x < 4 / 6, a * (x - 2 / 6) + (a + b) / 6,
+                                          np.where(x < 5 / 6, b * (x - 4 / 6) + (3 * a + b) / 6,
+                                                   a * (x - 5 / 6) + (3 * a + 2 * b) / 6))))
+
+    t, total_len = get_length_rate(z2, output_total_length=True)
+    fx = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.real(np.hstack((z2, z2[0]))))
+    fy = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.imag(np.hstack((z2, z2[0]))))
+    equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], rate)
+    return fx(equidistant_t) + 1j * fy(equidistant_t)
+
 def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, trianglation=True):
     z1 = renumbering(z1)
     plot_complex(z1)
@@ -401,23 +417,6 @@ def make_grid_seko(z1, path="", fname="sample", mg2=True, vtk=True, bdm=True, tr
                 return (z - normal * incremental)[dmask]
             else:
                 return (z + normal * incremental)[dmask]
-            
-
-    def get_equidistant_curve(z2, add=0, rate=0.5):
-        def func2(x, rate):
-            a = 3.0 / (2 + rate)
-            b = a * rate
-            return np.where(x < 1 / 6, a * x,
-                            np.where(x < 2 / 6, b * (x - 1 / 6) + a / 6,
-                                     np.where(x < 4 / 6, a * (x - 2 / 6) + (a + b) / 6,
-                                              np.where(x < 5 / 6, b * (x - 4 / 6) + (3 * a + b) / 6,
-                                                       a * (x - 5 / 6) + (3 * a + 2 * b) / 6))))
-
-        t, total_len = get_length_rate(z2, output_total_length=True)
-        fx = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.real(np.hstack((z2, z2[0]))))
-        fy = interpolate.PchipInterpolator(np.hstack((t, np.array([1.0]))), np.imag(np.hstack((z2, z2[0]))))
-        equidistant_t = func2(np.linspace(0, 1, z2.shape[0] + add + 1)[:z2.shape[0] + add], rate)
-        return fx(equidistant_t) + 1j * fy(equidistant_t)
 
     def equidistant_offset(z2, max_incremental, accel, add=0, restriction=True, rate=0.5, min_theta_output=False):
         if min_theta_output:
@@ -898,6 +897,7 @@ def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0012", cent
             for i34 in range(1,40):
                 naca4 = str(i1) + str(i2) + str(i34).zfill(2)
                 z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca4, size = size)
+                z1 = get_equidistant_curve(deduplication(z1)[::-1])
                 fname = "NACA" +  naca4
                 np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
                 np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
