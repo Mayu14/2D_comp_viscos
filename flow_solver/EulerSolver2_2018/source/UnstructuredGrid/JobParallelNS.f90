@@ -28,8 +28,7 @@ subroutine JobParallelNS(UConf)
     call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
     iStep = 0
     call UReadInflowOutflowCondition(UG, UConf)
-    call JPUOutput(UConf,UG,UCC,iStep)
-
+    call UPrepareBoundary(UG, UCC)
 
     allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
     allocate(obj_velocity(3))
@@ -45,9 +44,9 @@ subroutine JobParallelNS(UConf)
 
         if(UConf%UseLocalTimeStep /= 0 .and. iAccel == 0) then  ! steady area
             iCalcStep = iCalcStep + 1   ! tmp
-            call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
-            call UnstNS(iStep,UConf,UG,UCC,UCE)
             call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+            call UnstNS(iStep,UConf,UG,UCC,UCE)
+            call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
 
         else    ! accelaration area
             call JPUCheckCFL4FixedTime(UG,UCC,iSplit)
@@ -57,9 +56,9 @@ subroutine JobParallelNS(UConf)
                 iCalcStep = iCalcStep + 1
                 obj_velocity(:) = - min(0.01d0 * dble(iCalcStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
 
-                if(iLoop == 1) call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
+                if(iLoop == 1) call RelativeCoordinateTransform(UG, UCC, obj_velocity)
                     call UnstNS(iStep,UConf,UG,UCC,UCE)
-                if(iLoop == iSplit) call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+                if(iLoop == iSplit) call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
             end do
             FixedTimeStep = DefaultTimeStep
         end if

@@ -25,14 +25,15 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
     do i1digit = 0, 9
         do i2digit = 0, 9
-            do i34digit = 1, 40
-                write(cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
+            # do i34digit = 1, 40
+            i34digit = int(2 * UConf%my_rank + 1)
+                write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
                 do iAngleDeg = 0, 39, 3
                     UConf%dAttackAngle = 180 * dPi * dble(iAngleDeg)
                     write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
                     call JobParallelNS(Uconf)
                 end do
-            end do
+            # end do
         end do
     end do
 
