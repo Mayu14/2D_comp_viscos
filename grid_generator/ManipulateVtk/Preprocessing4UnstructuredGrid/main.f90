@@ -18,7 +18,7 @@ program Preprocessing4UnstructuredGrid
     type(UnstructuredGrid) :: UG
     character(len=64) :: cFileName, cWing, cInPath="", cOutPath=""
     logical :: ExistBound
-    integer :: MultipleConvertMode = 0, i1, i2, i34
+    integer :: MultipleConvertMode = 0, i1, i2, i34, i1234
     integer :: i, length, status
     character(:), allocatable :: arg
     intrinsic :: command_argument_count, get_command_argument
@@ -33,8 +33,8 @@ program Preprocessing4UnstructuredGrid
                     write(6,*) arg
                     !write(cWing,'(i4.4)') arg
                 else
-                    write(6,*) "error! too much arguments"
-                    stop
+                    read(arg, *) i1234
+                    write(cWing, '(i4.4)') i1234
                     !print *, 'Argument', i, '= "', arg, '"'
                 end if
             end if
@@ -43,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 2    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 1    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
@@ -55,6 +55,8 @@ program Preprocessing4UnstructuredGrid
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
         cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
         cFileName = "NACA"//cWing
+        write(6,*) cFileName
+        stop
         call main_process(UG, cInPath, cOutPath, cFileName)
     else
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
