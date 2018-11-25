@@ -897,7 +897,9 @@ def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0012", cent
             for i34 in range(1,40):
                 naca4 = str(i1) + str(i2) + str(i34).zfill(2)
                 z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca4, size = size)
-                z1 = get_equidistant_curve(deduplication(z1)[::-1])
+                z_u, z_l = split_surface(deduplication(z1)[::-1])
+                new_z_eq = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
+                z1 = get_equidistant_curve(new_z_eq)
                 fname = "NACA" +  naca4
                 np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
                 np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
