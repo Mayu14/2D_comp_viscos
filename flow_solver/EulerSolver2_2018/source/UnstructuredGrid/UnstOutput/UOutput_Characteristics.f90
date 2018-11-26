@@ -7,7 +7,7 @@ subroutine UOutput_Characteristics(UConf, UAC)
     integer :: iTime, iMaxTime
 
     !cDirectory = "ResultC/" !UConf%SaveDirectiry
-    cDirectory = "../../../../Case1/ResultC/" ! 東北大スパコン用
+    cDirectory = "../../../Case1/ResultC/" ! 東北大スパコン用
     cFileName = trim(adjustl(cDirectory))//"AC.dat"
     iMaxTime = ubound(UAC%coefficient, 2)
 
