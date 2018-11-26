@@ -17,7 +17,7 @@ subroutine UCalcAeroCharacteristics(UCC, UG, iPlotStep, UAC)
     use ConstantVar_Mod
     use FrequentOperation
     implicit none
-    type(CellCenter), intent(in) :: UCC
+    type(CellCenter), intent(inout) :: UCC
     type(UnstructuredGrid), intent(in) :: UG
     integer, intent(in) :: iPlotStep
     type(AeroCharacteristics), intent(inout) :: UAC
@@ -25,6 +25,8 @@ subroutine UCalcAeroCharacteristics(UCC, UG, iPlotStep, UAC)
     double precision :: WallPressure
     double precision :: lift, drag
     double precision :: scaling_factor, ObjLength = 1.0d0
+
+    call JPUConserve2Primitive(UG, UCC)
 
     lift = 0.0d0
     drag = 0.0d0
