@@ -16,7 +16,9 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     call JPUConserve2Primitive(UG,UCC)
 
     write(cStep,*) iStep
-    cDirectory = "ResultU/" !UConf%SaveDirectiry
+    !cDirectory = "ResultU/" !UConf%SaveDirectiry
+    cDirectory = "../../../../Case1/ResultU/" ! 東北大スパコン用
+
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
     open(unit = UConf%my_rank + 100, file =trim(adjustl(cFileName)), status = 'unknown')
