@@ -19,23 +19,27 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     implicit none
     type(Configulation), intent(inout) :: UConf
     integer, intent(in) :: PETOT
-    integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop
+    integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
 
-    do i1digit = 0, 9
-        do i2digit = 0, 9
-            # do i34digit = 1, 40
-            i34digit = int(2 * UConf%my_rank + 1)
-                write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
+    !PETET = 0 ~ 1799を仮定
+    ! do i1digit = 0, 9
+        ! do i2digit = 0, 9
+            ! do i34digit = 1, 40
+            i12digit = mod(UConf%my_rank, 100)  ! 00~99
+            i34digit = 5 * int((UConf%my_rank / 100)) + 11  ! 11~96, 5k+1
+                write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit
+                ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
                 do iAngleDeg = 0, 39, 3
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
-                    write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                    write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
+                    !write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
                     call JobParallelNS(Uconf)
                 end do
-            # end do
-        end do
-    end do
+            ! end do
+        ! end do
+    ! end do
 
     return
 contains
