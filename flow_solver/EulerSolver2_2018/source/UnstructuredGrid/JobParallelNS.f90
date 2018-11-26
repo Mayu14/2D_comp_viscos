@@ -31,7 +31,7 @@ subroutine JobParallelNS(UConf)
     call UPrepareBoundary(UG, UCC)
     call JPUConserve2Primitive(UG, UCC)
 
-    allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
+    allocate(UAC%coefficient(2, int(IterationNumber)))
     allocate(obj_velocity(3))
 
     ! for accelaration area
@@ -76,10 +76,8 @@ subroutine JobParallelNS(UConf)
         if(mod(iStep,OutputInterval) == 0) then
             iStep4Plot = iStep / OutputInterval
             !call JPUOutput(UConf,UG,UCC,iStep4Plot)
-            call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
-            write(6,*) UConf%cFileName, UAC%coefficient(1, iStep4Plot), UAC%coefficient(2, iStep4Plot)
         end if
-
+        call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
     end do
 
     call JPUOutput(UConf,UG,UCC,iStep)
