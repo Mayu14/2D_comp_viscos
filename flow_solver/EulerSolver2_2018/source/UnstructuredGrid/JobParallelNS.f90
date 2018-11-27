@@ -77,7 +77,7 @@ subroutine JobParallelNS(UConf)
             iStep4Plot = iStep / OutputInterval
             !call JPUOutput(UConf,UG,UCC,iStep4Plot)
         end if
-        call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
+        call UCalcAeroCharacteristics(UCC, UG, iStep, UAC)
     end do
 
     call JPUOutput(UConf,UG,UCC,iStep)

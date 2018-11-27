@@ -13,7 +13,7 @@ subroutine UOutput_Characteristics(UConf, UAC)
 
     open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
         do iTime = 1, iMaxTime
-            write(UConf%my_rank+100, *) UAC%coefficient(1,iTime), UAC%coefficient(2, iTime)
+            write(UConf%my_rank+100, "(2(1x,f22.17))") UAC%coefficient(1,iTime), UAC%coefficient(2, iTime)
         end do
     close(UConf%my_rank+100)
 
