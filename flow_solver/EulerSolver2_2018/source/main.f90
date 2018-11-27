@@ -21,6 +21,28 @@ program EulerEQ1D
     double precision, allocatable :: WatchTime(:,:) !(1Boundary,2Flux,3Integral:1Start,2End,3Total)
     type(Configulation) :: Conf
     character :: cConfirm
+    ! コマンドライン引数読込用
+    integer :: i, length, status, iOffset
+    character(:), allocatable :: arg
+    intrinsic :: command_argument_count, get_command_argument
+
+    do i = 0, command_argument_count()
+        call get_command_argument(i, length = length, status = status)
+        if (status == 0) then
+            allocate (character(length) :: arg)
+              call get_command_argument(i, arg, status = status)
+              if (status == 0) then
+                if (i == 0) then
+                    iOffset = 0
+                else
+                    read(arg, *) iOffset
+                end if
+            end if
+        deallocate (arg)
+        end if
+        if (status /= 0) print *, 'Error', status, 'on argument', i
+    end do
+
     allocate(WatchTime(3,3))
     TotalTime = 0.0d0
     WatchTime = 0.0d0
@@ -44,7 +66,7 @@ program EulerEQ1D
 
     else if(Conf%SwitchProgram == 5) then
         Conf%UseJobParallel = 1
-        call JobParallelControler(Conf)
+        call JobParallelControler(Conf, iOffset)
     end if
     stop
 

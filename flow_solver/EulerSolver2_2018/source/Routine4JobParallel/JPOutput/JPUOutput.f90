@@ -17,7 +17,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
 
     write(cStep,*) iStep
     !cDirectory = "ResultU/" !UConf%SaveDirectiry
-    cDirectory = "../../../Case1/ResultU/" ! 東北大スパコン用
+    cDirectory = "/work/FMa/FMa037/Case1/ResultU/" ! 東北大スパコン用
 
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
