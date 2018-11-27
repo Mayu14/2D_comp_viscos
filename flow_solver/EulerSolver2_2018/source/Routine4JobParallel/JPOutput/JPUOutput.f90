@@ -9,8 +9,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     integer, intent(in) :: iStep
     character(len=64) :: cDirectory,cFileName, cCaseName
     character(len=32) :: cStep
-    integer :: UseRelativeSpeed = 0
-    double precision, allocatable :: RelativeSpeed(:)
+
     integer :: iCheck
 
     call JPUConserve2Primitive(UG,UCC)
@@ -53,47 +52,16 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(UConf%my_rank + 100,"((2x,f22.14))") UCC%PrimitiveVariable(1,iCell,1,1)
         end do
 
-        if(UseRelativeSpeed == 0) then
-            write(UConf%my_rank + 100,"('VECTORS Velocity float')")
-            if(UG%GM%Dimension == 2) then
-                do iCell=1, UG%GI%RealCells
-                    write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,3),0.0d0
-                end do
-            else if(UG%GM%Dimension == 3) then
-                do iCell=1, UG%GI%RealCells
-                    write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
-                end do
-            end if
+        write(UConf%my_rank + 100,"('VECTORS Velocity float')")
+        do iCell=1, UG%GI%RealCells
+            write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
+        end do
 
-            write(UConf%my_rank + 100,"('SCALARS Pressure float')")
-            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
-            do iCell=1, UG%GI%RealCells
-                write(UConf%my_rank + 100,"((2x,f22.14))") UCC%PrimitiveVariable(UG%GM%Dimension+2,iCell,1,1)
-            end do
-
-        else
-            allocate(RelativeSpeed(3))
-            RelativeSpeed(1) = -0.3d0
-            RelativeSpeed(2) = 0.0d0
-            RelativeSpeed(3) = 0.0d0
-            write(UConf%my_rank + 100,"('VECTORS Velocity float')")
-            if(UG%GM%Dimension == 2) then
-                do iCell=1, UG%GI%RealCells
-                    write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1)-RelativeSpeed(iLoop-1),iLoop=2,3),0.0d0
-                end do
-            else if(UG%GM%Dimension == 3) then
-                do iCell=1, UG%GI%RealCells
-                    write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1)-RelativeSpeed(iLoop-1),iLoop=2,4)
-                end do
-            end if
-
-            write(UConf%my_rank + 100,"('SCALARS Pressure float')")
-            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
-            do iCell=1, UG%GI%RealCells
-                write(UConf%my_rank + 100,"((2x,f22.14))") Gmin1*(UCC%ConservedQuantity(UG%GM%Dimension+2,iCell,1,1)-0.5d0*UCC%ConservedQuantity(1,iCell,1,1)*&
-                &(dot_product(UCC%PrimitiveVariable(2:4,iCell,1,1)-RelativeSpeed(1:3),UCC%PrimitiveVariable(2:4,iCell,1,1)-RelativeSpeed(1:3))))
-            end do
-        end if
+        write(UConf%my_rank + 100,"('SCALARS Pressure float')")
+        write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+        do iCell=1, UG%GI%RealCells
+            write(UConf%my_rank + 100,"((2x,f22.14))") UCC%PrimitiveVariable(5,iCell,1,1)
+        end do
 
         if(iStep > 0) then
             write(UConf%my_rank + 100,"('SCALARS BoundaryCondition float')")
