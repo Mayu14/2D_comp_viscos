@@ -40,11 +40,9 @@ implicit none
                         Flux(:,iLocalEdge) = + UCE%NormalFluxDiff(:,1,1,1,iEdge) * UG%GM%Area(iEdge)
                     end if
                 end do
-
                 !EEM
                 UCC%ConservedQuantity(:,iCell,1,1) = UCC%ConservedQuantity(:,iCell,1,1) - 1.0d0/UG%GM%Volume(iCell)&
                         &   * UCC%TimeWidth(iTC,1,1)*sum(Flux,2)
-
             end if
 
         end do

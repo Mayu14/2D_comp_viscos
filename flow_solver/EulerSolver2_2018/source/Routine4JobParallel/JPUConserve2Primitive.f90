@@ -19,17 +19,16 @@ subroutine JPUConserve2Primitive(UG,UCC)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter),intent(inout) :: UCC
 
-    iDim = UG%GM%Dimension
-
     do iCell=1, UG%GI%AllCells
         UCC%PrimitiveVariable(1,iCell,1,1) = UCC%ConservedQuantity(1,iCell,1,1)
 
-        UCC%PrimitiveVariable(2:iDim+1,iCell,1,1) = &
-            &   UCC%ConservedQuantity(2:iDim+1,iCell,1,1)/UCC%ConservedQuantity(1,iCell,1,1)
+        UCC%PrimitiveVariable(2:4,iCell,1,1) = &
+            &   UCC%ConservedQuantity(2:4,iCell,1,1)/UCC%ConservedQuantity(1,iCell,1,1)
 
-        UCC%PrimitiveVariable(iDim+2,iCell,1,1) = &
-            &   Gmin1 * (UCC%ConservedQuantity(iDim+2,iCell,1,1) - 0.5d0 * UCC%ConservedQuantity(1,iCell,1,1) &
-            &   * dot_product(UCC%PrimitiveVariable(2:iDim+1,iCell,1,1),UCC%PrimitiveVariable(2:iDim+1,iCell,1,1)))
+        UCC%PrimitiveVariable(5,iCell,1,1) = &
+            &   Gmin1 * (UCC%ConservedQuantity(5,iCell,1,1) - 0.5d0 * UCC%ConservedQuantity(1,iCell,1,1) &
+            &   * dot_product(UCC%PrimitiveVariable(2:4,iCell,1,1),UCC%PrimitiveVariable(2:4,iCell,1,1)))
+
 
     end do
 

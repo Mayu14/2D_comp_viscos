@@ -35,23 +35,20 @@ subroutine JobParallelNS(UConf)
     allocate(obj_velocity(3))
 
     ! for accelaration area
-    UConf%UseMUSCL = 0
-    UConf%TurbulenceModel = 0
+    UConf%UseMUSCL = 1
+    UConf%TurbulenceModel = 1
+    UConf%UseJobParallel = 0
     !
+    obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
+    call RelativeCoordinateTransform(UG, UCC, obj_velocity)
     iStartStep = 1
     do iStep = iStartStep, IterationNumber
-        obj_velocity(:) = - min(0.01d0 * dble(iStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
-        if(iAccel == 0) then  ! steady area
-            call RelativeCoordinateTransform(UG, UCC, obj_velocity)
-            call UnstNS(iStep,UConf,UG,UCC,UCE)
-            call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
+        ! obj_velocity(:) = - min(0.01d0 * dble(iStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
+        !obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
 
-        else    ! accelaration area
-            call RelativeCoordinateTransform(UG, UCC, obj_velocity)
-            call UnstNS(iStep,UConf,UG,UCC,UCE)
-            call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
-        end if
-
+        !call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+        call UnstNS(iStep,UConf,UG,UCC,UCE)
+        !call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
         if(iStep > 100) then
             iAccel = 0  ! 加速区間終了
             UConf%UseMUSCL = 1

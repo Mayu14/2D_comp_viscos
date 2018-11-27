@@ -31,13 +31,13 @@ subroutine UCalcAeroCharacteristics(UCC, UG, iPlotStep, UAC)
     lift = 0.0d0
     drag = 0.0d0
     do iWall = 1, UG%GM%BC%iWallTotal
-        iEdge =UG%GM%BC%VW(iWall)%iGlobalEdge
+        iEdge = UG%GM%BC%VW(iWall)%iGlobalEdge
         iFrontCell = UG%Line%Cell(iEdge, 1, 1)
         iBackCell = UG%Line%Cell(iEdge, 2, 1)
         WallPressure = 0.5d0 * (UCC%PrimitiveVariable(5, iFrontCell, 1, 1) + UCC%PrimitiveVariable(5, iBackCell, 1, 1))
 
-        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 2))
-        drag = drag + WallPressure * (-UG%GM%Normal(iEdge, 1))
+        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 2)) * UG%GM%Area(iEdge)
+        drag = drag + WallPressure * (-UG%GM%Normal(iEdge, 1)) * UG%GM%Area(iEdge)
 
     end do
 
