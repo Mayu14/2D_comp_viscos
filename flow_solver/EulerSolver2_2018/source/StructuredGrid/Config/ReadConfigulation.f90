@@ -18,7 +18,7 @@ subroutine ReadConfigulation(Conf, my_rank)
     type(Configulation), intent(inout) :: Conf
     integer :: my_rank
     character :: cAnnotate
-    logical :: debug = .true.
+    logical :: debug = .false.
 
     open(unit=my_rank+100, file='CalcConfig',status='unknown')
         read(my_rank+100,*) cAnnotate
