@@ -11,21 +11,21 @@
 !	Update:2017.11.07
 !	Other:
 !***********************************/
-subroutine JobParallelControler(UConf)
+subroutine JobParallelControler(UConf, iOffset)
     use StructVar_Mod
     use ConstantVar_Mod
     use mpi
     !!$use omp_lib
     implicit none
     type(Configulation), intent(inout) :: UConf
-    integer :: ierr, my_rank, PETOT
+    integer :: ierr, my_rank, iOffset
     integer :: Total_threads
 
     call MPI_INIT(ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, PETOT, ierr)
     call MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierr)
         UConf%UseJobParallel = 1
-        UConf%my_rank = my_rank
+        UConf%my_rank = my_rank + 40 * iOffset
         !!$omp parallel default(private)
         ! my_rankと，omp_get_thread_num()とユーザ入力または環境変数から迎え角と格子を変更
         !Total_threads = omp_get_max_threads()
