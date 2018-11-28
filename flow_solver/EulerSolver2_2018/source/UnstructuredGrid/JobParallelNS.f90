@@ -36,7 +36,6 @@ subroutine JobParallelNS(UConf)
     ! for accelaration area
     UConf%UseMUSCL = 0
     UConf%TurbulenceModel = 0
-    UConf%UseJobParallel = 0
     !
     obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
     call RelativeCoordinateTransform(UG, UCC, obj_velocity)

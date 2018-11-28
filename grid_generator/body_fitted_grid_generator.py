@@ -871,9 +871,11 @@ def make_grid(fname, type, size=100, naca4="0012", center_x=0.08, center_y=0.08,
     make_grid_seko(z1, path, fname, mayugrid2, vtk, bdm, trianglation)
 
 def main():
-    z1, size = get_complex_coords(type=3, naca4="4501", size=25)
+    z1, size = get_complex_coords(type=3, naca4="2831", size=100)
     # z1, size = get_complex_coords(type=0, center_x=0.08, center_y=0.3, naca4="4912", size=100)
     z1 = deduplication(z1)[::-1]
+    plot_complex(z1)
+
     make_grid_seko(z1)
     # plt.plot(np.real(z1), np.imag(z1))
     # plt.show()
@@ -909,6 +911,6 @@ def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0012", cent
                 np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
                 
 if __name__ == '__main__':
-    # main()
+    main()
     # makeGridLoop()
-    output_coords_csv()
+    # output_coords_csv()
