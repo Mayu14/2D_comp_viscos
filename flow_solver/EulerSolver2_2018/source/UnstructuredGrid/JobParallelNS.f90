@@ -19,7 +19,7 @@ subroutine JobParallelNS(UConf)
     type(CellCenter) :: UCC
     type(CellEdge) :: UCE
     type(UnstructuredGrid) :: UG
-    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot !時間分割
+    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot, iCalcStep !時間分割
     integer :: iAccel = 1
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
@@ -31,43 +31,55 @@ subroutine JobParallelNS(UConf)
     call UPrepareBoundary(UG, UCC)
     call JPUConserve2Primitive(UG, UCC)
 
-    allocate(UAC%coefficient(2, int(IterationNumber)))
     allocate(obj_velocity(3))
 
     ! for accelaration area
-    UConf%UseMUSCL = 1
-    UConf%TurbulenceModel = 1
+    UConf%UseMUSCL = 0
+    UConf%TurbulenceModel = 0
     UConf%UseJobParallel = 0
     !
     obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
     call RelativeCoordinateTransform(UG, UCC, obj_velocity)
-    iStartStep = 1
-    do iStep = iStartStep, IterationNumber
-        ! obj_velocity(:) = - min(0.01d0 * dble(iStep), 1.0d0) * UG%GM%BC%InFlowVariable(2:4)
-        !obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
 
-        !call RelativeCoordinateTransform(UG, UCC, obj_velocity)
-        call UnstNS(iStep,UConf,UG,UCC,UCE)
-        !call RelativeCoordinateTransform(UG, UCC, -obj_velocity)
-        if(iStep > 100) then
-            iAccel = 0  ! 加速区間終了
-            UConf%UseMUSCL = 1
-            UConf%TurbulenceModel = 1
-        end if
+    do while (UCC%iEndFlag < 2)
+        iStartStep = 1
+        do iStep = iStartStep, IterationNumber
+            call UnstNS(iStep,UConf,UG,UCC,UCE)
 
-        if(mod(iStep,OutputInterval) == 0) then
-            iStep4Plot = iStep / OutputInterval
-            call JPUOutput(UConf,UG,UCC,iStep4Plot)
-        end if
+            if(iStep > 100) then
+                iAccel = 0  ! 加速区間終了
+                UConf%UseMUSCL = 1
+                UConf%TurbulenceModel = 1
+            end if
 
-        call UCalcAeroCharacteristics(UCC, UG, iStep, UAC)
+            if(mod(iStep,OutputInterval) == 0) then
+                iStep4Plot = iStep / OutputInterval
+                !call JPUOutput(UConf,UG,UCC,iStep4Plot)
+            end if
+
+            if(UCC%iEndFlag == 2) exit
+        end do
     end do
 
-    call JPUOutput(UConf,UG,UCC,iStep)
+    call JPUOutput(UConf,UG,UCC,0)
+
+    iCalcStep = 100
+    allocate(UAC%coefficient(2, iCalcStep))
+
+    UConf%UseLocalTimeStep = 0
+    UConf%UseSteadyCalc = 0
+    do iStep4Plot = 1, iCalcStep
+        call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
+        call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
+    end do
+
+    call JPUOutput(UConf,UG,UCC,iCalcStep)
     call UOutput_Characteristics(UConf, UAC)
 
     UConf%UseMUSCL = 1
     UConf%TurbulenceModel = 1
+    UConf%UseLocalTimeStep = 1
+    UConf%UseSteadyCalc = 1
 
     return
 contains

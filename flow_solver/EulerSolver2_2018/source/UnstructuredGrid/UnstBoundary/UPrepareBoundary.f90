@@ -22,7 +22,7 @@ implicit none
     do iCell = UG%GI%RealCells+1, UG%GI%AllCells
         if(UG%GM%CellType(iCell,1,1) == 1) then !Inflow and Outflow
             iEdge = UG%VC%Edge(iCell)
-            if(dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%Normal(iEdge, :)) <= 0.0d0) then    !　流入流束との内積が負になるとき流入境界→無反射境界に変更
+            if(dot_product(-UG%GM%BC%InFlowVariable(2:4), -UG%GM%Normal(iEdge, :)) <= 0.0d0) then    !　流入流速との内積が負になるとき流入境界→無反射境界に変更
                 UG%GM%CellType(iCell, 1, 1) = 10   ! non reflect boundary
             end if
         end if

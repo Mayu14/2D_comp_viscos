@@ -65,7 +65,7 @@ implicit none
             !EEM
             UCC%ConservedQuantity(:,iCell,1,1) = UCC%ConservedQuantity(:,iCell,1,1) + DeltaQuantity
 
-            Residual = Residual + 0.2d0*dot_product(DeltaQuantity,DeltaQuantity)
+            Residual = Residual + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
 
         end do
 
