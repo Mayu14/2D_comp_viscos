@@ -83,6 +83,26 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                     write(UConf%my_rank + 100,"((2x,f22.14))") dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
                 end if
             end do
+
+            write(UConf%my_rank + 100,"('SCALARS BoundaryType float')")
+            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+
+            do iCell=1, UG%GI%RealCells
+                iCheck = 0
+                do iLoop=1,3
+                    if(UG%Tri%Cell(iCell,iLoop) > UG%GI%RealCells) then
+                        iCheck = iCheck + 1
+                        iAdjacentCell = UG%Tri%Cell(iCell,iLoop)
+                    end if
+                end do
+
+                if(iCheck == 0) then
+                    write(UConf%my_rank + 100,"((2x,f22.14))") 0.0d0
+                else
+                    !write(6,*) iCell,dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
+                    write(UConf%my_rank + 100,"((2x,f22.14))") float(UG%GM%CellType(iAdjacentCell, 1, 1))
+                end if
+            end do
         else
             write(UConf%my_rank + 100,"('SCALARS BoundaryCondition float')")
             write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")

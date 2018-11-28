@@ -18,6 +18,7 @@ use ConstantVar_Mod, Gamma => SpecificOfHeatRatio
 implicit none
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
+    integer :: iFlag
 
     iDim = UG%GM%Dimension
 
@@ -28,8 +29,10 @@ implicit none
             call InOutFlowBoundary
 
         else if(UG%GM%CellType(iCell, 1, 1) == 10) then ! Non-Reflect Boundary
-
-            call UNonReflectBoundary_2D(UG, UCC, iCell)
+            !call UNonReflectBoundary_2D(UG, UCC, iCell, iFlag)
+            !if(iFlag /= 0) then
+                call InOutFlowBoundary
+            !end if
 
         else if(UG%GM%CellType(iCell,1,1) == 2) then !Wall
 
