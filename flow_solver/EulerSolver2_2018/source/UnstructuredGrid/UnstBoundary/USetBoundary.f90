@@ -158,7 +158,10 @@ contains
         iAdjacentCell = UG%VC%Cell(iCell,1)
         iAdjacentEdge = UG%VC%Edge(iCell)
         UCC%ConservedQuantity(1,iCell,1,1) = UCC%ConservedQuantity(1,iAdjacentCell,1,1) !Grad 0
-        UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)   !Energy Gradient 0 !これ正しいの？
+        !UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)   !Energy Gradient 0 !これ正しいの？
+        UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(5,iAdjacentCell,1,1) &
+            & - 0.5d0 / UCC%ConservedQuantity(1,iAdjacentCell,1,1) &
+            & * dot_product(UCC%ConservedQuantity(2:4,iAdjacentCell,1,1), UCC%ConservedQuantity(2:4,iAdjacentCell,1,1)) !Pressure Gradient 0
         UCC%ConservedQuantity(2:iDim+1,iCell,1,1) = 0.0d0
 
     return
