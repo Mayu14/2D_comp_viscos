@@ -69,7 +69,7 @@ subroutine JobParallelNS(UConf)
     UConf%UseSteadyCalc = 0
     do iStep4Plot = 1, iCalcStep
         call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
-        call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
+        call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
     end do
 
     call JPUOutput(UConf,UG,UCC,iCalcStep)

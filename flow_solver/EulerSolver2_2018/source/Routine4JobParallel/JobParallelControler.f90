@@ -25,7 +25,9 @@ subroutine JobParallelControler(UConf, iOffset)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, PETOT, ierr)
     call MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierr)
         UConf%UseJobParallel = 1
-        UConf%my_rank = my_rank + int(40 * iOffset)
+        if (PETOT > 16) then
+            UConf%CalcEnv = 1
+        end if
         !!$omp parallel default(private)
         ! my_rankと，omp_get_thread_num()とユーザ入力または環境変数から迎え角と格子を変更
         !Total_threads = omp_get_max_threads()

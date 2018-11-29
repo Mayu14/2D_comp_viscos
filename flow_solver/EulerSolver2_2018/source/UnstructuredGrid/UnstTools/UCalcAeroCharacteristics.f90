@@ -11,12 +11,13 @@
 !	Update:
 !	Other:
 !***********************************/
-subroutine UCalcAeroCharacteristics(UCC, UG, iPlotStep, UAC)
+subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
     use StructVar_Mod
     use LoopVar_Mod
     use ConstantVar_Mod
     use FrequentOperation
     implicit none
+    type(Configulation), intent(in) :: UConf
     type(CellCenter), intent(inout) :: UCC
     type(UnstructuredGrid), intent(in) :: UG
     integer, intent(in) :: iPlotStep
@@ -25,19 +26,25 @@ subroutine UCalcAeroCharacteristics(UCC, UG, iPlotStep, UAC)
     double precision :: WallPressure
     double precision :: lift, drag
     double precision :: scaling_factor, ObjLength = 1.0d0
-
+    double precision :: cosA, sinA
     call JPUConserve2Primitive(UG, UCC)
 
     lift = 0.0d0
     drag = 0.0d0
+
+    cosA = cos(UConf%dAttackAngle)
+    sinA = sin(UConf%dAttackAngle)
+
     do iWall = 1, UG%GM%BC%iWallTotal
         iEdge = UG%GM%BC%VW(iWall)%iGlobalEdge
         iFrontCell = UG%Line%Cell(iEdge, 1, 1)
         iBackCell = UG%Line%Cell(iEdge, 2, 1)
         WallPressure = 0.5d0 * (UCC%PrimitiveVariable(5, iFrontCell, 1, 1) + UCC%PrimitiveVariable(5, iBackCell, 1, 1))
 
-        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 2)) * UG%GM%Area(iEdge)
-        drag = drag + WallPressure * (-UG%GM%Normal(iEdge, 1)) * UG%GM%Area(iEdge)
+
+        drag = drag + WallPressure * (-UG%GM%Normal(iEdge, 1) * cosA + UG%GM%Normal(iEdge, 2) * sinA) * UG%GM%Area(iEdge)
+
+        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 1) * sinA - UG%GM%Normal(iEdge, 2) * cosA) * UG%GM%Area(iEdge)
 
     end do
 

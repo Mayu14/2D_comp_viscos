@@ -112,6 +112,7 @@ implicit none
         character(len=32) :: cFileName  ! 出力vtk名(JobParallel用)
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
+        integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer
     end type
 
     type RoeAverage !Roe平均
