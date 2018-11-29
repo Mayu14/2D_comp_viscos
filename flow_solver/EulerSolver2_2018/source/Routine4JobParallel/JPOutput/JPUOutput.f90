@@ -15,8 +15,11 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     call JPUConserve2Primitive(UG,UCC)
 
     write(cStep,*) iStep
-    !cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
-    cDirectory = "/work/A/FMa/FMa037/Case1/ResultU/" ! 東北大スパコン用
+    if(UConf%CalcEnv == 0) then
+        cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
+    else if(UConf%CalcEnv == 1) then
+        cDirectory = "/work/A/FMa/FMa037/Case1/ResultU/" ! 東北大スパコン用
+    end if
 
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     cCaseName = "UnstructuredShockTube" !UConf%CaseName

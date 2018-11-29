@@ -6,8 +6,12 @@ subroutine UOutput_Characteristics(UConf, UAC)
     character(len=64) :: cDirectory,cFileName, cCaseName
     integer :: iTime, iMaxTime
 
-    !cDirectory = "ResultC/" !UConf%SaveDirectiry    ! 研究室PC用
-    cDirectory = "/work/A/FMa/FMa037/Case1/ResultC/" ! 東北大スパコン用
+    if(UConf%CalcEnv == 0) then
+        cDirectory = "ResultC/" !UConf%SaveDirectiry    ! 研究室PC用
+    else if (UConf%CalcEnv == 1) then
+        cDirectory = "/work/A/FMa/FMa037/Case1/ResultC/" ! 東北大スパコン用
+    end if
+
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"_AC.dat"
     iMaxTime = ubound(UAC%coefficient, 2)
 

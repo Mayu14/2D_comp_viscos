@@ -599,7 +599,7 @@ contains
                 else
                     iStep4Plot = iStep / OutputInterval
                     call UOutput(UConf,UG,UCC,iStep4Plot)
-                    call UCalcAeroCharacteristics(UCC, UG, iStep4Plot, UAC)
+                    call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
                     write(6,*) UAC%coefficient(1, iStep4Plot), UAC%coefficient(2, iStep4Plot)
                 end if
             end if

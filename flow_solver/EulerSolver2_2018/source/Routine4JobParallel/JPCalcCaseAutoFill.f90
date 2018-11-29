@@ -29,14 +29,20 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             ! do i34digit = 1, 40
             i12digit = mod(UConf%my_rank, 100)  ! 00~99
             i34digit = 5 * int((UConf%my_rank / 100)) + 11  ! 11~96, 5k+1
+            if(UConf%CalcEnv == 0) then
+                write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
+            else if(UConf%CalcEnv == 1) then
                 write(UConf%cGridName, '("../../../grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
-                !write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
-
+            end if
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
+
                 do iAngleDeg = 0, 39, 3
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
-                    write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
-                    !write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                    if(UConf%CalcEnv == 0) then
+                        write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                    else if(UConf%CalcEnv == 1) then
+                        write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
+                    end if
                     call JobParallelNS(Uconf)
                 end do
             ! end do
