@@ -10,19 +10,22 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     character(len=64) :: cDirectory,cFileName, cCaseName
     character(len=32) :: cStep
 
-    integer :: iCheck
+    integer :: iCheck, iUnit_num
 
     call JPUConserve2Primitive(UG,UCC)
 
     write(cStep,*) iStep
     if(UConf%CalcEnv == 0) then
         cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     else if(UConf%CalcEnv == 1) then
         cDirectory = "/work/A/FMa/FMa037/Case1/ResultU/" ! 東北大スパコン用
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     end if
 
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
+
     open(unit = UConf%my_rank + 100, file =trim(adjustl(cFileName)), status = 'unknown')
         write(UConf%my_rank + 100,"('# vtk DataFile Version 3.0')")
         write(UConf%my_rank + 100,*) cCaseName

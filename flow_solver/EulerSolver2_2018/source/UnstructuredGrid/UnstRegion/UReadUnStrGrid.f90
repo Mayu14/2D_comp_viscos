@@ -19,7 +19,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(CellCenter), intent(inout) :: UCC !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(CellEdge), intent(inout) :: UCE !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(UnstructuredGrid), intent(inout) :: UG
-    character(len=64) cFileName,cAnnotate
+    character(len=64) cFileName, cDirectory,cAnnotate
 
     !write(6,*) "Please input file name of *.mayu"
     !read(5,*) cFileName
@@ -27,6 +27,12 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !cFileName = "MiniCircle_Fine.mayu"
     cFileName = "NACA0012.mayu"
     if(UConf%UseJobParallel == 1) cFileName = trim(adjustl(UConf%cGridName))
+    if(UConf%CalcEnv == 0) then
+        cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
+    else
+        cDirectory = ""
+    end if
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
     !cFileName = "tri_SquareGrid.mayu"
     !write(6,*) trim(adjustl(cFileName))
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)

@@ -24,6 +24,7 @@ subroutine JobParallelControler(UConf, iOffset)
     call MPI_INIT(ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, PETOT, ierr)
     call MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierr)
+        UConf%my_rank = my_rank + iOffset
         UConf%UseJobParallel = 1
         if (PETOT > 16) then
             UConf%CalcEnv = 1

@@ -39,7 +39,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                 do iAngleDeg = 0, 39, 3
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                     if(UConf%CalcEnv == 0) then
-                        write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                        write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
                     end if
