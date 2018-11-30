@@ -23,6 +23,7 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
     type(CellEdge), intent(inout) :: UCE
     double precision :: Mu0, STS, SC1, Mach2!, Tref
     double precision :: EdgeTemparature
+    logical :: debug = .true.
 
     if(UConf%UseSutherlandLaw == 0) then
         UCE%LaminarViscosity = 1.0d0
@@ -39,7 +40,14 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
         do iEdge = 1, UG%GI%Edges
             EdgeTemparature = 0.5d0 * (UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 1, 1) + UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 2, 1))
-            UCE%LaminarViscosity(iEdge, 1, 1) = SC1 * EdgeTemparature ** 1.5d0 / (EdgeTemparature + STS)
+            UCE%LaminarViscosity(iEdge,1,1) = SC1 * EdgeTemparature ** 1.5d0 / (EdgeTemparature + STS)
+        end do
+    end if
+
+    if(debug == .true.) then
+        do iCell = 1, UG%GI%RealCells
+            UCC%LaminarViscosity(iCell,1,1) = (UCE%LaminarViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
+            UCC%TurbulenceViscosity(iCell,1,1) = (UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
         end do
     end if
 

@@ -9,8 +9,6 @@ subroutine UOutput(UConf,UG,UCC,iStep)
     integer, intent(in) :: iStep
     character(len=64) :: cDirectory,cFileName, cCaseName
     character(len=32) :: cStep
-    integer :: UseRelativeSpeed = 0
-    double precision, allocatable :: RelativeSpeed(:)
     integer :: iCheck
 
     call UConserve2Primitive(UG,UCC)
@@ -51,47 +49,23 @@ subroutine UOutput(UConf,UG,UCC,iStep)
             write(1,"((2x,f22.14))") UCC%PrimitiveVariable(1,iCell,1,1)
         end do
 
-        if(UseRelativeSpeed == 0) then
-            write(1,"('VECTORS Velocity float')")
-            if(UG%GM%Dimension == 2) then
-                do iCell=1, UG%GI%RealCells
-                    write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,3),0.0d0
-                end do
-            else if(UG%GM%Dimension == 3) then
-                do iCell=1, UG%GI%RealCells
-                    write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
-                end do
-            end if
 
-            write(1,"('SCALARS Pressure float')")
-            write(1,"('LOOKUP_TABLE default')")
+        write(1,"('VECTORS Velocity float')")
+        if(UG%GM%Dimension == 2) then
             do iCell=1, UG%GI%RealCells
-                write(1,"((2x,f22.14))") UCC%PrimitiveVariable(UG%GM%Dimension+2,iCell,1,1)
+                write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,3),0.0d0
             end do
-
-        else
-            allocate(RelativeSpeed(3))
-            RelativeSpeed(1) = -0.3d0
-            RelativeSpeed(2) = 0.0d0
-            RelativeSpeed(3) = 0.0d0
-            write(1,"('VECTORS Velocity float')")
-            if(UG%GM%Dimension == 2) then
-                do iCell=1, UG%GI%RealCells
-                    write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1)-RelativeSpeed(iLoop-1),iLoop=2,3),0.0d0
-                end do
-            else if(UG%GM%Dimension == 3) then
-                do iCell=1, UG%GI%RealCells
-                    write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1)-RelativeSpeed(iLoop-1),iLoop=2,4)
-                end do
-            end if
-
-            write(1,"('SCALARS Pressure float')")
-            write(1,"('LOOKUP_TABLE default')")
+        else if(UG%GM%Dimension == 3) then
             do iCell=1, UG%GI%RealCells
-                write(1,"((2x,f22.14))") Gmin1*(UCC%ConservedQuantity(UG%GM%Dimension+2,iCell,1,1)-0.5d0*UCC%ConservedQuantity(1,iCell,1,1)*&
-                &(dot_product(UCC%PrimitiveVariable(2:4,iCell,1,1)-RelativeSpeed(1:3),UCC%PrimitiveVariable(2:4,iCell,1,1)-RelativeSpeed(1:3))))
+                write(1,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
             end do
         end if
+
+        write(1,"('SCALARS Pressure float')")
+        write(1,"('LOOKUP_TABLE default')")
+        do iCell=1, UG%GI%RealCells
+            write(1,"((2x,f22.14))") UCC%PrimitiveVariable(UG%GM%Dimension+2,iCell,1,1)
+        end do
 
         if(iStep > 0) then
             write(1,"('SCALARS BoundaryCondition float')")
@@ -113,6 +87,7 @@ subroutine UOutput(UConf,UG,UCC,iStep)
                     write(1,"((2x,f22.14))") dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
                 end if
             end do
+
         else
             write(1,"('SCALARS BoundaryCondition float')")
             write(1,"('LOOKUP_TABLE default')")
@@ -121,6 +96,37 @@ subroutine UOutput(UConf,UG,UCC,iStep)
                 write(1,"((2x,f22.14))") 0.0d0
             end do
         end if
+
+        write(1,"('SCALARS WallNumber float')")
+        write(1,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(1, "(f22.14)") dble(UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 1))+UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 2))+UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 3))) / 3.0d0
+        end do
+
+        write(1,"('SCALARS WallDistance float')")
+        write(1,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(1, "(f22.14)") dble(UG%Line%Distance(UG%Tri%Edge(iCell, 1))+UG%Line%Distance(UG%Tri%Edge(iCell, 2))+UG%Line%Distance(UG%Tri%Edge(iCell, 3))) / 3.0d0
+        end do
+
+        write(1,"('SCALARS LaminarViscosity float')")
+        write(1,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(1, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
+        end do
+
+        write(1,"('SCALARS TurbulenceViscosity float')")
+        write(1,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(1, "(f22.14)") UCC%TurbulenceViscosity(iCell,1,1)
+        end do
+
+
+
     close(1)
 return
 end subroutine UOutput

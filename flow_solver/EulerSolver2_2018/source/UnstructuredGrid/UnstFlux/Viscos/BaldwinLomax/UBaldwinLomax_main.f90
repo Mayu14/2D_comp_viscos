@@ -29,14 +29,6 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
     integer :: iY_max_num!, y_max_num(:)    ! y_maxを与えるCellNum(壁ごとの局所番号)
     double precision, allocatable :: mixing_length(:)   ! iWallごとmixing_length
 
-    ! Edgeで計算すべきということに気付いたため修正開始
-! RANS common
-    ! Calc Laminar Viscosity from Sutherland's Law
-    call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
-
-    ! Calc Strain Rate Tensor & AbsoluteVortisity
-    call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
-
 ! Baldwin-Lomax
 !$omp parallel num_threads(CoreNumberOfCPU), default(private), shared(UConf, UG, UCC, UCE), firstprivate(iWall, iMember)
 !$omp do
@@ -68,6 +60,8 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
         call GetTurbulenceViscosity(UG%GM%BC%VW(iWall), mixing_length**2, Fwake, yMax, UG%Line%Distance(:), UCE)
         deallocate(mixing_length)
     end do
+
+
 !$omp end do
 !$omp end parallel
     return
