@@ -45,6 +45,7 @@ contains
         double precision, intent(in) :: velocity(:), normal(:)
 
         tangential_velocity = abs(velocity(1) * (-normal(2)) + velocity(2) * normal(1))
+
         return
     end function GetAbsTangentialVelocity_2D
 

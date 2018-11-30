@@ -23,55 +23,55 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     end if
 
-
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
+    iUnit_num = iUnit_num
 
-    open(unit = UConf%my_rank + 100, file =trim(adjustl(cFileName)), status = 'unknown')
-        write(UConf%my_rank + 100,"('# vtk DataFile Version 3.0')")
-        write(UConf%my_rank + 100,*) cCaseName
-        write(UConf%my_rank + 100,"('ASCII')")
-        write(UConf%my_rank + 100,"('DATASET UNSTRUCTURED_GRID')")
-        write(UConf%my_rank + 100,"('POINTS ',(1x,i7),' double')") UG%GI%Points
+    open(unit = iUnit_num, file =trim(adjustl(cFileName)), status = 'unknown')
+        write(iUnit_num,"('# vtk DataFile Version 3.0')")
+        write(iUnit_num,*) cCaseName
+        write(iUnit_num,"('ASCII')")
+        write(iUnit_num,"('DATASET UNSTRUCTURED_GRID')")
+        write(iUnit_num,"('POINTS ',(1x,i7),' double')") UG%GI%Points
 
         do iPoint=1, UG%GI%Points
-            !write(UConf%my_rank + 100,"(3(1x,f22.17))") (UG%CD%Point(iPoint,iLoop),iLoop=1,3) !Adjust Point Number
-            write(UConf%my_rank + 100,"(3(1x,f22.17))") UG%CD%Point(iPoint,1),UG%CD%Point(iPoint,2),UG%CD%Point(iPoint,3)+1 !for OverSet
+            !write(iUnit_num,"(3(1x,f22.17))") (UG%CD%Point(iPoint,iLoop),iLoop=1,3) !Adjust Point Number
+            write(iUnit_num,"(3(1x,f22.17))") UG%CD%Point(iPoint,1),UG%CD%Point(iPoint,2),UG%CD%Point(iPoint,3)+1 !for OverSet
         end do
-        write(UConf%my_rank + 100,*) ""
+        write(iUnit_num,*) ""
 
-        write(UConf%my_rank + 100,"('CELLS ',2(1x,i7))") UG%GI%RealCells,UG%GI%RealCells*4
+        write(iUnit_num,"('CELLS ',2(1x,i7))") UG%GI%RealCells,UG%GI%RealCells*4
         do iCell=1, UG%GI%RealCells
-                write(UConf%my_rank + 100,"(4(1x,i7))") 3,(UG%Tri%Point(iCell,iLoop)-1,iLoop=1,3) !Adjusted Point Number
+                write(iUnit_num,"(4(1x,i7))") 3,(UG%Tri%Point(iCell,iLoop)-1,iLoop=1,3) !Adjusted Point Number
         end do
-        write(UConf%my_rank + 100,*) ""
+        write(iUnit_num,*) ""
 
-        write(UConf%my_rank + 100,"('CELL_TYPES ',(1x,i7))") UG%GI%RealCells
+        write(iUnit_num,"('CELL_TYPES ',(1x,i7))") UG%GI%RealCells
         do iCell=1, UG%GI%RealCells
-            write(UConf%my_rank + 100,"(1x,i1)") 5
+            write(iUnit_num,"(1x,i1)") 5
         end do
 
-        write(UConf%my_rank + 100,"('CELL_DATA ',i7)") UG%GI%RealCells
+        write(iUnit_num,"('CELL_DATA ',i7)") UG%GI%RealCells
 !密度プロット
-        write(UConf%my_rank + 100,"('SCALARS Density float')")
-        write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+        write(iUnit_num,"('SCALARS Density float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
         do iCell=1, UG%GI%RealCells
-            write(UConf%my_rank + 100,"((2x,f22.14))") UCC%PrimitiveVariable(1,iCell,1,1)
+            write(iUnit_num,"((2x,f22.14))") UCC%PrimitiveVariable(1,iCell,1,1)
         end do
 
-        write(UConf%my_rank + 100,"('VECTORS Velocity float')")
+        write(iUnit_num,"('VECTORS Velocity float')")
         do iCell=1, UG%GI%RealCells
-            write(UConf%my_rank + 100,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
+            write(iUnit_num,"((2x,f22.14))") (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
         end do
 
-        write(UConf%my_rank + 100,"('SCALARS Pressure float')")
-        write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+        write(iUnit_num,"('SCALARS Pressure float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
         do iCell=1, UG%GI%RealCells
-            write(UConf%my_rank + 100,"((2x,f22.14))") UCC%PrimitiveVariable(5,iCell,1,1)
+            write(iUnit_num,"((2x,f22.14))") UCC%PrimitiveVariable(5,iCell,1,1)
         end do
 
         if(iStep > 0) then
-            write(UConf%my_rank + 100,"('SCALARS BoundaryCondition float')")
-            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+            write(iUnit_num,"('SCALARS BoundaryCondition float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
 
             do iCell=1, UG%GI%RealCells
                 iCheck = 0
@@ -83,15 +83,15 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                 end do
 
                 if(iCheck == 0) then
-                    write(UConf%my_rank + 100,"((2x,f22.14))") 0.0d0
+                    write(iUnit_num,"((2x,f22.14))") 0.0d0
                 else
                     !write(6,*) iCell,dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
-                    write(UConf%my_rank + 100,"((2x,f22.14))") dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
+                    write(iUnit_num,"((2x,f22.14))") dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
                 end if
             end do
 
-            write(UConf%my_rank + 100,"('SCALARS BoundaryType float')")
-            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+            write(iUnit_num,"('SCALARS BoundaryType float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
 
             do iCell=1, UG%GI%RealCells
                 iCheck = 0
@@ -103,21 +103,44 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                 end do
 
                 if(iCheck == 0) then
-                    write(UConf%my_rank + 100,"((2x,f22.14))") 0.0d0
+                    write(iUnit_num,"((2x,f22.14))") 0.0d0
                 else
                     !write(6,*) iCell,dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),-UG%GM%Normal(UG%VC%Edge(iAdjacentCell),1:3))
-                    write(UConf%my_rank + 100,"((2x,f22.14))") float(UG%GM%CellType(iAdjacentCell, 1, 1))
+                    write(iUnit_num,"((2x,f22.14))") float(UG%GM%CellType(iAdjacentCell, 1, 1))
                 end if
             end do
         else
-            write(UConf%my_rank + 100,"('SCALARS BoundaryCondition float')")
-            write(UConf%my_rank + 100,"('LOOKUP_TABLE default')")
+            write(iUnit_num,"('SCALARS BoundaryCondition float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
 
             do iCell=1, UG%GI%RealCells
-                write(UConf%my_rank + 100,"((2x,f22.14))") 0.0d0
+                write(iUnit_num,"((2x,f22.14))") 0.0d0
             end do
         end if
-    close(UConf%my_rank + 100)
-return
+
+        write(iUnit_num,"('SCALARS Wall float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") dble((UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 1)) + UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 2)) + UG%Line%Belongs2Wall(UG%Tri%Edge(iCell, 3)))) / 3.0d0
+        end do
+
+        write(iUnit_num,"('SCALARS LaminarViscosity float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
+        end do
+
+        write(iUnit_num,"('SCALARS TurbulenceViscosity float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") UCC%TurbulenceViscosity(iCell,1,1)
+        end do
+
+
+    close(iUnit_num)
+    return
 end subroutine JPUOutput
 

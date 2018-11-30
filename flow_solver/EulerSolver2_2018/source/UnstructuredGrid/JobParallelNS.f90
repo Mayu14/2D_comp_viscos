@@ -48,12 +48,12 @@ subroutine JobParallelNS(UConf)
             if(iStep > 100) then
                 iAccel = 0  ! 加速区間終了
                 UConf%UseMUSCL = 1
-                UConf%TurbulenceModel = 1
+                !UConf%TurbulenceModel = 1
             end if
 
             if(mod(iStep,OutputInterval) == 0) then
                 iStep4Plot = iStep / OutputInterval
-                !call JPUOutput(UConf,UG,UCC,iStep4Plot)
+                call JPUOutput(UConf,UG,UCC,iStep4Plot)
             end if
 
             if(UCC%iEndFlag == 2) exit

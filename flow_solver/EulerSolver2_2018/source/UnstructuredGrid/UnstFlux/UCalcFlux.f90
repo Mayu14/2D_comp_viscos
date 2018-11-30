@@ -59,7 +59,7 @@ subroutine UCalcFlux(UConf,UG,UCC,UCE)
         end if
 
         if(UConf%TurbulenceModel == 1) then
-            call UBaldwinLomax_main(UConf, UG, UCC, UCE)
+            call URansCommon(UConf, UG, UCC, UCE)
         end if
     end if
 
@@ -80,7 +80,7 @@ contains
         call USlau2(UConf, UG, UCC, UCE)
 
         if(UConf%TurbulenceModel == 1) then
-            call UBaldwinLomax_main(UConf, UG, UCC, UCE)
+            call URansCommon(UConf, UG, UCC, UCE)
         end if
 
         return
