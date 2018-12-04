@@ -24,7 +24,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     end if
 
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
-    iUnit_num = iUnit_num
+    iUnit_num = UConf%my_rank + 100
 
     open(unit = iUnit_num, file =trim(adjustl(cFileName)), status = 'unknown')
         write(iUnit_num,"('# vtk DataFile Version 3.0')")
@@ -140,7 +140,25 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         end do
 
 
+        write(iUnit_num,"('SCALARS Wall2 float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+        do iCell=1, UG%GI%RealCells
+            iPoint = 0  ! iFlag
+            do iLoop=1, UG%GM%BC%iWallTotal
+                iAdjacentCell = UG%Line%Cell(UG%GM%BC%VW(iLoop)%iGlobalEdge, 1, 1)
+                if(iAdjacentCell == iCell) then
+                    iEdge = iAdjacentCell
+                    iPoint = 1
+                end if
+            end do
+            if(iPoint == 1) then
+                write(iUnit_num, "(f22.14)") dble(iEdge)
+            else
+                write(iUnit_num, "(f22.14)") dble(0.0)
+            end if
+        end do
+
     close(iUnit_num)
+    stop
     return
 end subroutine JPUOutput
-
