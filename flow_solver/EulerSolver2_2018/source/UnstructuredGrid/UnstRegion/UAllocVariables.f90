@@ -25,8 +25,8 @@
         allocate(UG%Tri%Cell(UG%Tri%Total,3))  !三角形要素の隣接要素番号は(要素数,3)
         allocate(UG%Tri%Type(UG%Tri%Total)) !三角形要素の種類（与えるべき境界条件（内部境界条件を利用するため））
 
-        allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号    ! only-use Baldwin-Lomax model
-        allocate(UG%Tri%Distance(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号からの界面垂直方向距離 ! only-use Baldwin-Lomax model
+        !allocate(UG%Tri%Belongs2Wall(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号    ! only-use Baldwin-Lomax model
+        !allocate(UG%Tri%Distance(UG%GI%RealCells)) !三角形要素に対する最近傍の物体表面辺番号からの界面垂直方向距離 ! only-use Baldwin-Lomax model
         allocate(UG%Line%Belongs2Wall(UG%GI%Edges))
         allocate(UG%Line%Distance(UG%GI%Edges))
 
