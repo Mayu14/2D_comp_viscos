@@ -143,6 +143,7 @@ contains
         else
             minDistance = minD_direct
         end if
+        minDistance = minD_direct
         return
     end subroutine get_minimum_distance_bruteforce_edge
 

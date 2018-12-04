@@ -24,7 +24,7 @@ implicit none
         double precision, allocatable :: PrimitiveVariable(:,:,:,:) !基本変数(密度，速度，全エネルギー) (構成は一緒)
 
         double precision, allocatable :: LaminarViscosity(:, :, :)
-        double precision, allocatable :: TurbulenceViscosity(:, :, :)
+        double precision, allocatable :: EddyViscosity(:, :, :)
         double precision, allocatable :: Temparature(:, :, :)    ! (i, j, k)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
         double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
@@ -48,7 +48,7 @@ implicit none
         double precision, allocatable :: TmpLimiterFunction(:,:,:,:,:) !セル界面における流束制限関数(全界面の最小値をセル中心の流束制限関数として採用する)
 
         double precision, allocatable :: LaminarViscosity(:, :, :)
-        double precision, allocatable :: TurbulenceViscosity(:, :, :)
+        double precision, allocatable :: EddyViscosity(:, :, :)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
         double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
     end type

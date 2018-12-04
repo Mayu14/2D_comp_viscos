@@ -32,10 +32,9 @@ subroutine JobParallelNS(UConf)
     call JPUConserve2Primitive(UG, UCC)
 
     allocate(obj_velocity(3))
-
     ! for accelaration area
-    UConf%UseMUSCL = 0
-    UConf%TurbulenceModel = 0
+    UConf%UseMUSCL = 1
+    UConf%TurbulenceModel = 1
     !
     obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
     call RelativeCoordinateTransform(UG, UCC, obj_velocity)
@@ -45,10 +44,11 @@ subroutine JobParallelNS(UConf)
         do iStep = iStartStep, IterationNumber
             call UnstNS(iStep,UConf,UG,UCC,UCE)
 
-            if(iStep > 100) then
+            !if(iStep > 100) then
+            if(iStep > 0) then
                 iAccel = 0  ! 加速区間終了
                 UConf%UseMUSCL = 1
-                !UConf%TurbulenceModel = 1
+                UConf%TurbulenceModel = 1
             end if
 
             if(mod(iStep,OutputInterval) == 0) then

@@ -118,11 +118,11 @@ subroutine UOutput(UConf,UG,UCC,iStep)
             write(1, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
         end do
 
-        write(1,"('SCALARS TurbulenceViscosity float')")
+        write(1,"('SCALARS EddyViscosity float')")
         write(1,"('LOOKUP_TABLE default')")
 
         do iCell=1, UG%GI%RealCells
-            write(1, "(f22.14)") UCC%TurbulenceViscosity(iCell,1,1)
+            write(1, "(f22.14)") UCC%EddyViscosity(iCell,1,1)
         end do
 
 

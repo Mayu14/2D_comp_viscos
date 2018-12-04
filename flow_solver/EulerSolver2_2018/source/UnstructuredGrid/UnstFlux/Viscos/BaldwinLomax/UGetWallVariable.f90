@@ -24,17 +24,17 @@ subroutine GetWallVariable(UG, UCC, UCE, iWall, Wall_Density, Wall_Viscosity, Wa
     double precision :: front_tangent_velocity, back_tangent_velocity, vertical_distance
 
     iWallEdge = UG%GM%BC%VW(iWall)%iGlobalEdge  ! 壁の大域界面番号
-    iFrontCell = UG%GM%BC%VW(iWall)%iMemberCell(1)  ! 壁の物体側セル番号
+    iFrontCell = UG%Line%Cell(iWallEdge, 1, 1)  ! 壁の物体側セル番号
     iBackCell = UG%Line%Cell(iWallEdge, 2, 1) ! 壁の仮想セル番号
     iWallEdge_as_Local = UG%Line%Cell(iWallEdge, 1, 2)  ! 物体外側セルから壁面セルを見たときの局所界面番号
 
     front_tangent_velocity = GetAbsTangentialVelocity_2D(UCC%PrimitiveVariable(2:3, iFrontCell, 1, 1), UG%GM%Normal(iWallEdge, 1:2))    ! 壁(物体外側)における接線方向速度の絶対値
-    back_tangent_velocity = GetAbsTangentialVelocity_2D(UCC%PrimitiveVariable(2:3, iBackCell, 1, 1), UG%GM%Normal(iWallEdge, 1:2))  ! 壁(物体内部)における接線方向速度の絶対値
+    back_tangent_velocity = GetAbsTangentialVelocity_2D(UCC%PrimitiveVariable(2:3, iBackCell, 1, 1), UG%GM%Normal(iWallEdge, 1:2))  ! 壁(物体内部)における接線方向速度の絶対値(基本的に0)
     vertical_distance = 2.0d0 * AbsVector(UG%GM%Width(iFrontCell, iWallEdge_as_Local, :))    ! 壁面を挟む2セルの中心間距離
 
-    Wall_Density = 0.5d0 * (UCC%ConservedQuantity(1, iFrontCell, 1, 1) + UCC%ConservedQuantity(1, iBackCell, 1, 1)) ! 壁における密度
+    Wall_Density = 0.5d0 * (UCC%ConservedQuantity(1, iFrontCell, 1, 1) + UCC%ConservedQuantity(1, iBackCell, 1, 1)) ! 壁における密度(算術平均)
     Wall_Viscosity = UCE%LaminarViscosity(iWallEdge, 1, 1)   ! 壁における粘性
-    Wall_dudy = abs((front_tangent_velocity - back_tangent_velocity)) / vertical_distance
+    Wall_dudy = abs((front_tangent_velocity - back_tangent_velocity)) / vertical_distance   ! 2次精度中心差分
 
     return
 

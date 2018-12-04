@@ -43,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 1    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 0    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
