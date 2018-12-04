@@ -156,17 +156,17 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
 
         if(ExistBound .eqv. .true.) then
     ! セルから最も近い物体表面セル
-            write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
-            do iCell = 1, UG%Tri%Total
-                write(1, *) UG%Tri%Belongs2Wall(iCell)
-            end do
+            !write(1, *) "NearestSurfaceBoundaryEdgeNum ", UG%Tri%Total
+            !do iCell = 1, UG%Tri%Total
+                !write(1, *) UG%Tri%Belongs2Wall(iCell)
+            !end do
 
     ! 物体表面からの距離
-            write(1, *) "DistanceFromObjectSurface ", UG%Tri%Total
-            do iCell = 1, UG%Tri%Total
-                write(1, *) UG%Tri%Distance(iCell)
-            end do
-            write(1,*) ""
+            !write(1, *) "DistanceFromObjectSurface ", UG%Tri%Total
+            !do iCell = 1, UG%Tri%Total
+                !write(1, *) UG%Tri%Distance(iCell)
+            !end do
+            !write(1,*) ""
 
     ! 界面から最も近い物体表面
             write(1, *) "NearestSurfaceBoundaryEdgeNum4Edge ", UG%Line%Total
@@ -182,13 +182,13 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
             write(1,*) ""
 
     ! 各壁に対応する
-            write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
-            do iEdge = 1, UG%GM%BC%iWallTotal
-                write(1, *) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                    write(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
-                end do
-            end do
+            !write(1,*) "Wall2Cell_data ", UG%GM%BC%iWallTotal
+            !do iEdge = 1, UG%GM%BC%iWallTotal
+                !write(1, *) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                !do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    !write(1,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                !end do
+            !end do
 
             write(1,*) "Wall2Edge_data ", UG%GM%BC%iWallTotal
             do iLoop = 1, UG%GM%BC%iWallTotal
