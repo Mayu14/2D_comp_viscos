@@ -180,15 +180,15 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
         end if
 
         if(UG%GI%AllCells - UG%GI%RealCells - UG%GI%OutlineCells /= 0) then
-            read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
-            do iCell = 1, UG%Tri%Total
-                read(UConf%my_rank+100,*) UG%Tri%Belongs2Wall(iCell)
-            end do
+            !read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+            !do iCell = 1, UG%Tri%Total
+                !read(UConf%my_rank+100,*) UG%Tri%Belongs2Wall(iCell)
+            !end do
 
-            read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface "
-            do iCell = 1, UG%Tri%Total
-                read(UConf%my_rank+100,*) UG%Tri%Distance(iCell)
-            end do
+            !read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface "
+            !do iCell = 1, UG%Tri%Total
+                !read(UConf%my_rank+100,*) UG%Tri%Distance(iCell)
+            !end do
 
             read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
             do iEdge = 1, UG%Line%Total
@@ -200,15 +200,15 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 read(UConf%my_rank+100,*) UG%Line%Distance(iEdge)
             end do
 
-            read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
+            !read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
             if(UConf%TurbulenceModel /= 0) then
-                do iEdge = 1, UG%GM%BC%iWallTotal
-                    read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                    allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
-                    do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                        read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
-                    end do
-                end do
+                !do iEdge = 1, UG%GM%BC%iWallTotal
+                    !read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    !allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
+                    !do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                        !read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                    !end do
+                !end do
 
                 read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
                 do iLoop = 1, UG%GM%BC%iWallTotal
