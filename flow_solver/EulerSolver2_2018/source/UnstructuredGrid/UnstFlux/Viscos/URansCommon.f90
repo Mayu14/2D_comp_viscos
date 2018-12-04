@@ -57,9 +57,9 @@ contains
         allocate(average_velocity(2))
 
         do iEdge = 1, UG%GI%Edges
-            Viscosity = UCE%LaminarViscosity(iEdge, 1, 1) + UCE%TurbulenceViscosity(iEdge, 1, 1)
+            Viscosity = UCE%LaminarViscosity(iEdge, 1, 1) + UCE%EddyViscosity(iEdge, 1, 1)
             ThermalConductivity = UCE%LaminarViscosity(iEdge, 1, 1) / LaminarPrandtlNumber &
-                              & + UCE%TurbulenceViscosity(iEdge, 1, 1) / TurbulentPrandtlNumber
+                              & + UCE%EddyViscosity(iEdge, 1, 1) / TurbulentPrandtlNumber
 
             average_velocity = 0.5d0 *(UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) + UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge))
 

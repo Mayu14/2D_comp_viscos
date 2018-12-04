@@ -109,14 +109,14 @@
         if(UConf%TurbulenceModel /= 0) then
             ! 廃止予定
             allocate(UCC%AbsoluteVortisity(UG%GI%RealCells, 1, 1))
-            allocate(UCC%TurbulenceViscosity(UG%GI%RealCells, 1, 1))
+            allocate(UCC%EddyViscosity(UG%GI%RealCells, 1, 1))
             allocate(UCC%StrainRateTensor(iDim, iDim, UG%GI%AllCells, 1, 1))    !uvw, xyz, icell, 1, 1
             allocate(UCC%LaminarViscosity(UG%GI%AllCells, 1, 1))
             allocate(UCC%Temparature(UG%GI%AllCells,1,1))
 
             allocate(UCE%AbsoluteVortisity(UG%GI%Edges, 1, 1))
             allocate(UCE%LaminarViscosity(UG%GI%Edges, 1, 1))
-            allocate(UCE%TurbulenceViscosity(UG%GI%Edges, 1, 1))
+            allocate(UCE%EddyViscosity(UG%GI%Edges, 1, 1))
             allocate(UCE%StrainRateTensor(iDim, iDim, UG%GI%Edges, 1, 1))
             allocate(UG%GM%BC%VW(UG%VC%Total - UG%GI%OutlineCells))
         end if

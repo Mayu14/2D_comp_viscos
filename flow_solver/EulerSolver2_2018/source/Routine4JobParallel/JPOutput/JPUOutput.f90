@@ -132,11 +132,11 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
         end do
 
-        write(iUnit_num,"('SCALARS TurbulenceViscosity float')")
+        write(iUnit_num,"('SCALARS EddyViscosity float')")
         write(iUnit_num,"('LOOKUP_TABLE default')")
 
         do iCell=1, UG%GI%RealCells
-            write(iUnit_num, "(f22.14)") UCC%TurbulenceViscosity(iCell,1,1)
+            write(iUnit_num, "(f22.14)") UCC%EddyViscosity(iCell,1,1)
         end do
 
 
@@ -156,6 +156,13 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             else
                 write(iUnit_num, "(f22.14)") dble(0.0)
             end if
+        end do
+
+        write(iUnit_num,"('SCALARS WallDistance float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") dble(UG%Line%Distance(UG%Tri%Edge(iCell, 1))+UG%Line%Distance(UG%Tri%Edge(iCell, 2))+UG%Line%Distance(UG%Tri%Edge(iCell, 3))) / 3.0d0
         end do
 
     close(iUnit_num)

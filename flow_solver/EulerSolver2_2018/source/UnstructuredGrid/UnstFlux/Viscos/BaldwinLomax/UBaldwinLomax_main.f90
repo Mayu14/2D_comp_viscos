@@ -34,7 +34,7 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
 !$omp do
     ! loop of wall
     do iWall=1, UG%GM%BC%iWallTotal
-        ! get density, shear_stress, and viscosity on wall
+        ! get density, viscosity, and velocity gradient on wall
         call GetWallVariable(UG, UCC, UCE, iWall, Wall_Density, Wall_Viscosity, Wall_dudy)
 
         allocate(mixing_length(UG%GM%BC%VW(iWall)%iNumberOfMemberEdge))
@@ -44,9 +44,8 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
         end do
 
         ! get y_max, F_max, and u_dif on each wall boundary respectively
-
         call CalcYmaxAndFmax_Udif(UCE%RebuildQunatity, mixing_length, UCE%AbsoluteVortisity(:, 1, 1), UG%GM%BC%VW(iWall), iY_max_num, Fmax, Udif)
-    ! 壁番号→壁に所属する要素の総数，近い順に整列済みでセル番号の検索が可能，高速巡回が可能なように内部では配列にしておく
+        ! 壁番号→壁に所属する要素の総数，近い順に整列済みでセル番号の検索が可能，高速巡回が可能なように内部では配列にしておく
 
         yMax = UG%Line%Distance(UG%GM%BC%VW(iWall)%iMemberEdge(iY_max_num))
         if(Fmax == 0.0d0) then
@@ -55,9 +54,8 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
             Fwake = min(yMax * Fmax, Cwk * yMax * (Udif ** 2) / Fmax)
         end if
 
-
         ! Calc Turbulance Viscosity of Baldwin-Lomax Model
-        call GetTurbulenceViscosity(UG%GM%BC%VW(iWall), mixing_length**2, Fwake, yMax, UG%Line%Distance(:), UCE)
+        call GetEddyViscosity(UG%GM%BC%VW(iWall), mixing_length**2, Fwake, yMax, UG%Line%Distance(:), UCE)
         deallocate(mixing_length)
     end do
 
@@ -71,7 +69,7 @@ contains
         implicit none
         double precision, intent(in) :: rho_w, mu_w, dudy_w, y   ! 壁表面での密度，せん断応力，粘性係数，壁からの垂直距離
         double precision :: y_plus
-        ! スタック積み上げ過ぎ(関数深すぎ)て使えない説
+
         y_plus = sqrt(rho_w / mu_w * dudy_w) * y ! 定義確認!
 
         return
@@ -85,19 +83,19 @@ contains
         double precision :: A_plus = 26.0d0
 
         l_mix = KC * y * (1.0d0 - exp(-set_y_plus(rho_w, mu_w, dudy_w, y) / A_plus))
-        !l_mix = KC * y * (1.0d0 - exp(-(sqrt(rho_w / mu_w * dudy_w) * y) / A_plus))
+
         return
     end function set_mixing_length
 
 
     subroutine CalcYmaxAndFmax_Udif(RQ, l_mix, Vortisity, VW, iYmax_id, Fmax, Udif)
         implicit none
-        double precision, intent(in) :: RQ(:, :, :, :, :), l_mix(:), Vortisity(:)
-        type(ViscosityWall), intent(in) :: VW
+        double precision, intent(in) :: RQ(:, :, :, :, :), l_mix(:), Vortisity(:)   ! RQ:大域界面番号，l_mix:壁内局所界面番号，Vortisity:大域界面番号
+        type(ViscosityWall), intent(in) :: VW   ! iWall固定済み
         double precision, intent(out) :: Fmax, Udif ! Baldwin(1978)のeq.8
-        integer, intent(out) :: iYmax_id
+        integer, intent(out) :: iYmax_id    ! 壁内局所界面番号
         double precision :: tmpF, tmpU, tmpUmax, tmpUmin
-        integer :: iMem, iEdgeNum
+        integer :: iMem, iEdgeNum   ! 壁内局所界面番号，大域界面番号
 
         Fmax = 0.0d0
         tmpUmax = 0.0d0
@@ -105,9 +103,9 @@ contains
 
         iYmax_id = 1
         do iMem = 1, VW%iNumberOfMemberEdge
-            iEdgeNum = VW%iMemberEdge(iMem)
-            tmpF = Vortisity(VW%iMemberEdge(iMem)) * l_mix(iMem) / KC
-            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum)) + AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum)))  ! 界面裏表速度の単純平均値にしている(不安定になるかも)
+            iEdgeNum = VW%iMemberEdge(iMem) ! iWallに属するiMem番目の界面について
+            tmpF = Vortisity(iEdgeNum) * l_mix(iMem) / KC   !
+            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum)) + AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum)))  ! 界面裏表速度の単純平均値にしている(高マッハ数で不安定になるかも)
 
             if(tmpF > Fmax) then
                 Fmax = tmpF
@@ -124,7 +122,7 @@ contains
     end subroutine CalcYmaxAndFmax_Udif
 
 
-    subroutine GetTurbulenceViscosity(VW, l_mix2, Fwake, yMax, Distance, UCE)
+    subroutine GetEddyViscosity(VW, l_mix2, Fwake, yMax, Distance, UCE)
         implicit none
         type(ViscosityWall), intent(in) :: VW
         double precision, intent(in) :: Distance(:)   ! 大域セル番号で検索
@@ -133,7 +131,7 @@ contains
 
         double precision, parameter :: Ccp = 1.6d0, Ckleb = 0.3d0
         integer :: iMem, iFlag, iEdgeNum
-        double precision :: Fkleb, Mu_in, Mu_out
+        double precision :: Fkleb, Mu_in, Mu_out, rho_wall
 
         iFlag = 1
         do iMem = 1, VW%iNumberOfMemberEdge
@@ -144,11 +142,11 @@ contains
                 Fkleb = 1.0d0 / (1.0d0 + 5.5d0 * (Ckleb * Distance(iEdgeNum) / yMax) ** 6)
             end if
 
-            Mu_out = ClauserConstant * Ccp * Fwake * Fkleb
+            rho_wall = 0.5d0 * (UCE%RebuildQunatity(1, 1, 1, 2, iEdgeNum) + UCE%RebuildQunatity(1, 1, 1, 1, iEdgeNum))  ! 密度は壁両側の算術平均
+            Mu_out = ClauserConstant * Ccp * rho_wall * Fwake * Fkleb
 
             if(iFlag == 1) then
-                Mu_in = (0.5d0 * (UCE%RebuildQunatity(1, 1, 1, 2, iEdgeNum) + UCE%RebuildQunatity(1, 1, 1, 1, iEdgeNum))) &
-                        &    * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)
+                Mu_in = rho_wall * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)
                 if(Mu_in > Mu_out) then
                     iFlag = 0
                 else
@@ -156,11 +154,11 @@ contains
                 end if
             end if
 
-            UCE%TurbulenceViscosity(iEdgeNum, 1, 1) = Mu_out
+            UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_out
         end do
 
         return
-    end subroutine GetTurbulenceViscosity
+    end subroutine GetEddyViscosity
 
 
 end subroutine UBaldwinLomax_main

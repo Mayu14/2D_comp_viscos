@@ -47,7 +47,7 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
     if(debug == .true.) then
         do iCell = 1, UG%GI%RealCells
             UCC%LaminarViscosity(iCell,1,1) = (UCE%LaminarViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
-            UCC%TurbulenceViscosity(iCell,1,1) = (UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%TurbulenceViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
+            UCC%EddyViscosity(iCell,1,1) = (UCE%EddyViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
         end do
     end if
 
