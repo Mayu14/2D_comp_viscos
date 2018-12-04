@@ -187,10 +187,10 @@ contains
         end if
 
     !物体表面からの距離を与える
-        call UGetDistanceFromSurface(UG, ExistBound)
-        if(ExistBound .eqv. .True.) then
-            call UGetDistanceFromSurface_Edge(UG)
-        end if
+        !call UGetDistanceFromSurface(UG, ExistBound)
+        !if(ExistBound .eqv. .True.) then
+        call UGetDistanceFromSurface_Edge(UG, ExistBound)
+        !end if
     !テスト出力
         !call UCheckGrid(UG)
 
