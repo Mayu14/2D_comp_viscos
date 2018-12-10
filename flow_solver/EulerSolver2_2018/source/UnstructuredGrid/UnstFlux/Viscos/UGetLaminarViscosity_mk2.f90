@@ -21,26 +21,27 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
-    double precision :: Mu0, STS, SC1, Mach2!, Tref
+    double precision :: Mu0, STS, SC1, Mach2, Tinf
     double precision :: EdgeTemparature
     logical :: debug = .true.
 
     if(UConf%UseSutherlandLaw == 0) then
-        UCE%LaminarViscosity = 1.0d0
+        UCE%LaminarViscosity = 1.0d0 / ReynoldsNumber
 
     else
         Mu0 = ReferenceViscosity_Mu0
         STS = SutherlandTemperature_S
         SC1 = SutherlandCoefficient1
         Mach2 = MachNumber ** 2
+        Tinf = InfinityTemperature
 
         do iCell = 1, UG%GI%RealCells
-            UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Mach2
+            UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Mach2 * Tinf ! Calculate Dimensional Value
         end do
 
         do iEdge = 1, UG%GI%Edges
-            EdgeTemparature = 0.5d0 * (UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 1, 1) + UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 2, 1))
-            UCE%LaminarViscosity(iEdge,1,1) = SC1 * EdgeTemparature ** 1.5d0 / (EdgeTemparature + STS)
+            EdgeTemparature = 0.5d0 * (UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 1, 1) + UCC%Temparature(UG%Line%Cell(iEdge, 2, 1), 1, 1))
+            UCE%LaminarViscosity(iEdge,1,1) = SC1 * EdgeTemparature ** 1.5d0 / (EdgeTemparature + STS) / InfinityStaticViscosity ! Calculate Non-Dimensional Value
         end do
     end if
 
