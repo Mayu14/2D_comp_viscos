@@ -165,7 +165,24 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num, "(f22.14)") dble(UG%Line%Distance(UG%Tri%Edge(iCell, 1))+UG%Line%Distance(UG%Tri%Edge(iCell, 2))+UG%Line%Distance(UG%Tri%Edge(iCell, 3))) / 3.0d0
         end do
 
+        write(iUnit_num,"('SCALARS AbsVortisity float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") UCC%AbsoluteVortisity(iCell,1,1)
+        end do
+
+        write(iUnit_num,"('VECTORS StrainRateTensorUxyz float')")
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(1,1,iCell,1,1),UCC%StrainRateTensor(1,2,iCell,1,1),0.0d0
+        end do
+
+        write(iUnit_num,"('VECTORS StrainRateTensorVxyz float')")
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(2,1,iCell,1,1),UCC%StrainRateTensor(2,2,iCell,1,1),0.0d0
+        end do
+
     close(iUnit_num)
-    stop
+
     return
 end subroutine JPUOutput
