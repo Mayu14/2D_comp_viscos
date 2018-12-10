@@ -21,12 +21,26 @@ subroutine URansCommon(UConf, UG, UCC, UCE)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
+    logical :: debug = .true.
     ! RANS common
     ! Calc Laminar Viscosity from Sutherland's Law
     call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
     ! Calc Strain Rate Tensor & AbsoluteVortisity
     call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
+
+    if(debug == .true.) then
+        do iCell = 1, UG%GI%RealCells
+            UCC%StrainRateTensor(1,1,iCell,1,1) = (UCE%StrainRateTensor(1,1,UG%Tri%Edge(iCell,1),1,1) + UCE%StrainRateTensor(1,1,UG%Tri%Edge(iCell,2),1,1) + UCE%StrainRateTensor(1,1,UG%Tri%Edge(iCell,3),1,1)) / 3.0d0
+            UCC%StrainRateTensor(1,2,iCell,1,1) = (UCE%StrainRateTensor(1,2,UG%Tri%Edge(iCell,1),1,1) + UCE%StrainRateTensor(1,2,UG%Tri%Edge(iCell,2),1,1) + UCE%StrainRateTensor(1,2,UG%Tri%Edge(iCell,3),1,1)) / 3.0d0
+            UCC%StrainRateTensor(2,1,iCell,1,1) = (UCE%StrainRateTensor(2,1,UG%Tri%Edge(iCell,1),1,1) + UCE%StrainRateTensor(2,1,UG%Tri%Edge(iCell,2),1,1) + UCE%StrainRateTensor(2,1,UG%Tri%Edge(iCell,3),1,1)) / 3.0d0
+            UCC%StrainRateTensor(2,2,iCell,1,1) = (UCE%StrainRateTensor(2,2,UG%Tri%Edge(iCell,1),1,1) + UCE%StrainRateTensor(2,2,UG%Tri%Edge(iCell,2),1,1) + UCE%StrainRateTensor(2,2,UG%Tri%Edge(iCell,3),1,1)) / 3.0d0
+        end do
+
+        do iCell = 1, UG%GI%RealCells
+            UCC%AbsoluteVortisity(iCell,1,1) = (UCE%AbsoluteVortisity(UG%Tri%Edge(iCell,1),1,1)+UCE%AbsoluteVortisity(UG%Tri%Edge(iCell,2),1,1)+UCE%AbsoluteVortisity(UG%Tri%Edge(iCell,3),1,1))/3.0d0
+        end do
+    end if
 
     if(UConf%TurbulenceModel == 1) then
         call UBaldwinLomax_main(UConf, UG, UCC, UCE)
@@ -60,16 +74,15 @@ contains
             Viscosity = UCE%LaminarViscosity(iEdge, 1, 1) + UCE%EddyViscosity(iEdge, 1, 1)
             ThermalConductivity = UCE%LaminarViscosity(iEdge, 1, 1) / LaminarPrandtlNumber &
                               & + UCE%EddyViscosity(iEdge, 1, 1) / TurbulentPrandtlNumber
-
+            ! 界面の平均流束(2次精度中心差分)
             average_velocity = 0.5d0 *(UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) + UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge))
-
             call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
-
+            ! 界面に対し法線方向(eta方向)の温度微分
             dTdeta = (UCC%Temparature(iFrontCell, 1, 1) - UCC%Temparature(iBackCell, 1, 1)) / length
-
+            ! 温度微分を座標変換により各座標方向に分配
             dTdx = dTdeta * UG%GM%Normal(iEdge, 1)
             dTdy = dTdeta * (-UG%GM%Normal(iEdge, 2))
-
+            ! せん断応力の計算
             tau_xx = 2.0d0 / 3.0d0 * Viscosity * (2.0d0 * UCE%StrainRateTensor(1, 1, iEdge, 1, 1) - UCE%StrainRateTensor(2, 2, iEdge, 1, 1))
             tau_xy = Viscosity * (UCE%StrainRateTensor(1, 2, iEdge, 1, 1) + UCE%StrainRateTensor(2, 1, iEdge, 1, 1))
             tau_yy = 2.0d0 / 3.0d0 * Viscosity * (2.0d0 * UCE%StrainRateTensor(2, 2, iEdge, 1, 1) - UCE%StrainRateTensor(1, 1, iEdge, 1, 1))
