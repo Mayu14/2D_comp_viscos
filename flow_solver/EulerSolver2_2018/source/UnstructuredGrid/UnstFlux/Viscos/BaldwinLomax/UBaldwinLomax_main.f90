@@ -133,7 +133,7 @@ contains
         integer :: iMem, iFlag, iEdgeNum
         double precision :: Fkleb, Mu_in, Mu_out, rho_wall
 
-        iFlag = 1
+        !iFlag = 1
         do iMem = 1, VW%iNumberOfMemberEdge
             iEdgeNum = VW%iMemberEdge(iMem)
             if(yMax == 0.0d0) then
@@ -145,16 +145,20 @@ contains
             rho_wall = 0.5d0 * (UCE%RebuildQunatity(1, 1, 1, 2, iEdgeNum) + UCE%RebuildQunatity(1, 1, 1, 1, iEdgeNum))  ! 密度は壁両側の算術平均
             Mu_out = ClauserConstant * Ccp * rho_wall * Fwake * Fkleb
 
-            if(iFlag == 1) then
-                Mu_in = rho_wall * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)
-                if(Mu_in > Mu_out) then
-                    iFlag = 0
-                else
-                    Mu_out = Mu_in
-                end if
+
+            Mu_in = rho_wall * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)
+            if(Mu_in > Mu_out) then
+                !iFlag = 1
+            else
+                Mu_out = Mu_in
             end if
 
-            UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_out
+            if (Mu_out > 14.0d0 * UCE%LaminarViscosity(iEdgeNum,1,1)) then
+                UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_out
+            else
+                UCE%EddyViscosity(iEdgeNum, 1, 1) = 0.0d0
+            end if
+
         end do
 
         return
