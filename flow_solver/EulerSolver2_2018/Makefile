@@ -604,7 +604,7 @@ EXE = EulerSolver2
 FC = mpif90
 LD = mpif90
 IDIR = 
-CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full  -J$(OBJS_DIR) $(IDIR)
+CFLAGS = -qopenmp -O3
 LFLAGS = -qopenmp
 LIBS = 
 
