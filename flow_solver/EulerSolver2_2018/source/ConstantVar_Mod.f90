@@ -41,6 +41,13 @@ implicit none
     double precision, parameter :: LaminarPrandtlNumber = 0.72d0
     double precision, parameter :: TurbulentPrandtlNumber = 0.9d0
 
+    ! Dimensional Parameter (高度10km前後の遷音速巡行を想定)
+    double precision :: InfinityDensity = 0.4135d0    ! [kg/m3]
+    double precision :: InfinityPressure = 2.650d0 * (10.0d0 ** 4)  ! [Pa]
+    double precision :: InfinityTemperature = 223.25d0 ! [K]
+    double precision :: InfinityStaticViscosity = 2.6566d0 * (10.0d0 ** (-5))
+    double precision :: InfinityKineticViscosity = 6.42469d0 * (10.0d0 ** (-5))
+
     ! Roe's FDS parameter
     double precision :: EntropyCorrection = 0.3d0 !FDS用エントロピー補正量
 
