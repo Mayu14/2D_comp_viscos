@@ -28,6 +28,7 @@ implicit none
         double precision, allocatable :: Temparature(:, :, :)    ! (i, j, k)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
         double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
+        !double precision, allocatable :: MachNumber(:,:,:)  ! i,j,k
 
         double precision, allocatable :: GradientOfVariable(:,:,:,:,:) !各セルにおける基礎変数勾配(xyz方向)(変数番号，x座標,y座標,z座標,xyz方向),非構造：(変数番号，セル番号，1,1,xyz)
         double precision, allocatable :: VariationOfVariable(:,:,:,:,:) !各セルの隣接セルにおける基礎変数勾配の最大値(1で最大,2で最小)(1or2,変数,x,y,z)
@@ -39,6 +40,8 @@ implicit none
         !for Overset
         double precision, allocatable :: InterpolatedQuantity(:,:,:,:) !補間したあとの保存変数(入れ方は一緒)
         integer :: iEndFlag !定常流計算を打ち切る判定
+
+        double precision, allocatable :: debug(:, :)  ! debug
     end type
 
     type CellEdge !セル界面(Edge)にて定義される量
@@ -55,9 +58,9 @@ implicit none
 
     type ViscosityWall
         integer :: iGlobalEdge  ! 物体表面の局所境界辺番号→大域辺番号を返すやつ
-        integer :: iNumberOfMember ! その壁に所属する要素の総数
+        !integer :: iNumberOfMember ! その壁に所属する要素の総数
         integer :: iNumberOfMemberEdge ! その壁に所属する界面の総数
-        integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
+        !integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
         integer, allocatable :: iMemberEdge(:)  ! その壁に所属する界面の界面番号を壁から近い順に格納(距離情報は界面側が保有)
     end type
 
