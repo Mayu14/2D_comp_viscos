@@ -77,7 +77,11 @@ contains
             call JPUMUSCL(UConf, UG, UCC, UCE)
         end if
 
-        call USlau2(UConf, UG, UCC, UCE)
+        if(UConf%UseFluxMethod == 0) then
+            call JPUUpwindFlux_Dim2(UG,UCE,UCC)
+        else
+            call USlau2(UConf, UG, UCC, UCE)
+        end if
 
         if(UConf%TurbulenceModel == 1) then
             call URansCommon(UConf, UG, UCC, UCE)
