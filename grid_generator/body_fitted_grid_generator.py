@@ -900,7 +900,7 @@ def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", cent
     path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv_HD\\"
     for i1 in range(10):
         for i2 in range(10):
-            for i34 in range(13,99):
+            for i34 in range(1,100):
                 naca4 = str(i1) + str(i2) + str(i34).zfill(2)
                 z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca4, size = size)
                 z_u, z_l = split_surface(deduplication(z1)[::-1])
@@ -911,7 +911,6 @@ def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", cent
                 
                 np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
                 np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
-                exit()
                 
 if __name__ == '__main__':
     # main()
