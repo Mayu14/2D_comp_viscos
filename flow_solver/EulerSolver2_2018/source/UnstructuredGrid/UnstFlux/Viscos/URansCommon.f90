@@ -75,13 +75,14 @@ contains
             ThermalConductivity = UCE%LaminarViscosity(iEdge, 1, 1) / LaminarPrandtlNumber &
                               & + UCE%EddyViscosity(iEdge, 1, 1) / TurbulentPrandtlNumber
             ! 界面の平均流束(2次精度中心差分)
-            average_velocity = 0.5d0 *(UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) + UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge))
+            average_velocity = 0.5d0 *(UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge) + UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge))
+
             call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
             ! 界面に対し法線方向(eta方向)の温度微分
             dTdeta = (UCC%Temparature(iFrontCell, 1, 1) - UCC%Temparature(iBackCell, 1, 1)) / length
             ! 温度微分を座標変換により各座標方向に分配
             dTdx = dTdeta * UG%GM%Normal(iEdge, 1)
-            dTdy = dTdeta * (-UG%GM%Normal(iEdge, 2))
+            dTdy = dTdeta * UG%GM%Normal(iEdge, 2)
             ! せん断応力の計算
             tau_xx = 2.0d0 / 3.0d0 * Viscosity * (2.0d0 * UCE%StrainRateTensor(1, 1, iEdge, 1, 1) - UCE%StrainRateTensor(2, 2, iEdge, 1, 1))
             tau_xy = Viscosity * (UCE%StrainRateTensor(1, 2, iEdge, 1, 1) + UCE%StrainRateTensor(2, 1, iEdge, 1, 1))
@@ -91,13 +92,13 @@ contains
             beta_y = average_velocity(1) * tau_xy + average_velocity(2) * tau_yy + ThermalConductivity * invGmin1Mach2Pr * dTdy
 
             UCE%NormalFluxDiff(2, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(2, 1, 1, 1, iEdge) &
-                                                   & + invRe * (tau_xx * UG%GM%Normal(iEdge, 1) + tau_xy * UG%GM%Normal(iEdge, 2))
+                                                   & - invRe * (tau_xx * UG%GM%Normal(iEdge, 1) + tau_xy * UG%GM%Normal(iEdge, 2))
 
             UCE%NormalFluxDiff(3, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(3, 1, 1, 1, iEdge) &
-                                                   & + invRe * (tau_xy * UG%GM%Normal(iEdge, 1) + tau_yy * UG%GM%Normal(iEdge, 2))
+                                                   & - invRe * (tau_xy * UG%GM%Normal(iEdge, 1) + tau_yy * UG%GM%Normal(iEdge, 2))
 
             UCE%NormalFluxDiff(5, 1, 1, 1, iEdge) = UCE%NormalFluxDiff(5, 1, 1, 1, iEdge) &
-                                                   & + invRe * (beta_x * UG%GM%Normal(iEdge, 1) + beta_y * UG%GM%Normal(iEdge, 2))
+                                                   & - invRe * (beta_x * UG%GM%Normal(iEdge, 1) + beta_y * UG%GM%Normal(iEdge, 2))
         end do
 
         return
