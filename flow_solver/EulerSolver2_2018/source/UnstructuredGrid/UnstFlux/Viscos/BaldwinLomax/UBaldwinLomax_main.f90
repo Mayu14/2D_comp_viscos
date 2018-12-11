@@ -105,7 +105,7 @@ contains
         do iMem = 1, VW%iNumberOfMemberEdge
             iEdgeNum = VW%iMemberEdge(iMem) ! iWallに属するiMem番目の界面について
             tmpF = Vortisity(iEdgeNum) * l_mix(iMem) / KC   !
-            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum)) + AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum)))  ! 界面裏表速度の単純平均値にしている(高マッハ数で不安定になるかも)
+            tmpU = 0.5d0 * (AbsVector(RQ(2:4, 1, 1, 1, iEdgeNum)) + AbsVector(RQ(2:4, 1, 1, 2, iEdgeNum)))  ! 界面裏表速度の単純平均値にしている(高マッハ数で不安定になるかも)
 
             if(tmpF > Fmax) then
                 Fmax = tmpF
@@ -131,7 +131,7 @@ contains
 
         double precision, parameter :: Ccp = 1.6d0, Ckleb = 0.3d0
         integer :: iMem, iFlag, iEdgeNum
-        double precision :: Fkleb, Mu_in, Mu_out, rho_wall
+        double precision :: Fkleb, Mu_in, Mu_out, rho_wall, Mu_max, Mu_t
 
         !iFlag = 1
         do iMem = 1, VW%iNumberOfMemberEdge
@@ -147,14 +147,11 @@ contains
 
 
             Mu_in = rho_wall * l_mix2(iMem) * UCE%AbsoluteVortisity(iEdgeNum, 1, 1)
-            if(Mu_in > Mu_out) then
-                !iFlag = 1
-            else
-                Mu_out = Mu_in
-            end if
+            Mu_max = max(Mu_in, Mu_out)
+            Mu_t = min(Mu_in, Mu_out)
 
-            if (Mu_out > 14.0d0 * UCE%LaminarViscosity(iEdgeNum,1,1)) then
-                UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_out
+            if (Mu_max > 14.0d0 * UCE%LaminarViscosity(iEdgeNum,1,1)) then
+                UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_t
             else
                 UCE%EddyViscosity(iEdgeNum, 1, 1) = 0.0d0
             end if
