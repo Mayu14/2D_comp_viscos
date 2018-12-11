@@ -1,6 +1,6 @@
 subroutine JPUOutput(UConf,UG,UCC,iStep)
     use StructVar_Mod
-    use ConstantVar_Mod
+    use ConstantVar_Mod, gamma => SpecificOfHeatRatio
     use LoopVar_Mod
     implicit none
     type(Configulation), intent(in) :: UConf
@@ -140,21 +140,21 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         end do
 
 
-        write(iUnit_num,"('SCALARS Wall2 float')")
-        write(iUnit_num,"('LOOKUP_TABLE default')")
+        write(iUnit_num,"('VECTORS Wall2 float')")
         do iCell=1, UG%GI%RealCells
             iPoint = 0  ! iFlag
             do iLoop=1, UG%GM%BC%iWallTotal
                 iAdjacentCell = UG%Line%Cell(UG%GM%BC%VW(iLoop)%iGlobalEdge, 1, 1)
                 if(iAdjacentCell == iCell) then
                     iEdge = iAdjacentCell
+                    iLocalEdge = iLoop
                     iPoint = 1
                 end if
             end do
             if(iPoint == 1) then
-                write(iUnit_num, "(f22.14)") dble(iEdge)
+                write(iUnit_num, "((2x,f22.14))") dble(iEdge), dble(UCC%debug(iCell,1)), dble(0.0)
             else
-                write(iUnit_num, "(f22.14)") dble(0.0)
+                write(iUnit_num, "((2x,f22.14))") dble(0.0), dble(0.0), dble(0.0)
             end if
         end do
 
@@ -182,6 +182,20 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(2,1,iCell,1,1),UCC%StrainRateTensor(2,2,iCell,1,1),0.0d0
         end do
 
+        write(iUnit_num,"('SCALARS Temparature float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") UCC%Temparature(iCell,1,1)
+        end do
+
+        write(iUnit_num,"('SCALARS MachNumber float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") sqrt(UCC%PrimitiveVariable(1,iCell,1,1) / (gamma*UCC%PrimitiveVariable(5,iCell,1,1)) &
+                                        &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
+        end do
     close(iUnit_num)
 
     return
