@@ -66,8 +66,9 @@ implicit none
     double precision, parameter :: SutherlandCoefficient1 = 0.000001458d0 ! Mu0 / (Tref)**(3/2) * (Tref + S)
 
     ! Baldwin-Lomax parameter
-    double precision, parameter :: KarmanConstant = 0.4d0
-    double precision, parameter :: ClauserConstant = 0.0168d0
+    double precision, parameter :: KarmanConstant = 0.4d0   ! eq.(6)
+    double precision, parameter :: ClauserConstant = 0.0168d0   ! eq.(7)
+    double precision, parameter :: C_mutm = 14.0d0  ! eq.(11)
 
     integer, target :: iZero=0, iOne=1, iTwo=2
     ! Influence Area Splitting Method (Toyota, 2018)
