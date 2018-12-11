@@ -48,6 +48,9 @@ subroutine UBaldwinLomax_main(UConf, UG, UCC, UCE)
         ! 壁番号→壁に所属する要素の総数，近い順に整列済みでセル番号の検索が可能，高速巡回が可能なように内部では配列にしておく
 
         yMax = UG%Line%Distance(UG%GM%BC%VW(iWall)%iMemberEdge(iY_max_num))
+
+        UCC%debug(UG%Line%Cell(UG%GM%BC%VW(iWall)%iGlobalEdge, 1, 1), 1) = yMax    ! debug
+
         if(Fmax == 0.0d0) then
             Fwake = 0.0d0
         else
@@ -150,7 +153,7 @@ contains
             Mu_max = max(Mu_in, Mu_out)
             Mu_t = min(Mu_in, Mu_out)
 
-            if (Mu_max > 14.0d0 * UCE%LaminarViscosity(iEdgeNum,1,1)) then
+            if (Mu_max > C_mutm * UCE%LaminarViscosity(iEdgeNum,1,1)) then
                 UCE%EddyViscosity(iEdgeNum, 1, 1) = Mu_t
             else
                 UCE%EddyViscosity(iEdgeNum, 1, 1) = 0.0d0
