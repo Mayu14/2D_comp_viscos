@@ -75,6 +75,8 @@ contains
 
         if(UConf%UseMUSCL == 1) then
             call JPUMUSCL(UConf, UG, UCC, UCE)
+        else
+            call JPUConserve2Primitive(UG, UCC)
         end if
 
         if(UConf%UseFluxMethod == 0) then
