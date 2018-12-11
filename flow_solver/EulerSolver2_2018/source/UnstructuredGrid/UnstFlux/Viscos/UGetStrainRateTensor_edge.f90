@@ -30,12 +30,12 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
         do iEdge = 1, UG%GI%Edges
             call UCentralDifferencePrepareAroundFace(UG, iEdge, iFrontCell, iFrontLocalEdge, iBackCell, iBackLocalEdge, length)
 
-            velocity_dif(1:2) = UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) - UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge) ! 表 - 裏
+            velocity_dif(1:2) = UCE%RebuildQunatity(2:3, 1, 1, 1, iEdge) - UCE%RebuildQunatity(2:3, 1, 1, 2, iEdge) ! 表 - 裏
 
-            UCE%StrainRateTensor(:, 1, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 1)
-            UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * (UG%GM%Normal(iEdge, 2))
-            UCE%AbsoluteVortisity(iEdge, 1, 1) = abs(UCE%StrainRateTensor(1, 2, iEdge, 1, 1) &
-                                             & - UCE%StrainRateTensor(2, 1, iEdge, 1, 1))
+            UCE%StrainRateTensor(:, 1, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 1)    ! 1:u,v, 2:x,y, 3:Edge, 4:1, 5:1
+            UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 2)
+            UCE%AbsoluteVortisity(iEdge, 1, 1) = sqrt((UCE%StrainRateTensor(2, 1, iEdge, 1, 1) &
+                                             & - UCE%StrainRateTensor(1, 2, iEdge, 1, 1))**2)   ! dv/dx - du/dy
         end do
 
     else
@@ -45,9 +45,9 @@ subroutine UGetStrainRateTensor_edge(UConf, UG,UCC,UCE)
             velocity_dif(1:2) = UCC%PrimitiveVariable(2:3, iFrontCell, 1, 1) - UCC%PrimitiveVariable(2:3, iBackCell, 1, 1) ! 表 - 裏
 
             UCE%StrainRateTensor(:, 1, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 1)
-            UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * (UG%GM%Normal(iEdge, 2))
-            UCE%AbsoluteVortisity(iEdge, 1, 1) = abs(UCE%StrainRateTensor(1, 2, iEdge, 1, 1) &
-                                             & - UCE%StrainRateTensor(2, 1, iEdge, 1, 1))
+            UCE%StrainRateTensor(:, 2, iEdge, 1, 1) = velocity_dif / length * UG%GM%Normal(iEdge, 2)
+            UCE%AbsoluteVortisity(iEdge, 1, 1) = sqrt((UCE%StrainRateTensor(2, 1, iEdge, 1, 1) &
+                                             & - UCE%StrainRateTensor(1, 2, iEdge, 1, 1))**2)
         end do
 
     end if
