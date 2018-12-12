@@ -31,9 +31,9 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
 
     lift = 0.0d0
     drag = 0.0d0
-
-    cosA = cos(UConf%dAttackAngle)
-    sinA = sin(UConf%dAttackAngle)
+    ! 迎角を+θ <=> 座標系を+θ <=> データを-θ
+    cosA = cos(-UConf%dAttackAngle)
+    sinA = sin(-UConf%dAttackAngle)
 
     do iWall = 1, UG%GM%BC%iWallTotal
         iEdge = UG%GM%BC%VW(iWall)%iGlobalEdge
@@ -41,10 +41,10 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
         iBackCell = UG%Line%Cell(iEdge, 2, 1)
         WallPressure = 0.5d0 * (UCC%PrimitiveVariable(5, iFrontCell, 1, 1) + UCC%PrimitiveVariable(5, iBackCell, 1, 1))
 
+        ! 法線ベクトルは物体内部方向へ向いているものが正になっているため-1倍する必要あり
+        drag = drag + WallPressure * (UG%GM%Normal(iEdge, 1) * cosA + UG%GM%Normal(iEdge, 2) * sinA) * (-1.0d0) * UG%GM%Area(iEdge)
 
-        drag = drag + WallPressure * (-UG%GM%Normal(iEdge, 1) * cosA + UG%GM%Normal(iEdge, 2) * sinA) * UG%GM%Area(iEdge)
-
-        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 1) * sinA - UG%GM%Normal(iEdge, 2) * cosA) * UG%GM%Area(iEdge)
+        lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 1) * sinA + UG%GM%Normal(iEdge, 2) * cosA) * (-1.0d0) * UG%GM%Area(iEdge)
 
     end do
 
