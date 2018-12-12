@@ -22,8 +22,8 @@ def main():
                     for line in f:
                         drag_and_lift = line.split()
                         attack = - angle / 180.0 * np.pi * 2.0  # 0.0
-                        drag[number] = float(drag_and_lift[0]) * np.cos(attack) + float(drag_and_lift[1]) * np.sin(attack)
-                        lift[number] = -float(drag_and_lift[0]) * np.sin(attack) + float(drag_and_lift[1]) * np.cos(attack)
+                        drag[number] = float(drag_and_lift[0])
+                        lift[number] = float(drag_and_lift[1])
                         number += 1
             
             char_angle[deg, 0] = - np.average(drag)
