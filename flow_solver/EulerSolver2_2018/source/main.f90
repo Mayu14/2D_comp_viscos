@@ -611,7 +611,7 @@ contains
         end do
 
         call UOutput(UConf,UG,UCC,iStep)
-        call UOutput_Characteristics(UConf, UAC)
+        call UOutput_Characteristics(UConf, UG, UAC)
     return
     end subroutine SteadUnstructEuler
 
