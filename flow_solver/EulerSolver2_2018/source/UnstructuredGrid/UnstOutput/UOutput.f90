@@ -125,8 +125,6 @@ subroutine UOutput(UConf,UG,UCC,iStep)
             write(1, "(f22.14)") UCC%EddyViscosity(iCell,1,1)
         end do
 
-
-
     close(1)
 return
 end subroutine UOutput
