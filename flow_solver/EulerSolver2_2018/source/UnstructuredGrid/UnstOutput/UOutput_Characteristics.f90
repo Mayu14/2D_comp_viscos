@@ -1,10 +1,11 @@
-subroutine UOutput_Characteristics(UConf, UAC)
+subroutine UOutput_Characteristics(UConf, UG, UAC)
     use StructVar_Mod
     implicit none
     type(Configulation), intent(in) :: UConf
+    type(UnstructuredGrid), intent(in) :: UG
     type(AeroCharacteristics), intent(in) :: UAC
     character(len=64) :: cDirectory,cFileName, cCaseName
-    integer :: iTime, iMaxTime
+    integer :: iTime, iMaxTime, iWall
 
     if(UConf%CalcEnv == 0) then
         cDirectory = "ResultC/" !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
@@ -18,6 +19,17 @@ subroutine UOutput_Characteristics(UConf, UAC)
     open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
         do iTime = 1, iMaxTime
             write(UConf%my_rank+100, "(2(1x,f22.17))") UAC%coefficient(1,iTime), UAC%coefficient(2, iTime)
+        end do
+    close(UConf%my_rank+100)
+
+    cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(UConf%cFileName))//".dat"
+
+    open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
+        do iTime = 1, iMaxTime
+            do iWall = 1, UG%GM%BC%iWallTotal
+                write(UConf%my_rank+100, "(2(1x,f22.17))") UG%CD%Edge(UG%GM%BC%VW(iWall)%iGlobalEdge, 1), UAC%pressure_coefficient(1,iTime)
+            end do
+            write(UConf%my_rank+100, *) " "
         end do
     close(UConf%my_rank+100)
 
