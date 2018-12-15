@@ -3,70 +3,68 @@
 #
 
 SRCS_f90d1 = \
-main.f90 
+LoopVar_Mod.f90 \
+FrequentOperation.f90 \
+StructVar_Mod.f90 
 
 SRCS_f90d2 = \
-UMakeInternalObject.f90 \
-UReSortVirtualCell.f90 \
-UMarkingVirtualCell.f90 \
-UMakeConvexHull.f90 \
-UOutputUnStrGrid.f90 \
-UReadRegionVTK.f90 \
-UCheckGrid.f90 \
-UCalcElementCenter.f90 \
 UCalcCellVolume.f90 \
 UCalcEdgeArea.f90 \
 UCalcInscribedCircleOfCell.f90 \
+UReSortVirtualCell.f90 \
+UOutputUnStrGrid.f90 \
+UCheckGrid.f90 \
+UMakeEdgeNumber.f90 \
+UMakeInternalObject.f90 \
+UCalcElementCenter.f90 \
 UCalcWidthCell2Edge.f90 \
-UGetDistanceFromSurface.f90 \
-UCalcNormalVector.f90 \
 UGetDistanceFromSurface_Edge.f90 \
-UMakeEdgeNumber.f90 
+UReadRegionVTK.f90 \
+UCalcNormalVector.f90 \
+UMarkingVirtualCell.f90 \
+UMakeConvexHull.f90 
 
 SRCS_f90d3 = \
-FrequentOperation.f90 \
-StructVar_Mod.f90 \
-LoopVar_Mod.f90 
+main.f90 
 
 OBJS_f90d1 = \
-main.o 
+LoopVar_Mod.o \
+FrequentOperation.o \
+StructVar_Mod.o 
 
 OBJS_f90d2 = \
-UMakeInternalObject.o \
-UReSortVirtualCell.o \
-UMarkingVirtualCell.o \
-UMakeConvexHull.o \
-UOutputUnStrGrid.o \
-UReadRegionVTK.o \
-UCheckGrid.o \
-UCalcElementCenter.o \
 UCalcCellVolume.o \
 UCalcEdgeArea.o \
 UCalcInscribedCircleOfCell.o \
+UReSortVirtualCell.o \
+UOutputUnStrGrid.o \
+UCheckGrid.o \
+UMakeEdgeNumber.o \
+UMakeInternalObject.o \
+UCalcElementCenter.o \
 UCalcWidthCell2Edge.o \
-UGetDistanceFromSurface.o \
-UCalcNormalVector.o \
 UGetDistanceFromSurface_Edge.o \
-UMakeEdgeNumber.o 
+UReadRegionVTK.o \
+UCalcNormalVector.o \
+UMarkingVirtualCell.o \
+UMakeConvexHull.o 
 
 OBJS_f90d3 = \
-FrequentOperation.o \
-StructVar_Mod.o \
-LoopVar_Mod.o 
+main.o 
 
-SRC_DIR_f90d1 = 
+SRC_DIR_f90d1 = ../../../flow_solver/EulerSolver2_2018/source/
 
 SRC_DIR_f90d2 = source/
 
-SRC_DIR_f90d3 = ../../../flow_solver/EulerSolver2_2018/source/
-OBJS_DIR = obj/Debug/grid_generator/ManipulateVtk/Preprocessing4UnstructuredGrid/
+SRC_DIR_f90d3 = 
+OBJS_DIR = obj/Debug/flow_solver/EulerSolver2_2018/source/
 EXE_DIR = bin/Debug/
 
 EXE = Preprocessing4UnstructuredGrid
 FC = ifort
 LD = ifort
 IDIR = 
-CFLAGS = -warn all -i8 -check uninit -check pointers -check bounds -stand f90 -O0 -traceback -warn all -debug full -check all  -J$(OBJS_DIR) $(IDIR)
+CFLAGS = -O3
 LFLAGS = 
 LIBS = 
 
@@ -96,50 +94,8 @@ clean :
 	rm -f $(EXE_DIR)$(EXE)
 
 # Dependencies of files
-main.o: \
-    main.f90 \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UMakeInternalObject.o: \
-    UMakeInternalObject.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UReSortVirtualCell.o: \
-    UReSortVirtualCell.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UMarkingVirtualCell.o: \
-    UMarkingVirtualCell.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UMakeConvexHull.o: \
-    UMakeConvexHull.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UOutputUnStrGrid.o: \
-    UOutputUnStrGrid.f90 \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UReadRegionVTK.o: \
-    UReadRegionVTK.f90 \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UCheckGrid.o: \
-    UCheckGrid.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-FrequentOperation.o: \
-    FrequentOperation.f90 \
-    StructVar_Mod.o
-UCalcElementCenter.o: \
-    UCalcElementCenter.f90 \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
+LoopVar_Mod.o: \
+    LoopVar_Mod.f90
 UCalcCellVolume.o: \
     UCalcCellVolume.f90 \
     FrequentOperation.o \
@@ -150,27 +106,47 @@ UCalcEdgeArea.o: \
     FrequentOperation.o \
     LoopVar_Mod.o \
     StructVar_Mod.o
-StructVar_Mod.o: \
-    StructVar_Mod.f90
-LoopVar_Mod.o: \
-    LoopVar_Mod.f90
 UCalcInscribedCircleOfCell.o: \
     UCalcInscribedCircleOfCell.f90 \
     FrequentOperation.o \
     LoopVar_Mod.o \
     StructVar_Mod.o
+UReSortVirtualCell.o: \
+    UReSortVirtualCell.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UOutputUnStrGrid.o: \
+    UOutputUnStrGrid.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+main.o: \
+    main.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UCheckGrid.o: \
+    UCheckGrid.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UMakeEdgeNumber.o: \
+    UMakeEdgeNumber.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UMakeInternalObject.o: \
+    UMakeInternalObject.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UCalcElementCenter.o: \
+    UCalcElementCenter.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+FrequentOperation.o: \
+    FrequentOperation.f90 \
+    StructVar_Mod.o
 UCalcWidthCell2Edge.o: \
     UCalcWidthCell2Edge.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UGetDistanceFromSurface.o: \
-    UGetDistanceFromSurface.f90 \
-    FrequentOperation.o \
-    LoopVar_Mod.o \
-    StructVar_Mod.o
-UCalcNormalVector.o: \
-    UCalcNormalVector.f90 \
     FrequentOperation.o \
     LoopVar_Mod.o \
     StructVar_Mod.o
@@ -179,8 +155,25 @@ UGetDistanceFromSurface_Edge.o: \
     FrequentOperation.o \
     LoopVar_Mod.o \
     StructVar_Mod.o
-UMakeEdgeNumber.o: \
-    UMakeEdgeNumber.f90 \
+UReadRegionVTK.o: \
+    UReadRegionVTK.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UCalcNormalVector.o: \
+    UCalcNormalVector.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UMarkingVirtualCell.o: \
+    UMarkingVirtualCell.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+StructVar_Mod.o: \
+    StructVar_Mod.f90
+UMakeConvexHull.o: \
+    UMakeConvexHull.f90 \
+    FrequentOperation.o \
     LoopVar_Mod.o \
     StructVar_Mod.o
 
