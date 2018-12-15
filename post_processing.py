@@ -7,8 +7,8 @@ import os
 def main():
     path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\"
     for i in range(1800):
-        i12digit = i % 100
-        i34digit = 5 * int(i / 100.0) + 11
+        i12digit = 4#i % 100
+        i34digit = 11#5 * int(i / 100.0) + 11
         char_angle = np.zeros((14, 2))
         for angle in range(0, 42, 3):
             deg = int(angle / 3)
