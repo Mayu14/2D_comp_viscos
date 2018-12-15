@@ -27,6 +27,8 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
     double precision :: lift, drag
     double precision :: scaling_factor, ObjLength = 1.0d0
     double precision :: cosA, sinA
+    double precision :: static_pressure, kinetic_pressure
+
     call JPUConserve2Primitive(UG, UCC)
 
     lift = 0.0d0
@@ -34,6 +36,9 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
     ! 迎角を+θ <=> 座標系を+θ <=> データを-θ
     cosA = cos(-UConf%dAttackAngle)
     sinA = sin(-UConf%dAttackAngle)
+
+    static_pressure = UG%GM%BC%InFlowVariable(5)
+    kinetic_pressure = 0.5d0 * UG%GM%BC%InFlowVariable(1) * dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%BC%InFlowVariable(2:4))   ! for Cp
 
     do iWall = 1, UG%GM%BC%iWallTotal
         iEdge = UG%GM%BC%VW(iWall)%iGlobalEdge
@@ -46,9 +51,11 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
 
         lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 1) * sinA + UG%GM%Normal(iEdge, 2) * cosA) * (-1.0d0) * UG%GM%Area(iEdge)
 
+        UAC%pressure_coefficient(iWall, iPlotStep) = (WallPressure - static_pressure) / kinetic_pressure
     end do
 
-    scaling_factor = 0.5d0 * UG%GM%BC%InFlowVariable(1) * dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%BC%InFlowVariable(2:4)) * ObjLength
+    scaling_factor = kinetic_pressure * ObjLength
+
     UAC%coefficient(1, iPlotStep) = drag / scaling_factor
     UAC%coefficient(2, iPlotStep) = lift / scaling_factor
 
