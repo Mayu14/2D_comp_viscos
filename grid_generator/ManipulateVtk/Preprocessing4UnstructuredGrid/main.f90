@@ -219,7 +219,6 @@ contains
         if(allocated(UG%GM%BC%OutFlowVariable)) deallocate(UG%GM%BC%OutFlowVariable)
         if(allocated(UG%GM%BC%VW)) then
             do iLoop = 1, UG%GM%BC%iWallTotal
-                deallocate(UG%GM%BC%VW(iLoop)%iMemberCell)
                 deallocate(UG%GM%BC%VW(iLoop)%iMemberEdge)
             end do
             deallocate(UG%GM%BC%VW)
