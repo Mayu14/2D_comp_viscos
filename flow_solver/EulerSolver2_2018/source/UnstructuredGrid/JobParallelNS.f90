@@ -63,7 +63,9 @@ subroutine JobParallelNS(UConf)
     call JPUOutput(UConf,UG,UCC,0)
 
     iCalcStep = 100
+
     allocate(UAC%coefficient(2, iCalcStep))
+    allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
 
     UConf%UseLocalTimeStep = 0
     UConf%UseSteadyCalc = 0
@@ -73,7 +75,7 @@ subroutine JobParallelNS(UConf)
     end do
 
     call JPUOutput(UConf,UG,UCC,iCalcStep)
-    call UOutput_Characteristics(UConf, UAC)
+    call UOutput_Characteristics(UConf, UG, UAC)
 
     UConf%UseMUSCL = 1
     UConf%TurbulenceModel = 1
