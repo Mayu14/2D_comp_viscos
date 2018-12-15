@@ -572,6 +572,7 @@ contains
         UCC%iEndFlag = 0
         allocate(MW%StepDistance(1:3))
         allocate(UAC%coefficient(2, int(IterationNumber/OutputInterval)))
+        allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, int(IterationNumber/OutputInterval)))
         do iStep = iStartStep, IterationNumber
             if(UConf%UseLocalTimeStep == 0) then
                 call UCheckCFL4FixedTime(UG,UCC,iSplit)
