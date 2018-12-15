@@ -25,7 +25,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
-    cFileName = "NACA0012.mayu"
+    cFileName = "circle_HD.mayu"
     if(UConf%UseJobParallel == 1) cFileName = trim(adjustl(UConf%cGridName))
     if(UConf%CalcEnv == 0) then
         cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
