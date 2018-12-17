@@ -21,8 +21,6 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(UnstructuredGrid), intent(inout) :: UG
     character(len=64) cFileName, cDirectory,cAnnotate
 
-    !write(6,*) "Please input file name of *.mayu"
-    !read(5,*) cFileName
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
     cFileName = "circle_HD.mayu"
@@ -33,6 +31,9 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
         cDirectory = ""
     end if
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
+    write(6,*) "Please input file name of *.mayu"
+    read(5,*) cFileName
+
     !cFileName = "tri_SquareGrid.mayu"
     !write(6,*) trim(adjustl(cFileName))
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
