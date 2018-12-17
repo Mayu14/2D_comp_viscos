@@ -4,8 +4,14 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
     type(AeroCharacteristics), intent(in) :: UAC
-    character(len=64) :: cDirectory,cFileName, cCaseName
-    integer :: iTime, iMaxTime, iWall
+    character(len=64) :: cDirectory,cFileName, cCaseName, cUFileName
+    integer :: iTime, iMaxTime, iWall, debug = 1
+
+    if(debug == 1) then
+        cUFileName = "test_NACA0012_medium"
+    else
+        cUFileName = UConf%cFileName
+    end if
 
     if(UConf%CalcEnv == 0) then
         cDirectory = "ResultC/" !UConf%SaveDirectiry    ! 研究室PC用
@@ -13,7 +19,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
         cDirectory = "/work/A/FMa/FMa037/Case1/ResultC/" ! 東北大スパコン用
     end if
 
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"_AC.dat"
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
     iMaxTime = ubound(UAC%coefficient, 2)
 
     open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
@@ -22,9 +28,9 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
         end do
     close(UConf%my_rank+100)
 
-    cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(UConf%cFileName))//".dat"
+    cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//".dat"
 
-    open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
+    open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
         do iTime = 1, iMaxTime
             do iWall = 1, UG%GM%BC%iWallTotal
                 write(UConf%my_rank+100, "(2(1x,f22.17))") UG%CD%Edge(UG%GM%BC%VW(iWall)%iGlobalEdge, 1), UAC%pressure_coefficient(1,iTime)
