@@ -31,8 +31,8 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
         cDirectory = ""
     end if
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
-    write(6,*) "Please input file name of *.mayu"
-    read(5,*) cFileName
+    !write(6,*) "Please input file name of *.mayu"
+    !read(5,*) cFileName
 
     !cFileName = "tri_SquareGrid.mayu"
     !write(6,*) trim(adjustl(cFileName))
