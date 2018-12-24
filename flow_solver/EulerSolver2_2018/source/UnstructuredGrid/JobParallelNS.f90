@@ -66,8 +66,6 @@ subroutine JobParallelNS(UConf)
     call JPUOutput(UConf,UG,UCC,iCalcStep)
     call UOutput_Characteristics(UConf, UG, UAC)
 
-    UConf%UseMUSCL = 1
-    UConf%TurbulenceModel = 1
     UConf%UseLocalTimeStep = 1
     UConf%UseSteadyCalc = 1
 
