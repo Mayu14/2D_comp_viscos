@@ -31,12 +31,13 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
     cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//".dat"
 
     open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
-        do iTime = 1, iMaxTime
+        !do iTime = 1, iMaxTime
+        iTime = iMaxTime
             do iWall = 1, UG%GM%BC%iWallTotal
                 write(UConf%my_rank+100, "(2(1x,f22.17))") UG%CD%Edge(UG%GM%BC%VW(iWall)%iGlobalEdge, 1), UAC%pressure_coefficient(iWall,iTime)
             end do
             write(UConf%my_rank+100, *) " "
-        end do
+        !end do
     close(UConf%my_rank+100)
 
     return
