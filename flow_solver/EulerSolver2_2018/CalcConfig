@@ -22,4 +22,6 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 0.3 Venkatakrishnanの振動許容量
 0.01 クーラン数
 0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
-5000000 レイノルズ数	
+5000000 レイノルズ数
+0	非粘性流束評価	!0:Roe, 1:SLAU2
+5	収束条件	! ave(ΔQij)<10^(-x)で指定
