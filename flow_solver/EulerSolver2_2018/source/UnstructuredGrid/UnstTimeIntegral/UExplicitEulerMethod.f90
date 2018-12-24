@@ -69,7 +69,8 @@ implicit none
 
         end do
 
-        if(sqrt(Residual/dble(UG%GI%RealCells)) <= 10.0**(-5)) then
+        if(sqrt(Residual/dble(UG%GI%RealCells)) <= Converge_tolerance) then
+            write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
             write(6,*) "converge"
             UCC%iEndFlag = 2
         end if
