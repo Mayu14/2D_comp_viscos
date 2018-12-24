@@ -18,6 +18,7 @@ subroutine ReadConfigulation(Conf, my_rank)
     type(Configulation), intent(inout) :: Conf
     integer :: my_rank
     character :: cAnnotate
+    integer :: tolerance_exp
     logical :: debug = .false.
 
     open(unit=my_rank+100, file='CalcConfig',status='unknown')
@@ -46,17 +47,19 @@ subroutine ReadConfigulation(Conf, my_rank)
         read(my_rank+100,*) CourantFriedrichsLewyCondition, cAnnotate
         read(my_rank+100,*) Conf%TurbulenceModel, cAnnotate
         read(my_rank+100,*) ReynoldsNumber, cAnnotate
+        read(my_rank+100,*) Conf%UseFluxMethod, cAnnotate
+        read(my_rank+100,*) tolerance_exp, cAnnotate
     close(my_rank+100)
 
     if(Conf%TurbulenceModel /= 0) invicid = .false.
     if(Conf%UseRRK2 == 1) IterationNumber = 2*IterationNumber
     DefaultTimeStep = FixedTimeStep
+    Converge_tolerance = 10.0d0 ** (-tolerance_exp)
 
     if(Conf%UseJobParallel == 0) then
         Conf%my_rank = 0
     end if
 
-    Conf%UseFluxMethod = 1
     call Show_Configulation(debug)
 
     return
