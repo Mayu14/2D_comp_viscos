@@ -32,6 +32,7 @@ implicit none
     double precision, parameter :: Gmin1 = SpecificOfHeatRatio - 1.0d0
     double precision, parameter :: InverseGmin1 = 1.0d0/Gmin1
     complex(kind(0d0)), parameter :: ImaginaryNumber = cmplx(0.0d0, 1.0d0, kind(0d0))
+    double precision :: Converge_tolerance = 10.0d0**(-5.0d0)
     ! CFL Number
     double precision :: CourantFriedrichsLewyCondition = 1.0d0
 
