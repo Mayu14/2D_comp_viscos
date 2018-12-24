@@ -1,6 +1,6 @@
 !***********************************/
 !	Name:計算設定を読み込むプログラム
-!	Alias:ReadConfigulation
+!	Alias:JPCalcCaseAutoFill
 !	Description:専用のCalcConfigファイルが必要
 !	Type:Configulation
 !	Input:CalcConfig(外部入力)
@@ -22,7 +22,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
-    integer :: debug = 1
+    integer :: debug = 3
     !PETET = 0 ~ 1799を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
@@ -50,6 +50,13 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     else if(debug == 2) then
                         write(UConf%cGridName, '("NACA0012_medium.mayu")')
                         write(UConf%cFileName, '("NACA0012_medium_", i2.2)') iAngleDeg
+                    else if(debug == 3) then
+                        write(UConf%cGridName, '("circle_HD.mayu")')
+                        if(UConf%UseFluxMethod == 0) then
+                            write(UConf%cFileName, '("circle_Roe", i2.2)') iAngleDeg
+                        else if(UConf%UseFluxMethod == 1) then
+                            write(UConf%cFileName, '("circle_SLAU2", i2.2)') iAngleDeg
+                        end if
                     end if
 
                     call JobParallelNS(Uconf)
