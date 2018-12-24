@@ -1,6 +1,6 @@
 !***********************************/
 !	Name:計算設定を読み込むプログラム
-!	Alias:ReadConfigulation
+!	Alias:JobParallelControler
 !	Description:専用のCalcConfigファイルが必要
 !	Type:Configulation
 !	Input:CalcConfig(外部入力)
@@ -33,6 +33,7 @@ subroutine JobParallelControler(UConf, iOffset)
         ! my_rankと，omp_get_thread_num()とユーザ入力または環境変数から迎え角と格子を変更
         !Total_threads = omp_get_max_threads()
         !UConf%my_thread = omp_get_thread_num()
+
         call ReadConfigulation(UConf, UConf%my_rank)
         call JPCalcCaseAutoFill(UConf, PETOT)
 
