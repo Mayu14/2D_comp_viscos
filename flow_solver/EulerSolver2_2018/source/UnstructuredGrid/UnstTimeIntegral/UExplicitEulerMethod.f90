@@ -68,7 +68,7 @@ implicit none
             Residual = Residual + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
 
         end do
-
+        !write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
         if(sqrt(Residual/dble(UG%GI%RealCells)) <= Converge_tolerance) then
             write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
             write(6,*) "converge"
