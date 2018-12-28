@@ -56,7 +56,7 @@ subroutine JobParallelNS(UConf)
     allocate(UAC%coefficient(2, iCalcStep))
     allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
 
-    UConf%UseLocalTimeStep = 0
+    !UConf%UseLocalTimeStep = 0
     UConf%UseSteadyCalc = 0
     do iStep4Plot = 1, iCalcStep
         call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
@@ -66,7 +66,7 @@ subroutine JobParallelNS(UConf)
     call JPUOutput(UConf,UG,UCC,iCalcStep)
     call UOutput_Characteristics(UConf, UG, UAC)
 
-    UConf%UseLocalTimeStep = 1
+    !UConf%UseLocalTimeStep = 1
     UConf%UseSteadyCalc = 1
 
     return
