@@ -22,7 +22,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
-    integer :: debug = 3
+    integer :: debug = 1
     !PETET = 0 ~ 1799を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
@@ -46,7 +46,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
                     if(debug == 1) then
                         write(UConf%cGridName, '("NACA0012_course.mayu")')
-                        write(UConf%cFileName, '("NACA0012_course_", i2.2)') iAngleDeg
+                        write(UConf%cFileName, '("NACA0012_course_mk2_LTS_", i2.2)') iAngleDeg
                     else if(debug == 2) then
                         write(UConf%cGridName, '("NACA0012_medium.mayu")')
                         write(UConf%cFileName, '("NACA0012_medium_", i2.2)') iAngleDeg
