@@ -47,6 +47,7 @@ subroutine JobParallelNS(UConf)
 
             if(UCC%iEndFlag == 2) exit
         end do
+        UCC%iEndFlag = 2    ! debug
     end do
 
     call JPUOutput(UConf,UG,UCC,0)
