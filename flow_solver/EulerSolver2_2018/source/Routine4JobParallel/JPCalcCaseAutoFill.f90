@@ -46,7 +46,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
                     if(debug == 1) then
                         write(UConf%cGridName, '("NACA0012_course.mayu")')
-                        write(UConf%cFileName, '("NACA0012_course_mk2_LTS_", i2.2)') iAngleDeg
+                        write(UConf%cFileName, '("NACA0012_course_mk2_t5000k", i2.2)') iAngleDeg
                     else if(debug == 2) then
                         write(UConf%cGridName, '("NACA0012_medium.mayu")')
                         write(UConf%cFileName, '("NACA0012_medium_", i2.2)') iAngleDeg
