@@ -40,10 +40,10 @@ subroutine JobParallelNS(UConf)
         do iStep = iStartStep, IterationNumber
             call UnstNS(iStep,UConf,UG,UCC,UCE)
 
-            if(mod(iStep,OutputInterval) == 0) then
-                iStep4Plot = iStep / OutputInterval
-                call JPUOutput(UConf,UG,UCC,iStep4Plot)
-            end if
+            !if(mod(iStep,OutputInterval) == 0) then
+                !iStep4Plot = iStep / OutputInterval
+                !call JPUOutput(UConf,UG,UCC,iStep4Plot)
+            !end if
 
             if(UCC%iEndFlag == 2) exit
         end do
@@ -64,7 +64,7 @@ subroutine JobParallelNS(UConf)
         call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
     end do
 
-    call JPUOutput(UConf,UG,UCC,iCalcStep)
+    !call JPUOutput(UConf,UG,UCC,iCalcStep)
     call UOutput_Characteristics(UConf, UG, UAC)
 
     !UConf%UseLocalTimeStep = 1
