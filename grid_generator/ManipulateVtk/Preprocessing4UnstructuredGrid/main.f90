@@ -59,11 +59,12 @@ program Preprocessing4UnstructuredGrid
         stop
         call main_process(UG, cInPath, cOutPath, cFileName)
     else
-        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
-        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
-        do i1 = 0, 9
-            do i2 =0, 9
-                do i34 = 41, 99
+        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk_HD_course_rev2/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
+        !do i1 = 1, 9
+        i1 = 1
+            do i2 = 1, 9
+                do i34 = 11, 99
                     write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
                     cFileName = trim(adjustl(cWing))
                     write(6,*) cFileName
@@ -71,7 +72,7 @@ program Preprocessing4UnstructuredGrid
                     call deallocate_UG
                 end do
             end do
-        end do
+        !end do
     end if
     stop
 
