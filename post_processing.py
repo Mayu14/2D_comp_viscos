@@ -16,7 +16,7 @@ def main():
             # deg = int(angle / 3)
             deg = int((angle - 8) / 2)
             # fname = "NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + "_AC.dat"
-            fname = "NACA0012_medium_" + str(angle).zfill(2) + "_AC.dat"
+            fname = "NACA0012_course_mk2_LTS_" + str(angle).zfill(2) + "_AC.dat"
             if os.path.exists(path + fname):
                 # print(fname + " " + str(os.path.exists(path + fname)))
                 drag = np.zeros(100, dtype = float)
@@ -47,7 +47,7 @@ def cp_graph():
     for angle in range(8, 28, 2):
         deg = int(angle / 3)
         # fname = "NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + "_AC.dat"
-        fname = "CP_NACA0012_medium_" + str(angle).zfill(2) + ".dat"
+        fname = "CP_NACA0012_course_mk2_LTS_" + str(angle).zfill(2) + ".dat"
         coord = np.zeros(5000, dtype = float)
         pressure = np.zeros(5000, dtype = float)
         if os.path.exists(path + fname):
@@ -74,7 +74,7 @@ def cp_graph():
             ax.grid()
             ax.set_ylim(2.0, -6.0)
             plt.show()
-            exit()
+            # exit()
         
 
 if __name__ == '__main__':
