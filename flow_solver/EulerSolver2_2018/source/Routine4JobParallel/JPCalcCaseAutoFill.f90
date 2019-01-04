@@ -22,7 +22,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
-    integer :: debug = 1
+    integer :: debug = 0
     !PETET = 0 ~ 1799を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
@@ -32,11 +32,12 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             if(UConf%CalcEnv == 0) then
                 write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
             else if(UConf%CalcEnv == 1) then
-                write(UConf%cGridName, '("../../../grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
+                write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
             end if
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
-                !do iAngleDeg = 0, 39, 3
-                do iAngleDeg = 8, 26, 2
+                do iAngleDeg = 0, 39, 3
+                !do iAngleDeg = 8, 26, 2
+                !iAngleDeg = 19
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
@@ -59,6 +60,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         end if
                     end if
 
+                    CourantFriedrichsLewyCondition = CFL_default
                     call JobParallelNS(Uconf)
                 end do
             ! end do
