@@ -18,6 +18,7 @@ implicit none
     type CellCenter !セル中心(Center)にて定義される量
         double precision, allocatable :: ConservedQuantity(:,:,:,:) !保存変数(密度，運動量，全エネルギー)(非構造：変数番号，要素番号,1,1)(構造：変数番号，x,y,z)
         double precision, allocatable :: PreviousQuantity(:,:,:,:)  !時間積分処理に入る前の保存変数
+        double precision, allocatable :: PastQuantity(:,:,:,:)      !NaN発生時刻から十分離れた時刻での保存変数
         double precision, allocatable :: RungeKuttaG1(:,:,:,:)       !ルンゲクッタ1段階目における保存変数の値
         double precision, allocatable :: RungeKuttaG3(:,:,:,:)       !ルンゲクッタ2段階目における保存変数の値
 
