@@ -58,7 +58,7 @@ subroutine UGetRoeAverage(RA,P4O)
                 write(6,*) "RVx",RA%RoeAverage(2)
                 write(6,*) "RVy",RA%RoeAverage(3)
                 write(6,*) "RVz",RA%RoeAverage(4)
-                stop
+                RetryFlag = 1
              end if
 
 
