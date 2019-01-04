@@ -19,7 +19,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     else if(UConf%CalcEnv == 1) then
-        cDirectory = "/work/A/FMa/FMa037/Case1/ResultU/" ! 東北大スパコン用
+        cDirectory = "/work/A/FMa/FMa037/Case2/ResultU/" ! 東北大スパコン用
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     end if
 
@@ -56,6 +56,9 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         write(iUnit_num,"('LOOKUP_TABLE default')")
         do iCell=1, UG%GI%RealCells
             write(iUnit_num,"((2x,f22.14))") UCC%PrimitiveVariable(1,iCell,1,1)
+            if(isnan(UCC%PrimitiveVariable(1,iCell,1,1))) then
+                RetryFlag = 1
+            end if
         end do
 
         write(iUnit_num,"('VECTORS Velocity float')")
@@ -199,6 +202,15 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                                         &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
         end do
     close(iUnit_num)
+
+    if(RetryFlag == 0) then
+        UCC%PastQuantity = UCC%ConservedQuantity
+    else
+        UCC%ConservedQuantity = UCC%PastQuantity
+        CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
+        RetryFlag = 0
+        write(6,*) CourantFriedrichsLewyCondition
+    end if
 
     return
 end subroutine JPUOutput
