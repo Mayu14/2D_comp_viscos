@@ -60,6 +60,7 @@
 
         iDim = UG%GM%Dimension
         allocate(UCC%ConservedQuantity(iDim+2,UG%GI%AllCells,1,1)) !保存変数は(変数の種類，要素番号,1,1)で確保
+        allocate(UCC%PastQuantity(iDim+2,UG%GI%AllCells,1,1)) !保存変数は(変数の種類，要素番号,1,1)で確保
         allocate(UCC%PrimitiveVariable(iDim+2,UG%GI%AllCells,1,1)) !基礎変数は(変数の種類，要素番号,1,1)で確保
         allocate(UCE%NormalFluxDiff(iDim+2,1,1,1,UG%GI%Edges)) !法線方向流束は(変数の種類，1,1,1,大域面番号)で確保
         UCC%ConservedQuantity = 0.0d0
