@@ -209,7 +209,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         UCC%ConservedQuantity = UCC%PastQuantity
         CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
         RetryFlag = 0
-        write(6,*) CourantFriedrichsLewyCondition
+        ! write(6,*) CourantFriedrichsLewyCondition
     end if
 
     return
