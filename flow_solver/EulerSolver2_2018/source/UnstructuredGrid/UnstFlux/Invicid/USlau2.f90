@@ -109,13 +109,13 @@ subroutine USlau2(UConf, UG, UCC, UCE) !MUSCL経由の場合CEのみ，1次精�
                          & - param_Chi / SoundV_Ave * (PresR - PresL))    ! 最後の圧力の差分式は、プラスマイナス逆である可能性あり
 
         ! get pressure flux
-        if(abs(Mach_L) > 1) then
+        if(abs(Mach_L) > 1.0d0) then
             pres_P_a = 0.5d0 * (1.0d0 + sign(1.0d0, Mach_L))
         else
             pres_P_a = 0.25d0 * ((Mach_L + 1.0d0) ** 2) * (2.0d0 - Mach_L)
         end if
 
-        if(abs(Mach_R) > 1) then
+        if(abs(Mach_R) > 1.0d0) then
             pres_M_a = 0.5d0 * (1.0d0 - sign(1.0d0, Mach_R))
         else
             pres_M_a = 0.25d0 * ((Mach_R - 1.0d0) ** 2) * (2.0d0 + Mach_R)
