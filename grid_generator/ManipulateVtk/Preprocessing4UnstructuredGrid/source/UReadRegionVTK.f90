@@ -23,7 +23,7 @@ subroutine UReadRegionVTK(UG,cInPath, cFileName)
     integer :: iCellType, iPointNumber
     integer :: iTmp
     character(len=64), intent(in) :: cFileName, cInPath
-    character(len=64) :: cVTK,cAnnotate
+    character(len=128) :: cVTK,cAnnotate
     !点の番号と座標の対応
     !点の総数
     !実要素の総数
