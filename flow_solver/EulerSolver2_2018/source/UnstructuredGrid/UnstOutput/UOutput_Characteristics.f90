@@ -16,7 +16,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
     if(UConf%CalcEnv == 0) then
         cDirectory = "ResultC/" !UConf%SaveDirectiry    ! 研究室PC用
     else if (UConf%CalcEnv == 1) then
-        cDirectory = "/work/A/FMa/FMa037/Case1/ResultC/" ! 東北大スパコン用
+        cDirectory = "/work/A/FMa/FMa037/Case2/ResultC/" ! 東北大スパコン用
     end if
 
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
