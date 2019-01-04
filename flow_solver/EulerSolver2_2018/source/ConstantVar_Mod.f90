@@ -35,6 +35,7 @@ implicit none
     double precision :: Converge_tolerance = 10.0d0**(-5.0d0)
     ! CFL Number
     double precision :: CourantFriedrichsLewyCondition = 1.0d0
+    double precision :: CFL_default = 0.5d0
 
     ! Physical Property Value
     double precision :: ReynoldsNumber = 0.0d0
