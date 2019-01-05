@@ -112,8 +112,8 @@ implicit none
         integer :: UseSutherlandLaw = 0    !0:not use, 1:use
         integer :: UseJobParallel = 0   ! 0:not use, 1:use
         double precision :: dAttackAngle    ! 迎角(JobParallel用)
-        character(len=32) :: cGridName  ! mayuファイル名(JobParallel用)
-        character(len=32) :: cFileName  ! 出力vtk名(JobParallel用)
+        character(len=128) :: cGridName  ! mayuファイル名(JobParallel用)
+        character(len=128) :: cFileName  ! 出力vtk名(JobParallel用)
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
         integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer

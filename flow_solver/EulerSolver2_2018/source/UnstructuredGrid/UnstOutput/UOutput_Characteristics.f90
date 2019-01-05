@@ -4,7 +4,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
     type(AeroCharacteristics), intent(in) :: UAC
-    character(len=64) :: cDirectory,cFileName, cCaseName, cUFileName
+    character(len=256) :: cDirectory,cFileName, cCaseName, cUFileName
     integer :: iTime, iMaxTime, iWall, debug = 0
 
     if(debug == 1) then
