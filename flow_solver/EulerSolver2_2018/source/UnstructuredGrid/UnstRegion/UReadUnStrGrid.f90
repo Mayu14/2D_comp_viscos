@@ -19,14 +19,14 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(CellCenter), intent(inout) :: UCC !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(CellEdge), intent(inout) :: UCE !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(UnstructuredGrid), intent(inout) :: UG
-    character(len=64) cFileName, cDirectory,cAnnotate
+    character(len=128) cFileName, cDirectory,cAnnotate
 
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
     cFileName = "circle_HD.mayu"
     if(UConf%UseJobParallel == 1) cFileName = trim(adjustl(UConf%cGridName))
     if(UConf%CalcEnv == 0) then
-        cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu/"
+        cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
     else
         cDirectory = ""
     end if
