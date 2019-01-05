@@ -23,17 +23,18 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     double precision :: AttackAngleRad
     character(len=32) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
-    !PETET = 0 ~ 1799を仮定
+    !PETET = 0 ~ 1759を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
             ! do i34digit = 1, 40
-            i12digit = mod(UConf%my_rank, 100)  ! 00~99
-            i34digit = 5 * int((UConf%my_rank / 100)) + 11  ! 11~96, 5k+1
+            i12digit = int(float(UConf%my_rank) / 20.0d0) + 11  ! 11~99
+            i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 11~96, 5k+1
             if(UConf%CalcEnv == 0) then
                 write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
             else if(UConf%CalcEnv == 1) then
                 write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
             end if
+            !write(6,*) UConf%my_rank ,UConf%cGridName, i34digit
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
                 do iAngleDeg = 0, 39, 3
                 !do iAngleDeg = 8, 26, 2
