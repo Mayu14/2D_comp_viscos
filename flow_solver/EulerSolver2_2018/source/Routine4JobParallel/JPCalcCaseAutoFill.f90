@@ -21,7 +21,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer, intent(in) :: PETOT
     integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
-    character(len=32) :: cGridName, cResultName, cLoop, cAngle
+    character(len=256) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
     !PETET = 0 ~ 1759を仮定
     ! do i1digit = 0, 9

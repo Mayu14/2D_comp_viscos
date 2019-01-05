@@ -20,7 +20,7 @@ subroutine ReadInitialCondition(Conf,Geom,CC)
     type(Geometry),intent(in) :: Geom
     type(CellCenter),intent(inout) :: CC
     double precision :: Temporary
-    character(len=64) :: cDensity,cVelocity,cPressure,cFileName,cAnnotate
+    character(len=256) :: cDensity,cVelocity,cPressure,cFileName,cAnnotate
     integer,allocatable :: CellNumber(:)
     allocate(CellNumber(2))
 

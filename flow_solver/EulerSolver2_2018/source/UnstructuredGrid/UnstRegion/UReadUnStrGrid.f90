@@ -19,7 +19,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(CellCenter), intent(inout) :: UCC !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(CellEdge), intent(inout) :: UCE !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(UnstructuredGrid), intent(inout) :: UG
-    character(len=128) cFileName, cDirectory,cAnnotate
+    character(len=256) cFileName, cDirectory,cAnnotate
 
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"

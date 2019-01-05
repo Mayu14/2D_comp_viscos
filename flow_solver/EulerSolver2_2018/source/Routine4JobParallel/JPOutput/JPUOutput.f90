@@ -7,8 +7,8 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     integer, intent(in) :: iStep
-    character(len=64) :: cDirectory,cFileName, cCaseName
-    character(len=32) :: cStep
+    character(len=256) :: cDirectory,cFileName, cCaseName
+    character(len=256) :: cStep
 
     integer :: iCheck, iUnit_num
 
