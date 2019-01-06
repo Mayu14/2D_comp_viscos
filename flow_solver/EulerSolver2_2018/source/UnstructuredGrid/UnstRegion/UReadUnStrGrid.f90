@@ -27,10 +27,11 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     if(UConf%UseJobParallel == 1) cFileName = trim(adjustl(UConf%cGridName))
     if(UConf%CalcEnv == 0) then
         cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
     else
         cDirectory = ""
     end if
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
+
     !write(6,*) "Please input file name of *.mayu"
     !read(5,*) cFileName
 
@@ -38,6 +39,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !write(6,*) trim(adjustl(cFileName))
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
+
     open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
 !格子の基本情報
 
