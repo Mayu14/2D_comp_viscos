@@ -20,7 +20,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     type(CellEdge), intent(inout) :: UCE !本プログラム内ではなくUAllocVariables内で大きさを割り当てるためだけに呼び出している
     type(UnstructuredGrid), intent(inout) :: UG
     character(len=256) cFileName, cDirectory,cAnnotate
-
+    integer :: iUnit
     !cFileName = "UnStrGrid"
     !cFileName = "MiniCircle_Fine.mayu"
     cFileName = "circle_HD.mayu"
@@ -39,192 +39,192 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     !write(6,*) trim(adjustl(cFileName))
     UG%InternalRadius = 0.10d0 + epsilon(0.05d0)
 !点番号は1始まり
-
-    open(unit=UConf%my_rank+100,file=trim(adjustl(cFileName)),status='unknown')
+    iUnit = UConf%my_rank + 100
+    open(unit=iUnit,file=trim(adjustl(cFileName)),status='unknown')
 !格子の基本情報
 
-        read(UConf%my_rank+100,*) cAnnotate, UG%GI%Points
-        read(UConf%my_rank+100,*) cAnnotate, UG%GI%Edges
-        read(UConf%my_rank+100,*) cAnnotate, UG%GI%RealCells
-        read(UConf%my_rank+100,*) cAnnotate, UG%VC%Total
-        read(UConf%my_rank+100,*) cAnnotate, UG%GI%OutlineCells
+        read(iUnit,*) cAnnotate, UG%GI%Points
+        read(iUnit,*) cAnnotate, UG%GI%Edges
+        read(iUnit,*) cAnnotate, UG%GI%RealCells
+        read(iUnit,*) cAnnotate, UG%VC%Total
+        read(iUnit,*) cAnnotate, UG%GI%OutlineCells
 
         UG%GI%AllCells = UG%GI%RealCells + UG%VC%Total
         UG%GM%Dimension = 3
-        read(UConf%my_rank+100,*) cAnnotate, UG%Tri%Total
-        read(UConf%my_rank+100,*) cAnnotate, UG%Quad%Total
-        read(UConf%my_rank+100,*) cAnnotate, UG%Line%Total
-        read(UConf%my_rank+100,*) cAnnotate, UG%CH%iTotal
-        read(UConf%my_rank+100,*) cAnnotate, UG%IO%iTotal
+        read(iUnit,*) cAnnotate, UG%Tri%Total
+        read(iUnit,*) cAnnotate, UG%Quad%Total
+        read(iUnit,*) cAnnotate, UG%Line%Total
+        read(iUnit,*) cAnnotate, UG%CH%iTotal
+        read(iUnit,*) cAnnotate, UG%IO%iTotal
 
         !非構造格子用の配列確保
         call UAllocVariables(UConf,UG,UCC,UCE)
 !三角形要素の幾何的関係
-        read(UConf%my_rank+100,*) cAnnotate !"TriPoint"
+        read(iUnit,*) cAnnotate !"TriPoint"
         do iCell=1, UG%Tri%Total
-            read(UConf%my_rank+100,*) (UG%Tri%Point(iCell,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%Tri%Point(iCell,iLoop),iLoop=1,3)
         end do
 
-        read(UConf%my_rank+100,*) cAnnotate !"TriEdge"
+        read(iUnit,*) cAnnotate !"TriEdge"
         do iCell=1, UG%Tri%Total
-            read(UConf%my_rank+100,*) (UG%Tri%Edge(iCell,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%Tri%Edge(iCell,iLoop),iLoop=1,3)
         end do
 
-        read(UConf%my_rank+100,*) cAnnotate !"TriCell"既存のプロジェクトを開く
+        read(iUnit,*) cAnnotate !"TriCell"既存のプロジェクトを開く
         do iCell=1, UG%Tri%Total
-            read(UConf%my_rank+100,*) (UG%Tri%Cell(iCell,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%Tri%Cell(iCell,iLoop),iLoop=1,3)
         end do
 
 !四辺形要素の幾何的関係
         if(UG%Quad%Total /= 0) then
-            read(UConf%my_rank+100,*) cAnnotate !"coming soon..."
+            read(iUnit,*) cAnnotate !"coming soon..."
         end if
 
 !線要素の幾何的関係
-        read(UConf%my_rank+100,*) cAnnotate !"LinePoint"
+        read(iUnit,*) cAnnotate !"LinePoint"
         do iEdge=1, UG%Line%Total
-            read(UConf%my_rank+100,*) (UG%Line%Point(iEdge,iLoop),iLoop=1,2)
+            read(iUnit,*) (UG%Line%Point(iEdge,iLoop),iLoop=1,2)
         end do
 
-        read(UConf%my_rank+100,*) cAnnotate !"LineCell"
+        read(iUnit,*) cAnnotate !"LineCell"
         do iEdge=1, UG%Line%Total
-            read(UConf%my_rank+100,*) ((UG%Line%Cell(iEdge,iSide,iLocalEdge),iLocalEdge=1,2),iSide=1,2)
+            read(iUnit,*) ((UG%Line%Cell(iEdge,iSide,iLocalEdge),iLocalEdge=1,2),iSide=1,2)
         end do
 
 !仮想格子の幾何的関係
-        read(UConf%my_rank+100,*) cAnnotate !"VCCell"
+        read(iUnit,*) cAnnotate !"VCCell"
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
-            read(UConf%my_rank+100,*) (UG%VC%Cell(iCell,iLoop),iLoop=1,2)
+            read(iUnit,*) (UG%VC%Cell(iCell,iLoop),iLoop=1,2)
 
         end do
 
-        read(UConf%my_rank+100,*) cAnnotate !"VCEdge"
+        read(iUnit,*) cAnnotate !"VCEdge"
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
-            read(UConf%my_rank+100,*) UG%VC%Edge(iCell)
+            read(iUnit,*) UG%VC%Edge(iCell)
         end do
 
 !格子点の座標情報
-        read(UConf%my_rank+100,*) cAnnotate !"PointC"
+        read(iUnit,*) cAnnotate !"PointC"
         do iPoint=1, UG%GI%Points
-            read(UConf%my_rank+100,*) (UG%CD%Point(iPoint,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%CD%Point(iPoint,iLoop),iLoop=1,3)
             UG%CD%Point(iPoint,4) = 1.0d0
         end do
 
 !格子境界中心の座標情報
-        read(UConf%my_rank+100,*) cAnnotate !"EdgeC"
+        read(iUnit,*) cAnnotate !"EdgeC"
         do iEdge=1,UG%GI%Edges
-            read(UConf%my_rank+100,*) (UG%CD%Edge(iEdge,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%CD%Edge(iEdge,iLoop),iLoop=1,3)
         end do
 
 !格子要素中心の座標情報
-        read(UConf%my_rank+100,*) cAnnotate !"CellC"
+        read(iUnit,*) cAnnotate !"CellC"
         do iCell=1,UG%GI%AllCells
-            read(UConf%my_rank+100,*) (UG%CD%Cell(iCell,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%CD%Cell(iCell,iLoop),iLoop=1,3)
             UG%CD%Cell(iCell,4) = 1.0d0
         end do
 
 !格子境界の面積
-        read(UConf%my_rank+100,*) cAnnotate !"EdgeS"
+        read(iUnit,*) cAnnotate !"EdgeS"
         do iEdge=1,UG%GI%Edges
-            read(UConf%my_rank+100,*) UG%GM%Area(iEdge)
+            read(iUnit,*) UG%GM%Area(iEdge)
         end do
 
 !格子境界の体積
-        read(UConf%my_rank+100,*) cAnnotate !"CellV"
+        read(iUnit,*) cAnnotate !"CellV"
         do iCell=1,UG%GI%RealCells
-            read(UConf%my_rank+100,*) UG%GM%Volume(iCell)
+            read(iUnit,*) UG%GM%Volume(iCell)
         end do
 
 !セル界面における法線ベクトル
-        read(UConf%my_rank+100,*) cAnnotate !"EdgeNormal"
+        read(iUnit,*) cAnnotate !"EdgeNormal"
         do iEdge=1,UG%GI%Edges
-            read(UConf%my_rank+100,*) (UG%GM%Normal(iEdge,iLoop),iLoop=1,3)
+            read(iUnit,*) (UG%GM%Normal(iEdge,iLoop),iLoop=1,3)
         end do
 
 !セル中心から界面中心までの距離ベクトル(中心基準)
-        read(UConf%my_rank+100,*) cAnnotate !"Width"
+        read(iUnit,*) cAnnotate !"Width"
         do iCell=1,UG%GI%RealCells
-            read(UConf%my_rank+100,*) ((UG%GM%Width(iCell,iLocalEdge,iLoop),iLoop=1,3),iLocalEdge=1,3)
+            read(iUnit,*) ((UG%GM%Width(iCell,iLocalEdge,iLoop),iLoop=1,3),iLocalEdge=1,3)
         end do
 
-        read(UConf%my_rank+100,*) cAnnotate !"BoudnaryCondition of VirtualCell"
+        read(iUnit,*) cAnnotate !"BoudnaryCondition of VirtualCell"
         do iCell=UG%GI%RealCells+1, UG%GI%AllCells
-            read(UConf%my_rank+100,*) UG%GM%CellType(iCell,1,1)
+            read(iUnit,*) UG%GM%CellType(iCell,1,1)
         end do
 
 !Radius of Cell's Inscribed-Circle for compute CFL Condition
-        read(UConf%my_rank+100,*) cAnnotate
+        read(iUnit,*) cAnnotate
         do iCell=1,UG%GI%RealCells
-            read(UConf%my_rank+100,*) UG%InscribedCircle(iCell)
+            read(iUnit,*) UG%InscribedCircle(iCell)
         end do
 
 !内部に含む物体を構成する凸包のデータ
-        read(UConf%my_rank+100,*) cAnnotate !"InternalObject"
+        read(iUnit,*) cAnnotate !"InternalObject"
         if(UG%IO%iTotal /= 0) then
             do iPoint=1, UG%IO%iTotal
-                read(UConf%my_rank+100,*) UG%IO%PointNum(iPoint)
+                read(iUnit,*) UG%IO%PointNum(iPoint)
             end do
             UG%IO%iMinNumber = minval(UG%IO%PointNum)
         end if
 
-        read(UConf%my_rank+100,*) cAnnotate !"AverageWid"
+        read(iUnit,*) cAnnotate !"AverageWid"
         !if(UConf%UseMUSCL == 1) then
             do iCell=1,UG%GI%RealCells
-                read(UConf%my_rank+100,*) UG%GM%AverageWidth(iCell)
+                read(iUnit,*) UG%GM%AverageWidth(iCell)
             end do
         !end if
-        read(UConf%my_rank+100,*) cAnnotate !"ConvexHull"
+        read(iUnit,*) cAnnotate !"ConvexHull"
 
         if(UG%CH%iTotal /= 0) then
             do iCell=1,UG%CH%iTotal
-                read(UConf%my_rank+100,*) UG%CH%PointNum(iCell)
+                read(iUnit,*) UG%CH%PointNum(iCell)
             end do
 
         end if
 
         if(UG%GI%AllCells - UG%GI%RealCells - UG%GI%OutlineCells /= 0) then
-            !read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
+            !read(iUnit,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum "
             !do iCell = 1, UG%Tri%Total
-                !read(UConf%my_rank+100,*) UG%Tri%Belongs2Wall(iCell)
+                !read(iUnit,*) UG%Tri%Belongs2Wall(iCell)
             !end do
 
-            !read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface "
+            !read(iUnit,*) cAnnotate !"DistanceFromObjectSurface "
             !do iCell = 1, UG%Tri%Total
-                !read(UConf%my_rank+100,*) UG%Tri%Distance(iCell)
+                !read(iUnit,*) UG%Tri%Distance(iCell)
             !end do
 
-            read(UConf%my_rank+100,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+            read(iUnit,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
             do iEdge = 1, UG%Line%Total
-                read(UConf%my_rank+100,*) UG%Line%Belongs2Wall(iEdge)
+                read(iUnit,*) UG%Line%Belongs2Wall(iEdge)
             end do
 
-            read(UConf%my_rank+100,*) cAnnotate !"DistanceFromObjectSurface4Edge "
+            read(iUnit,*) cAnnotate !"DistanceFromObjectSurface4Edge "
             do iEdge = 1, UG%Line%Total
-                read(UConf%my_rank+100,*) UG%Line%Distance(iEdge)
+                read(iUnit,*) UG%Line%Distance(iEdge)
             end do
 
-            !read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
+            !read(iUnit,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
             if(UConf%TurbulenceModel /= 0) then
                 !do iEdge = 1, UG%GM%BC%iWallTotal
-                    !read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
+                    !read(iUnit,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
                     !allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
                     !do iCell = 1, UG%GM%BC%VW(iEdge)%iNumberOfMember
-                        !read(UConf%my_rank+100,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
+                        !read(iUnit,*) UG%GM%BC%VW(iEdge)%iMemberCell(iCell)
                     !end do
                 !end do
 
-                read(UConf%my_rank+100,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
+                read(iUnit,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Edge_data "
                 do iLoop = 1, UG%GM%BC%iWallTotal
-                    read(UConf%my_rank+100,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
+                    read(iUnit,*) UG%GM%BC%VW(iLoop)%iGlobalEdge, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
                     allocate(UG%GM%BC%VW(iLoop)%iMemberEdge(UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge))
                     do iEdge = 1, UG%GM%BC%VW(iLoop)%iNumberOfMemberEdge
-                        read(UConf%my_rank+100,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
+                        read(iUnit,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
                     end do
                 end do
             end if
         end if
 
-        close(UConf%my_rank+100)
+        close(iUnit)
 
         UG%GM%Bound(1,1) = minval(UG%CD%Point(:,1),1)
         UG%GM%Bound(2,1) = maxval(UG%CD%Point(:,1),1)
