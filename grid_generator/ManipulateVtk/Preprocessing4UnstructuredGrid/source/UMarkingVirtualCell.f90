@@ -21,7 +21,7 @@ subroutine UMarkingVirtualCell(UG)
     integer :: iKind,iUseObject = 0 ,iInternalBound, OutlineCell
     double precision, allocatable :: ObjectCenterCorrection(:)
     double precision :: ObjectRadius
-    character(len=64) :: cBoundaryDataFileName,cAnnotate
+    character(len=256) :: cBoundaryDataFileName,cAnnotate
 
     UG%GM%CellType = 0 !実セル
     UG%GI%OutlineCells = 0 !外周セル数の初期化
