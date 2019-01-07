@@ -173,9 +173,9 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 read(iUnit,*) UG%GM%AverageWidth(iCell)
             end do
         !end if
-        read(iUnit,*) cAnnotate !"ConvexHull"
 
         if(UG%CH%iTotal /= 0) then
+            read(iUnit,*) cAnnotate !"ConvexHull"
             do iCell=1,UG%CH%iTotal
                 read(iUnit,*) UG%CH%PointNum(iCell)
             end do
@@ -194,6 +194,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             !end do
 
             read(iUnit,*) cAnnotate !"NearestSurfaceBoundaryEdgeNum4Edge "
+
             do iEdge = 1, UG%Line%Total
                 read(iUnit,*) UG%Line%Belongs2Wall(iEdge)
             end do
