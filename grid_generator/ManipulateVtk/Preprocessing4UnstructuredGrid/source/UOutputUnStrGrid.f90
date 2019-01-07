@@ -16,7 +16,7 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid), intent(in) :: UG
-    character(len=64), intent(inout) :: cFileName, cPath
+    character(len=256), intent(inout) :: cFileName, cPath
     logical, intent(in) :: ExistBound
     !write(6,*) "Please input filename of the Computed Grid Data"
     !read(5,*) cFileName

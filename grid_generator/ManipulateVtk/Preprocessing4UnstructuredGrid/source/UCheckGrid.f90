@@ -17,7 +17,7 @@ subroutine UCheckGrid(UG)
     use FrequentOperation
     implicit none
     type(UnstructuredGrid), intent(inout) :: UG
-    character(len=64) :: cDirectory,cFileName, cCaseName
+    character(len=256) :: cDirectory,cFileName, cCaseName
     integer :: iCheck
 
     cDirectory = ""

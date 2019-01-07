@@ -16,7 +16,7 @@ program Preprocessing4UnstructuredGrid
     use LoopVar_Mod
     implicit none
     type(UnstructuredGrid) :: UG
-    character(len=64) :: cFileName, cWing, cInPath="", cOutPath=""
+    character(len=256) :: cFileName, cWing, cInPath="", cOutPath=""
     logical :: ExistBound
     integer :: MultipleConvertMode = 0, i1, i2, i34, i1234
     integer :: i, length, status
@@ -60,14 +60,14 @@ program Preprocessing4UnstructuredGrid
         call main_process(UG, cInPath, cOutPath, cFileName)
     else
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk_HD_course_rev2/"
-        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev3/"
         !do i1 = 1, 9
         i1 = 9
-            do i2 = 1, 9
+            do i2 = 6, 9
                 do i34 = 11, 99
                     write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
                     cFileName = trim(adjustl(cWing))
-                    write(6,*) cFileName
+                    write(6,*) trim(adjustl(cFileName))
                     call main_process(UG, cInPath, cOutPath, cFileName)
                     call deallocate_UG
                 end do
@@ -138,7 +138,7 @@ contains
     subroutine main_process(UG, cInPath, cOutPath, cFileName)
         implicit none
         type(UnstructuredGrid), intent(inout) :: UG
-        character(len=64), intent(inout) :: cFileName, cInPath, cOutPath
+        character(len=256), intent(inout) :: cFileName, cInPath, cOutPath
     !vtkの読み込み
         call UReadRegionVTK(UG, cInPath, cFileName)
 
