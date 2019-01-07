@@ -35,7 +35,7 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
         write(1,*) "TotalTriangle", UG%Tri%Total
         write(1,*) "TotalSquare", UG%Quad%Total
         write(1,*) "TotalLine", UG%Line%Total
-        write(1,*) "TotalCeonvexHullPoint", UG%CH%iTotal
+        write(1,*) "TotalConvexHullPoint", 0    !UG%CH%iTotal
         write(1,*) "InternalObjectPoint", UG%IO%iTotal
 
 !三角形要素の幾何的関係
@@ -149,10 +149,10 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
         end do
 
 !格子外周を構成する凸包のデータ
-        write(1,*) "ConvexHull ", UG%CH%iTotal
-        do iPoint=1, UG%CH%iTotal
-            write(1,"(1x,i7)") UG%CH%PointNum(iPoint)
-        end do
+        !write(1,*) "ConvexHull ", UG%CH%iTotal
+        !do iPoint=1, UG%CH%iTotal
+            !write(1,"(1x,i7)") UG%CH%PointNum(iPoint)
+        !end do
 
         if(ExistBound .eqv. .true.) then
     ! セルから最も近い物体表面セル
