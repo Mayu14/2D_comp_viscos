@@ -601,8 +601,8 @@ OBJS_DIR = obj/Debug/source/MultipleOverSetMethod/PreProcess/
 EXE_DIR = bin/Debug/
 
 EXE = EulerSolver2
-FC = mpif90
-LD = mpif90
+FC = mpiifort
+LD = mpiifort
 IDIR = 
 CFLAGS = -O3
 LFLAGS = 
