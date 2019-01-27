@@ -22,6 +22,7 @@ implicit none
     double precision :: FixedTimeStep
     double precision :: DefaultTimeStep
     integer :: OutputInterval !結果の出力間隔
+    integer :: CheckNaNInterval = 1000 !NaNになってないか確認する間隔
     integer :: IterationNumber !計算の反復回数
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
