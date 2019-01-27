@@ -43,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 0    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 2    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
@@ -61,8 +61,8 @@ program Preprocessing4UnstructuredGrid
     else
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk_HD_course_rev2/"
         cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev3/"
-        do i1 = 1, 9
-        !i1 = 9
+        !do i1 = 1, 9
+        i1 = 8
             do i2 = 6, 9
                 do i34 = 11, 99
                     write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
@@ -72,7 +72,7 @@ program Preprocessing4UnstructuredGrid
                     call deallocate_UG
                 end do
             end do
-        end do
+        !end do
     end if
     stop
 
