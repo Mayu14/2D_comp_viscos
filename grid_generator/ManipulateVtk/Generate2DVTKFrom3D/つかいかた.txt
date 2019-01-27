@@ -1,0 +1,6 @@
+1.3Dのvtkからz座標が一定の面を取り出すプログラムです
+2.2次元に変換したいvtkファイルをプログラムと同じフォルダに配置して下さい．
+3.プログラムを起動すると「Please Input the filename of 3D-Vtk what you want to convert 2D.」というダイアログが出るので，変換元の3次元のvtkファイルの名前を「hogehoge.vtk」と入力して下さい．
+4.「Please Input the filename of 2D-Vtk what you want to generate.」というダイアログが出るので，変換後に出て来る2次元のvtkファイルの名前を「hogehoge.vtk」と入力して下さい．
+5.あとは待ってるとすぐにvtkが出力されます．
+

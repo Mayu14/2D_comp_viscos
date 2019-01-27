@@ -1,0 +1,114 @@
+!***********************************/
+!	Name:非構造格子の計算領域データを確認するプログラム
+!	Alias:UTestAlloc
+!	Description:MAYUGridから読み出したデータの格子点情報を画面出力するプログラム
+!	Type:UG
+!	Input:UG,UCC,UCE
+!	Output:
+!	Note:
+!	Author:Akitaka Toyota
+!	Date:2017.11.11
+!	Update:2017.11.11
+!	Other:
+!***********************************/
+subroutine UTestAlloc(UCC,UCE,UG)
+    use StructVar_Mod
+    use LoopVar_Mod
+    implicit none
+    type(UnstructuredGrid), intent(in) :: UG
+    type(CellCenter), intent(in) :: UCC
+    type(CellEdge), intent(in) :: UCE
+
+        write(6,*) "lbound(UG%CD%Cell)"
+        write(6,*) lbound(UG%CD%Cell)
+        write(6,*) ubound(UG%CD%Cell)
+        write(6,*) "lbound(UG%CD%Edge)"
+        write(6,*) lbound(UG%CD%Edge)
+        write(6,*) ubound(UG%CD%Edge)
+        write(6,*) "lbound(UG%CD%Point)"
+        write(6,*) lbound(UG%CD%Point)
+        write(6,*) ubound(UG%CD%Point)
+        write(6,*) "lbound(UG%GM%Area)"
+        write(6,*) lbound(UG%GM%Area)
+        write(6,*) ubound(UG%GM%Area)
+        write(6,*) "lbound(UG%GM%VOlume)"
+        write(6,*) lbound(UG%GM%Volume)
+        write(6,*) ubound(UG%GM%Volume)
+        write(6,*) "lbound(UG%GM%AverageWidth)"
+        write(6,*) lbound(UG%GM%AverageWidth)
+        write(6,*) ubound(UG%GM%AverageWidth)
+        write(6,*) "lbound(UG%GM%Nomal)"
+        write(6,*) lbound(UG%GM%Normal)
+        write(6,*) ubound(UG%GM%Normal)
+        write(6,*) "lbound(UG%GM%Width)"
+        write(6,*) lbound(UG%GM%Width)
+        write(6,*) ubound(UG%GM%Width)
+        write(6,*) "lbound(UG%Line%Cell)"
+        write(6,*) lbound(UG%Line%Cell)
+        write(6,*) ubound(UG%Line%Cell)
+        write(6,*) "lbound(UG%Line%point)"
+        write(6,*) lbound(UG%Line%Point)
+        write(6,*) ubound(UG%Line%Point)
+        write(6,*) "lbound(UG%tri%Cell)"
+        write(6,*) lbound(UG%Tri%Cell)
+        write(6,*) ubound(UG%Tri%Cell)
+        write(6,*) "lbound(UG%tri%point)"
+        write(6,*) lbound(UG%Tri%Point)
+        write(6,*) ubound(UG%Tri%Point)
+        write(6,*) "lbound(UG%tri%edge)"
+        write(6,*) lbound(UG%Tri%Edge)
+        write(6,*) ubound(UG%Tri%Edge)
+        write(6,*) "lbound(UG%tri%Type)"
+        write(6,*) lbound(UG%Tri%Type)
+        write(6,*) ubound(UG%Tri%Type)
+        write(6,*) "lbound(UG%VC%Cell)"
+        write(6,*) lbound(UG%VC%Cell)
+        write(6,*) ubound(UG%VC%Cell)
+        write(6,*) "lbound(UG%VC%Edge)"
+        write(6,*) lbound(UG%VC%Edge)
+        write(6,*) ubound(UG%VC%Edge)
+        write(6,*) "lbound(UCC%ConservedQuantity)"
+        write(6,*) lbound(UCC%ConservedQuantity)
+        write(6,*) ubound(UCC%ConservedQuantity)
+        write(6,*) "lbound(UCC%PrimitiveVariable)"
+        write(6,*) lbound(UCC%PrimitiveVariable)
+        write(6,*) ubound(UCC%PrimitiveVariable)
+        write(6,*) "lbound(UCC%LimiterFunction)"
+        write(6,*) lbound(UCC%LimiterFunction)
+        write(6,*) ubound(UCC%LimiterFunction)
+        write(6,*) "lbound(UCC%PreviousQuantity)"
+        write(6,*) lbound(UCC%PreviousQuantity)
+        write(6,*) ubound(UCC%PreviousQuantity)
+        write(6,*) "lbound(UCC%PrimitiveVariables)"
+        write(6,*) lbound(UCC%PrimitiveVariable)
+        write(6,*) ubound(UCC%PrimitiveVariable)
+        write(6,*) "lbound(UCC%RungeKuttaG1)"
+        write(6,*) lbound(UCC%RungeKuttaG1)
+        write(6,*) ubound(UCC%RungeKuttaG1)
+        write(6,*) "lbound(UCC%RungeKuttaG3)"
+        write(6,*) lbound(UCC%RungeKuttaG3)
+        write(6,*) ubound(UCC%RungeKuttaG3)
+        write(6,*) "lbound(UCC%TimeWidth)"
+        write(6,*) lbound(UCC%TimeWidth)
+        write(6,*) ubound(UCC%TimeWidth)
+        write(6,*) "lbound(UCC%TmpTImeWidth)"
+        write(6,*) lbound(UCC%TmpTimeWidth)
+        write(6,*) ubound(UCC%TmpTimeWidth)
+        write(6,*) "lbound(UCC%VariationOfVariable)"
+        write(6,*) lbound(UCC%VariationOfVariable)
+        write(6,*) ubound(UCC%VariationOfVariable)
+        write(6,*) "lbound(UEC%RNormalFluxDif)"
+        write(6,*) lbound(UCE%NormalFluxDiff)
+        write(6,*) ubound(UCE%NormalFluxDiff)
+        write(6,*) "lbound(UEC%RNormalGradient)"
+        write(6,*) lbound(UCE%NormalGradient)
+        write(6,*) ubound(UCE%NormalGradient)
+        write(6,*) "lbound(UEC%RebuildQuantity)"
+        write(6,*) lbound(UCE%RebuildQunatity)
+        write(6,*) ubound(UCE%RebuildQunatity)
+        write(6,*) "lbound(UEC%TmpLimiterFunction)"
+        write(6,*) lbound(UCE%TmpLimiterFunction)
+        write(6,*) ubound(UCE%TmpLimiterFunction)
+        stop
+return
+end subroutine UTestAlloc
