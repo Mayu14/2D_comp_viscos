@@ -35,6 +35,8 @@ subroutine JobParallelNS(UConf)
     obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
     call RelativeCoordinateTransform(UG, UCC, obj_velocity)
 
+    call CheckNaN(UConf, UCC)   !
+
     do while (UCC%iEndFlag < 2)
         iStartStep = 1
         do iStep = iStartStep, IterationNumber
@@ -45,30 +47,42 @@ subroutine JobParallelNS(UConf)
                 !call JPUOutput(UConf,UG,UCC,iStep4Plot)
             !end if
 
-            if(UCC%iEndFlag == 2) exit
+            if(mod(iStep, CheckNaNInterval) == 0)then
+                call CheckNaN(UConf, UCC)
+            end if
+
+            if(UCC%iEndFlag > 1) exit
         end do
-        UCC%iEndFlag = 2    ! debug
     end do
 
     call JPUOutput(UConf,UG,UCC,0)
 
-    iCalcStep = 100
+    if (UCC%iEndFlag == 2) then
+        iCalcStep = 100
+    else if(UCC%iEndFlag == 3) then
+        iCalcStep = 1
+    end if
 
     allocate(UAC%coefficient(2, iCalcStep))
     allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
 
     !UConf%UseLocalTimeStep = 0
-    UConf%UseSteadyCalc = 0
-    do iStep4Plot = 1, iCalcStep
-        call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
+    !UConf%UseSteadyCalc = 0
+    if(UCC%iEndFlag == 2) then
+        do iStep4Plot = 1, iCalcStep
+            call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
+            call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
+        end do
+
+    else if(UCC%iEndFlag == 3) then
         call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
-    end do
+    end if
 
     !call JPUOutput(UConf,UG,UCC,iCalcStep)
     call UOutput_Characteristics(UConf, UG, UAC)
 
     !UConf%UseLocalTimeStep = 1
-    UConf%UseSteadyCalc = 1
+    !UConf%UseSteadyCalc = 1
 
     return
 contains
@@ -120,6 +134,27 @@ contains
 
         return
     end function accel_area_velocity
+
+    subroutine CheckNaN(UConf, UCC)
+        implicit none
+        type(Configulation), intent(inout) :: UConf
+        type(CellCenter), intent(inout) :: UCC
+
+            if(RetryFlag == 0) then
+                UCC%PastQuantity = UCC%ConservedQuantity
+            else
+                UCC%ConservedQuantity = UCC%PastQuantity
+                CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
+                RetryFlag = 0
+                CheckNaNInterval = ceiling(float(CheckNaNInterval) / 2.0)
+            end if
+
+            if(CourantFriedrichsLewyCondition < 10.0**(-6)) then
+                UCC%iEndFlag = 3
+            end if
+
+        return
+    end subroutine CheckNaN
 
 end subroutine JobParallelNS
 
