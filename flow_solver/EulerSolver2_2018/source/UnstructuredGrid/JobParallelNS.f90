@@ -40,6 +40,7 @@ subroutine JobParallelNS(UConf)
     do while (UCC%iEndFlag < 2)
         iStartStep = 1
         do iStep = iStartStep, IterationNumber
+            write(6,*) iStep, "/", IterationNumber, " th iteration"
             call UnstNS(iStep,UConf,UG,UCC,UCE)
 
             !if(mod(iStep,OutputInterval) == 0) then
@@ -48,6 +49,7 @@ subroutine JobParallelNS(UConf)
             !end if
 
             if(mod(iStep, CheckNaNInterval) == 0)then
+                write(6,*) "NaN Checking..."
                 call CheckNaN(UConf, UCC)
             end if
 
@@ -96,9 +98,9 @@ contains
         type(CellEdge), intent(inout) :: UCE
 
             call USetBoundary(UG,UCC)
-
+            !write(6,*) "Compute Flux..."
             call UCalcFlux(OConf,UG,UCC,UCE)
-
+            !write(6,*) "Time integration..."
             call UTimeIntegral(OConf,UG,UCE,UCC,iStep)
 
         return
@@ -139,18 +141,42 @@ contains
         implicit none
         type(Configulation), intent(inout) :: UConf
         type(CellCenter), intent(inout) :: UCC
+        integer :: iVariable, iCell
+
+            do iCell = 1, UG%GI%RealCells
+                do iVariable = 1, 5
+                    if(isnan(UCC%ConservedQuantity(iVariable,iCell,1,1))) then
+                        RetryFlag = 1
+                    end if
+                    if(RetryFlag == 1) exit
+                end do
+                if(isnan(UCC%AbsoluteVortisity(iCell, 1, 1))) then
+                    RetryFlag = 1
+                end if
+            end do
 
             if(RetryFlag == 0) then
                 UCC%PastQuantity = UCC%ConservedQuantity
             else
                 UCC%ConservedQuantity = UCC%PastQuantity
-                CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
+                if(UConf%UseJobParallel == 1) then
+                    call JPUConserve2Primitive(UG, UCC)
+                else
+                    call UConserve2Primitive(UG, UCC)
+                end if
+                CourantFriedrichsLewyCondition = 0.5d0*CourantFriedrichsLewyCondition
                 RetryFlag = 0
-                CheckNaNInterval = ceiling(float(CheckNaNInterval) / 2.0)
+                CheckNaNInterval = max(ceiling(float(CheckNaNInterval) / 2.0), 1)
+                write(6,*) "NaN detected."
+                write(6,*) "CFL Number ", CourantFriedrichsLewyCondition*2, " -> ", CourantFriedrichsLewyCondition
+                write(6,*) "Check interval ", CheckNaNInterval
+                write(6,*) ""
             end if
 
             if(CourantFriedrichsLewyCondition < 10.0**(-6)) then
                 UCC%iEndFlag = 3
+                write(6,*) "CFL Number ", CourantFriedrichsLewyCondition
+                write(6,*) "Finish Calculate"
             end if
 
         return
