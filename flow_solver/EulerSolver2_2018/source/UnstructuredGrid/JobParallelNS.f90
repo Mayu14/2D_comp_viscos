@@ -77,7 +77,7 @@ subroutine JobParallelNS(UConf)
         end do
 
     else if(UCC%iEndFlag == 3) then
-        call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
+        call UCalcAeroCharacteristics(UConf, UCC, UG, iCalcStep, UAC)
     end if
 
     !call JPUOutput(UConf,UG,UCC,iCalcStep)
