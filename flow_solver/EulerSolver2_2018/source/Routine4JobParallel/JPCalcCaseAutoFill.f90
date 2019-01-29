@@ -23,6 +23,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     double precision :: AttackAngleRad
     character(len=256) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
+
+    if(UConf%UseJobParallel == 1) then
     !PETET = 0 ~ 1759を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
@@ -62,11 +64,38 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     end if
 
                     CourantFriedrichsLewyCondition = CFL_default
+                    CheckNaNInterval = CheckNaNInterval_default
                     call JobParallelNS(Uconf)
                 end do
             ! end do
         ! end do
     ! end do
+    else
+        do i1digit = 1, 9
+            do i2digit = 1, 9
+                do i34digit = 11, 99, 5
+                    if(UConf%CalcEnv == 0) then
+                        write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
+                    else if(UConf%CalcEnv == 1) then
+                        write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
+                    end if
+                    do iAngleDeg = 39, 0, -3
+                        UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
+                        if(UConf%CalcEnv == 0) then
+                            write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                        else if(UConf%CalcEnv == 1) then
+                            write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg ! 東北大スパコン用
+                        end if
+                        CourantFriedrichsLewyCondition = CFL_default
+                        CheckNaNInterval = CheckNaNInterval_default
+                        write(6,*) UConf%cFileName
+                        call JobParallelNS(Uconf)
+                    end do
+                end do
+            end do
+        end do
+
+    end if
 
     return
 contains
