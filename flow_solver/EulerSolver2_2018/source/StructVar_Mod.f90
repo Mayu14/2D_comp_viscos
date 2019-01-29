@@ -41,6 +41,7 @@ implicit none
         !for Overset
         double precision, allocatable :: InterpolatedQuantity(:,:,:,:) !補間したあとの保存変数(入れ方は一緒)
         integer :: iEndFlag !定常流計算を打ち切る判定
+        integer :: ConvergeCondition = 1    ! 0:RMS, 1:Max
 
         double precision, allocatable :: debug(:, :)  ! debug
     end type
