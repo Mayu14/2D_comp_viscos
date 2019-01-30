@@ -43,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 2    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 0    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
@@ -59,11 +59,13 @@ program Preprocessing4UnstructuredGrid
         stop
         call main_process(UG, cInPath, cOutPath, cFileName)
     else
-        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk_HD_course_rev2/"
-        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev3/"
+        !cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk_HD_course_rev2/"
+        !cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev3/"
+        cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_vtk/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_course_rev4/"
         !do i1 = 1, 9
-        i1 = 8
-            do i2 = 6, 9
+        i1 = 9
+            do i2 = 0, 9
                 do i34 = 11, 99
                     write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
                     cFileName = trim(adjustl(cWing))

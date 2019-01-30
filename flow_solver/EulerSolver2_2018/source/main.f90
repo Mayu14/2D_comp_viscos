@@ -50,7 +50,7 @@ program EulerEQ1D
     !iSwitch = 3
     !write(6,*) "Please input use CPU number."
     !read(5,*) CoreNumberOfCPU
-    !CoreNumberOfCPU = 16
+    CoreNumberOfCPU = 16
 
     if(Conf%SwitchProgram == 0) then
         call StructEulerEQ(Conf)
@@ -66,6 +66,9 @@ program EulerEQ1D
 
     else if(Conf%SwitchProgram == 5) then
         Conf%UseJobParallel = 1
+        call JobParallelControler(Conf, iOffset)
+    else if (Conf%SwitchProgram == 6) then
+        Conf%UseJobParallel = 0
         call JobParallelControler(Conf, iOffset)
     end if
     stop

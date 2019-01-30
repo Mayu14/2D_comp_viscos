@@ -44,12 +44,14 @@ def main():
 def cp_graph():
     path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\"
     char_angle = np.zeros((9, 2))
-    for angle in range(8, 28, 2):
+    i12digit = 11
+    i34digit = 11
+    for angle in range(3, 42, 3):
         deg = int(angle / 3)
-        # fname = "NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + "_AC.dat"
-        fname = "CP_NACA0012_course_mk2_LTS_" + str(angle).zfill(2) + ".dat"
-        coord = np.zeros(5000, dtype = float)
-        pressure = np.zeros(5000, dtype = float)
+        fname = "CP_NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + ".dat"
+        # fname = "CP_NACA0012_course_mk2_LTS_" + str(angle).zfill(2) + ".dat"
+        coord = np.zeros(800, dtype = float)
+        pressure = np.zeros(800, dtype = float)
         if os.path.exists(path + fname):
             # print(fname + " " + str(os.path.exists(path + fname)))
             number = 0
@@ -61,12 +63,12 @@ def cp_graph():
                     attack = - angle / 180.0 * np.pi * 2.0  # 0.0
                     coord[number] = float(coord_and_pressure[0])
                     pressure[number] = float(coord_and_pressure[1])
+                    print(coord_and_pressure)
                     number += 1
             
-
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1)
-            ax.set_title("NACA0012 Fine-Grid alpha = 10 deg")
+            ax.set_title("NACA1111 Fine-Grid alpha = 10 deg")
             ax.plot(coord[:number], pressure[:number], ".", label="Toyota. Re=5 mill. Ma=0.7")
             ax.legend()
             ax.set_xlabel("x/c")
