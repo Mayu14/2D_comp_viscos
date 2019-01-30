@@ -26,8 +26,8 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
     cFileName = "circle_HD.mayu"
     if(UConf%UseJobParallel == 1 .or. UConf%SwitchProgram == 6) cFileName = trim(adjustl(UConf%cGridName))
     if(UConf%CalcEnv == 0) then
-        ! cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
-        cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_course_rev4/"
+        cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_HD_course_rev2/"
+        ! cDirectory = "/mnt/g/Toyota/Data/grid_vtk/NACA4_mayu_course_rev4/"
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(cFileName))
     else
         cDirectory = ""
