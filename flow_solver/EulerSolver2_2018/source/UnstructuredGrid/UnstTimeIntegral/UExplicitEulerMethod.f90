@@ -86,9 +86,9 @@ implicit none
 
         else if(UCC%ConvergeCondition == 1) then
             Residual = sqrt(Residual)
-            write(6,*) "MAX Residual : ", Residual
+            if(DetailedReport > 3) write(6,*) "MAX Residual : ", Residual
             if(Residual <= Converge_tolerance) then
-                write(6,*) "converge... ", Converge_tolerance, Residual
+                if(DetailedReport > 3) write(6,*) "converge... ", Converge_tolerance, Residual
                 UCC%iEndFlag = 2
             end if
         end if
