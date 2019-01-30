@@ -37,10 +37,15 @@ subroutine JobParallelNS(UConf)
 
     call CheckNaN(UConf, UCC)   !
 
-    do while (UCC%iEndFlag < 2)
+    !do while (UCC%iEndFlag < 2)
         iStartStep = 1
         do iStep = iStartStep, IterationNumber
-            write(6,*) iStep, "/", IterationNumber, " th iteration"
+            if(DetailedReport > 2) then
+                if(mod(IterationNumber, 10) == 0) then
+                    write(6,*) iStep, "/", IterationNumber, " th iteration"
+                end if
+            end if
+
             call UnstNS(iStep,UConf,UG,UCC,UCE)
 
             !if(mod(iStep,OutputInterval) == 0) then
@@ -49,13 +54,15 @@ subroutine JobParallelNS(UConf)
             !end if
 
             if(mod(iStep, CheckNaNInterval) == 0)then
-                write(6,*) "NaN Checking..."
+                if(DetailedReport > 2) write(6,*) "NaN Checking..."
                 call CheckNaN(UConf, UCC)
             end if
 
             if(UCC%iEndFlag > 1) exit
         end do
-    end do
+    !end do
+
+    UCC%iEndFlag = 3
 
     call JPUOutput(UConf,UG,UCC,0)
 
@@ -167,16 +174,20 @@ contains
                 CourantFriedrichsLewyCondition = 0.5d0*CourantFriedrichsLewyCondition
                 RetryFlag = 0
                 CheckNaNInterval = max(ceiling(float(CheckNaNInterval) / 2.0), 1)
-                write(6,*) "NaN detected."
-                write(6,*) "CFL Number ", CourantFriedrichsLewyCondition*2, " -> ", CourantFriedrichsLewyCondition
-                write(6,*) "Check interval ", CheckNaNInterval
-                write(6,*) ""
+                if(DetailedReport > 1) then
+                    write(6,*) "NaN detected."
+                    write(6,*) "CFL Number ", CourantFriedrichsLewyCondition*2, " -> ", CourantFriedrichsLewyCondition
+                    write(6,*) "Check interval ", CheckNaNInterval
+                    write(6,*) ""
+                end if
             end if
 
             if(CourantFriedrichsLewyCondition < 10.0**(-6)) then
                 UCC%iEndFlag = 3
-                write(6,*) "CFL Number ", CourantFriedrichsLewyCondition
-                write(6,*) "Finish Calculate"
+                if(DetailedReport > 0) then
+                    write(6,*) "CFL Number ", CourantFriedrichsLewyCondition
+                    write(6,*) "Finish Calculate"
+                end if
             end if
 
         return
