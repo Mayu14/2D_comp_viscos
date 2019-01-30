@@ -28,13 +28,17 @@ implicit none
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
     integer :: RetryFlag = 0 !音速が負になる等の問題が発生するとこのフラグが点灯し，再計算を実施する．フラグが点灯した状態で再度フラグ点灯しようとすると強制終了させる
+    integer :: DetailedReport = 3   ! 0で画面出力なし，1で開始・終了報告のみ，2でリトライの通知を追加，3で反復回数の通知を追加，4で残差通知を追加
+
     double precision :: dAttackAngle = 0.0d0
+
     !Constant value for Calculate
     logical :: invicid = .true.
     double precision, parameter :: Gmin1 = SpecificOfHeatRatio - 1.0d0
     double precision, parameter :: InverseGmin1 = 1.0d0/Gmin1
     complex(kind(0d0)), parameter :: ImaginaryNumber = cmplx(0.0d0, 1.0d0, kind(0d0))
     double precision :: Converge_tolerance = 10.0d0**(-5.0d0)
+
     ! CFL Number
     double precision :: CourantFriedrichsLewyCondition = 1.0d0
     double precision :: CFL_default = 0.5d0
