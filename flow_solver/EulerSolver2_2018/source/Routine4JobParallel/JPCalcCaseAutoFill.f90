@@ -22,15 +22,15 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: i34digit, i2digit, i1digit, iAngleDeg, iLoop, i12digit
     double precision :: AttackAngleRad
     character(len=256) :: cGridName, cResultName, cLoop, cAngle
-    integer :: debug = 1
+    integer :: debug = 0
 
     if(UConf%UseJobParallel == 1) then
-    !PETET = 0 ~ 1759を仮定
+    !PETET = 0 ~ 1619を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
             ! do i34digit = 1, 40
-            i12digit = int(float(UConf%my_rank) / 20.0d0) + 11  ! 11~99
-            i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 11~96, 5k+1
+            i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
+            i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
             if(UConf%CalcEnv == 0) then
                 write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
             else if(UConf%CalcEnv == 1) then
@@ -38,9 +38,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             end if
             !write(6,*) UConf%my_rank ,UConf%cGridName, i34digit
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
-                do iAngleDeg = 0, 39, 3
-                !do iAngleDeg = 8, 26, 2
-                !iAngleDeg = 19
+                do iAngleDeg = 39, 0, -3
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
@@ -79,8 +77,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
-                    do iAngleDeg = 9, -3, -3
-                        !iAngleDeg = 10
+                    do iAngleDeg = 39, 0, -3
+                        !iAngleDeg = 15
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
@@ -101,7 +99,6 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         if(DetailedReport > 0) write(6,*) UConf%cFileName
                         call JobParallelNS(Uconf)
                     end do
-                    if (debug /= 0) exit
                 end do
             end do
         end do
