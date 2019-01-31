@@ -64,6 +64,7 @@ subroutine UGetRoeAverage(RA,P4O)
 
                 RA%RoeAverage(1) = dsqrt(Gmin1*RA%RoeAverage(5)-0.5d0*(sum(RA%RoeAverage(2:4)**2)))
 
+
     return
 contains
     function RoeLoadAverage(QuantityL,QuantityR) result(Average)
