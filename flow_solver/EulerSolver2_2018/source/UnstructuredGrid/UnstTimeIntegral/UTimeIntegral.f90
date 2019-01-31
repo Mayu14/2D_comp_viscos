@@ -42,7 +42,7 @@ implicit none
         iTC => iOne
     end if
 
-    if(iStep /= 1 .and. UConf%UseSteadyCalc == 1) then
+    if(iStep > 10 .and. UConf%UseSteadyCalc == 1) then
         UCC%iEndFlag = 1
     else
         UCC%iEndFlag = 0

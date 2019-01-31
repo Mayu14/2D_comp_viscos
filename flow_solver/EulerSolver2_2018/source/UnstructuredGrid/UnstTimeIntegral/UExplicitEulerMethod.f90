@@ -65,14 +65,32 @@ implicit none
             !EEM
             UCC%ConservedQuantity(:,iCell,1,1) = UCC%ConservedQuantity(:,iCell,1,1) + DeltaQuantity
 
-            Residual = Residual + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
+            !RMS
+            if(UCC%ConvergeCondition == 0) then
+                Residual = Residual + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
+            !Max Residual
+            else if(UCC%ConvergeCondition == 1) then
+                Residual = max(Residual, abs(dot_product(DeltaQuantity,DeltaQuantity)))
+            end if
 
         end do
         !write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
-        if(sqrt(Residual/dble(UG%GI%RealCells)) <= Converge_tolerance) then
-            write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
-            write(6,*) "converge"
-            UCC%iEndFlag = 2
+        if(UCC%ConvergeCondition == 0) then
+            Residual = sqrt(Residual/dble(UG%GI%RealCells))
+            write(6,*) "RMS Residual : ", Residual
+            if(Residual <= Converge_tolerance) then
+                write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
+                write(6,*) "converge"
+                UCC%iEndFlag = 2
+            end if
+
+        else if(UCC%ConvergeCondition == 1) then
+            Residual = sqrt(Residual)
+            if(DetailedReport > 3) write(6,*) "MAX Residual : ", Residual
+            if(Residual <= Converge_tolerance) then
+                if(DetailedReport > 3) write(6,*) "converge... ", Converge_tolerance, Residual
+                UCC%iEndFlag = 2
+            end if
         end if
 
     end if
