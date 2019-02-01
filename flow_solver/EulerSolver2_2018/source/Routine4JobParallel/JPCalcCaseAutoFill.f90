@@ -23,6 +23,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     double precision :: AttackAngleRad
     character(len=256) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
+    character(len=256) :: cDirectory,cFileName, cCaseName
+    character(len=256) :: cStep
 
     if(UConf%UseJobParallel == 1) then
     !PETET = 0 ~ 1619を仮定
@@ -71,7 +73,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     else
         do i1digit = 1, 9
             do i2digit = 1, 9
-                do i34digit = 11, 99, 5
+                do i34digit = 12, 88, 4
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
                     else if(UConf%CalcEnv == 1) then
@@ -96,8 +98,21 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
                         CourantFriedrichsLewyCondition = CFL_default
                         CheckNaNInterval = CheckNaNInterval_default
-                        if(DetailedReport > 0) write(6,*) UConf%cFileName
-                        call JobParallelNS(Uconf)
+                        ! 出力先ファイルがないときのみ実行
+                        write(cStep,*) 0
+                        if(UConf%CalcEnv == 0) then
+                            cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
+                            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                        else if(UConf%CalcEnv == 1) then
+                            cDirectory = "/work/A/FMa/FMa037/Case2/ResultU/" ! 東北大スパコン用
+                            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                        end if
+
+                        if(access(cFileName, " ") /= 0) then
+                            if(DetailedReport > 0) write(6,*) UConf%cFileName
+                            call JobParallelNS(Uconf)
+                        end if
+
                     end do
                 end do
             end do
