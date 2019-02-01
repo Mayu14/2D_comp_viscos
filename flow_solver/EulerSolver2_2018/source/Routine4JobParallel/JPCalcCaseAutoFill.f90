@@ -23,6 +23,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     double precision :: AttackAngleRad
     character(len=256) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
+    integer :: access
     character(len=256) :: cDirectory,cFileName, cCaseName
     character(len=256) :: cStep
 
