@@ -25,10 +25,11 @@ implicit none
 
         if(Gamma*Gmin1*(CC%ConservedQuantity(5,iCell,1,1) / CC%ConservedQuantity(1,iCell,1,1) &
                             & - 0.5d0 * CTW%AbsoluteVelocity2) < 0.0d0) then
+                write(6,*) "CalcTimeWidth, Error "
                 write(6,*) iCell
                 write(6,*) CC%ConservedQuantity(1,iCell,1,1),CC%ConservedQuantity(5,iCell,1,1)
                 write(6,*) CTW%AbsoluteVelocity2
-                stop
+                !stop
         end if
 
         CTW%LocalSoundSpeed = sqrt(Gamma*Gmin1*(CC%ConservedQuantity(5,iCell,1,1) / CC%ConservedQuantity(1,iCell,1,1) &
