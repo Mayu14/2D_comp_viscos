@@ -72,9 +72,9 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         ! end do
     ! end do
     else
-        do i1digit = 1, 9
-            do i2digit = 1, 9
-                do i34digit = 12, 88, 4
+        do i1digit = 9, 1
+            do i2digit = 9, 1
+                do i34digit = 88, 12, -4
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
                     else if(UConf%CalcEnv == 1) then
