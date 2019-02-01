@@ -44,6 +44,7 @@ subroutine JobParallelControler(UConf, iOffset)
 
     else
         UConf%my_rank = iOffset
+        UConf%CalcEnv = 1   ! for 流体研スパコン
         call JPCalcCaseAutoFill(UConf, PETOT)
     end if
     return
