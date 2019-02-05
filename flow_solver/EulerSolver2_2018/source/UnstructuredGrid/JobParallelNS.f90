@@ -157,9 +157,6 @@ contains
                     end if
                     if(RetryFlag == 1) exit
                 end do
-                if(isnan(UCC%AbsoluteVortisity(iCell, 1, 1))) then
-                    RetryFlag = 1
-                end if
             end do
 
             if(RetryFlag == 0) then
