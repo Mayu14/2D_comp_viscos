@@ -27,7 +27,7 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
 
     Mach2 = MachNumber ** 2
     if(UConf%UseSutherlandLaw == 0) then
-        UCE%LaminarViscosity = 1.0d0 / ReynoldsNumber
+        UCE%LaminarViscosity = 1.0d0
         do iCell = 1, UG%GI%RealCells
             UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Mach2 ! Calculate "NON"-Dimensional Value
         end do
