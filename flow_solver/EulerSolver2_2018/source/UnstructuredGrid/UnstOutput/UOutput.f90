@@ -111,7 +111,7 @@ subroutine UOutput(UConf,UG,UCC,iStep)
             write(1, "(f22.14)") dble(UG%Line%Distance(UG%Tri%Edge(iCell, 1))+UG%Line%Distance(UG%Tri%Edge(iCell, 2))+UG%Line%Distance(UG%Tri%Edge(iCell, 3))) / 3.0d0
         end do
 
-        if(invicid == .true.) then
+        if(invicid == .false.) then
             write(1,"('SCALARS LaminarViscosity float')")
             write(1,"('LOOKUP_TABLE default')")
 

@@ -72,7 +72,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         ! end do
     ! end do
     else
-        do i1digit = 9, 1, -1
+        !do i1digit = 9, 1, -1
+        do i1digit = 1, 2
             do i2digit = 9, 1, -1
                 do i34digit = 88, 12, -4
                     if(UConf%CalcEnv == 0) then
@@ -110,7 +111,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         end if
 
                         if(access(cFileName, " ") /= 0) then
-                            if(DetailedReport > 0) write(6,*) UConf%cFileName
+                            write(6,*) UConf%cFileName
                             call JobParallelNS(Uconf)
                         end if
 
