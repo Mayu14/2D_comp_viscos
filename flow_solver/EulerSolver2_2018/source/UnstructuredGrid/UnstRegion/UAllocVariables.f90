@@ -107,14 +107,13 @@
             allocate(UG%GM%Interpolated(UG%GI%AllCells,1,1)) !時間が進んでいる格子から内挿されたとき，この値を1にして時間積分の対象から外す
         end if
 
-        if(UConf%TurbulenceModel /= 0) then
-            ! 廃止予定
+        !if(UConf%TurbulenceModel /= 0) then
             allocate(UCC%AbsoluteVortisity(UG%GI%RealCells, 1, 1))
             allocate(UCC%EddyViscosity(UG%GI%RealCells, 1, 1))
             allocate(UCC%StrainRateTensor(iDim, iDim, UG%GI%AllCells, 1, 1))    !uvw, xyz, icell, 1, 1
             allocate(UCC%LaminarViscosity(UG%GI%AllCells, 1, 1))
             allocate(UCC%Temparature(UG%GI%AllCells,1,1))
-            allocate(UCC%VelocityNorm(UG%GI%AllCells,1,1))
+            allocate(UCC%TemparatureGrad(iDim,UG%GI%AllCells,1,1))
 
             allocate(UCE%AbsoluteVortisity(UG%GI%Edges, 1, 1))
             allocate(UCE%LaminarViscosity(UG%GI%Edges, 1, 1))
@@ -124,7 +123,7 @@
 
             allocate(UCC%debug(UG%GI%AllCells, 1))
             UCC%debug = 0.0d0
-        end if
+        !end if
 
         return
     end subroutine UAllocVariables
