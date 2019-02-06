@@ -92,10 +92,10 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
-                            write(UConf%cDirectory, ' ')
+                            write(UConf%cDirectory, '("")')
                         else if(UConf%CalcEnv == 1) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg ! 東北大スパコン用
-                            write(UConf%cDirectory, '/work/A/FMa/FMa037/Case3/')
+                            write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case3/")')
                         end if
 
                         if(debug == 1) then
