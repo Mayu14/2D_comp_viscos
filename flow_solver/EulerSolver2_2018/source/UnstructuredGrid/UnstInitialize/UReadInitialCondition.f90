@@ -14,13 +14,8 @@ subroutine UReadInitialCondition(UConf,UG,UCC)
         read(5,*) cFileName
     else
         write(cStep,*) 0
-        if(UConf%CalcEnv == 0) then
-            cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
-            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
-        else if(UConf%CalcEnv == 1) then
-            cDirectory = "/work/A/FMa/FMa037/Case2/ResultU/" ! 東北大スパコン用
-            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
-        end if
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     end if
 
     open(unit = 1, file =trim(adjustl(cFileName)), status = 'old')
