@@ -470,10 +470,10 @@
 		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetLaminarViscosity_mk2.f90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor.f90">
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_edge.f90">
 			<Option weight="2" />
 		</Unit>
-		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_edge.f90">
+		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/UGetStrainRateTensor_mk2.f90">
 			<Option weight="2" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstFlux/Viscos/URansCommon.f90">
@@ -522,7 +522,7 @@
 			<Option weight="1" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstTools/UCalcAeroCharacteristics.f90">
-			<Option weight="1" />
+			<Option weight="2" />
 		</Unit>
 		<Unit filename="source/UnstructuredGrid/UnstTools/UCentralDifferencePrepareAroundEdge.f90">
 			<Option weight="2" />

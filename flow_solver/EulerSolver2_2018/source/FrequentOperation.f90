@@ -306,13 +306,13 @@ contains
         return
     end subroutine CheckBackOrFront
 
-    subroutine GetLengthBetweenEdge(UG, iEdge, FrontLength, BackLength)
+    subroutine GetLengthBetweenEdge(UG, iEdge, iFrontCell, iBackCell,FrontLength, BackLength)
         use StructVar_Mod
         implicit none
         type(UnstructuredGrid), intent(in) :: UG
         integer, intent(in) :: iEdge
+        integer, intent(out) :: iFrontCell, iBackCell
         double precision, intent(out) :: FrontLength, BackLength
-        integer :: iFrontCell, iBackCell
             iFrontCell = UG%Line%Cell(iEdge,1,1)
             iBackCell =  UG%Line%Cell(iEdge,2,1)
 
