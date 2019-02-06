@@ -15,7 +15,7 @@ subroutine UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
     use StructVar_Mod
     use LoopVar_Mod
     use FrequentOperation
-    use ConstantVar_Mod, ci => ImaginaryNumber
+    use ConstantVar_Mod, ci => ImaginaryNumber, gamma => SpecificOfHeatRatio
     implicit none
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
@@ -59,8 +59,6 @@ subroutine UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
             !end if
             weight_ave_value(4) = (MyLength * MyTemparature + AdjLength * AdjTemparature) / (MyLength + AdjLength)
 
-
-
             dUdi(1:2) = dUdi(1:2) + weight_ave_value(1) * (DirectionN * UG%GM%Normal(iEdge,1:2)) * UG%GM%Area(iEdge)
             dVdi(1:2) = dVdi(1:2) + weight_ave_value(2) * (DirectionN * UG%GM%Normal(iEdge,1:2)) * UG%GM%Area(iEdge)
             dTdi(1:2) = dTdi(1:2) + weight_ave_value(4) * (DirectionN * UG%GM%Normal(iEdge,1:2)) * UG%GM%Area(iEdge)
@@ -68,8 +66,6 @@ subroutine UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
         UCC%StrainRateTensor(1,1:2,iCell,1,1) = dUdi(1:2)
         UCC%StrainRateTensor(2,1:2,iCell,1,1) = dUdi(1:2)
         UCC%TemparatureGrad(1:2,iCell,1,1) = dTdi(1:2)
-
-    end do
 
     UCC%AbsoluteVortisity(iCell, 1, 1) = abs(UCC%StrainRateTensor(1, 2, iCell, 1, 1) &
                                          & - UCC%StrainRateTensor(2, 1, iCell, 1, 1))
