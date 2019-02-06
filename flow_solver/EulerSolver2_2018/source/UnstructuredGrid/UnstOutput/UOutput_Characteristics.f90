@@ -13,12 +13,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
         cUFileName = UConf%cFileName
     end if
 
-    if(UConf%CalcEnv == 0) then
-        cDirectory = "ResultC/" !UConf%SaveDirectiry    ! 研究室PC用
-    else if (UConf%CalcEnv == 1) then
-        cDirectory = "/work/A/FMa/FMa037/Case2/ResultC/" ! 東北大スパコン用
-    end if
-
+    cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! 研究室PC用
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
     iMaxTime = ubound(UAC%coefficient, 2)
 
