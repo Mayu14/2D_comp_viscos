@@ -45,8 +45,10 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
+                        write(UConf%cDirectory, ' ')
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
+                        write(UConf%cDirectory, '/work/A/FMa/FMa037/Case3/')
                     end if
 
                     if(debug == 1) then
@@ -72,26 +74,28 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         ! end do
     ! end do
     else
-        !do i1digit = 9, 1, -1
+        do i1digit = 9, 1, -1
         !do i1digit = 1, 2
-            !do i2digit = 9, 1, -1
-                !do i34digit = 88, 12, -4
-                UConf%CalcEnv = 0
-                i1digit = 3
-                i2digit = 9
-                i34digit = 36
+            do i2digit = 9, 1, -1
+                do i34digit = 88, 12, -4
+                !UConf%CalcEnv = 0
+                !i1digit = 3
+                !i2digit = 9
+                !i34digit = 36
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
-                    !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 36
+                    do iAngleDeg = 39, 0, -3
+                        !iAngleDeg = 36
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
+                            write(UConf%cDirectory, ' ')
                         else if(UConf%CalcEnv == 1) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg ! 東北大スパコン用
+                            write(UConf%cDirectory, '/work/A/FMa/FMa037/Case3/')
                         end if
 
                         if(debug == 1) then
@@ -107,11 +111,9 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         ! 出力先ファイルがないときのみ実行
                         write(cStep,*) 0
                         if(UConf%CalcEnv == 0) then
-                            cDirectory = "ResultU/" !UConf%SaveDirectiry   ! 研究室PC用
-                            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
-                        else if(UConf%CalcEnv == 1) then
-                            cDirectory = "/work/A/FMa/FMa037/Case2/ResultU/" ! 東北大スパコン用
-                            cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                            cFileName = trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                        else if(UConf%CalcEnv == 1) then    ! 東北大スパコン用
+                            cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         end if
 
                         if(UConf%SwitchProgram /= 7) then
@@ -122,10 +124,10 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         else
                             call JobParallelNS(UConf)
                         end if
-                    !end do
-                !end do
-            !end do
-        !end do
+                    end do
+                end do
+            end do
+        end do
 
     end if
 
