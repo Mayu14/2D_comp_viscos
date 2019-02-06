@@ -114,11 +114,14 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                             cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         end if
 
-                        if(access(cFileName, " ") /= 0) then
-                            write(6,*) UConf%cFileName
-                            call JobParallelNS(Uconf)
+                        if(UConf%SwitchProgram /= 7) then
+                            if(access(cFileName, " ") /= 0) then
+                                write(6,*) UConf%cFileName
+                                call JobParallelNS(Uconf)
+                            end if
+                        else
+                            call JobParallelNS(UConf)
                         end if
-
                     !end do
                 !end do
             !end do
