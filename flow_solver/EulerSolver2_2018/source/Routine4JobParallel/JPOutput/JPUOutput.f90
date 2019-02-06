@@ -11,7 +11,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     character(len=256) :: cStep
 
     integer :: iCheck, iUnit_num
-
+    integer :: debug = 1
     call JPUConserve2Primitive(UG,UCC)
 
     write(cStep,*) iStep
@@ -197,6 +197,22 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                                         &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
         end do
     close(iUnit_num)
+
+    if(debug == 1) then
+        write(iUnit_num,"('SCALARS TimeStep float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") UCC%TimeWidth(iCell,1,1)
+        end do
+
+        write(iUnit_num,"('SCALARS Sq_SoundSpeed float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") gamma*Gmin1*(CC%ConservedQuantity(5,iCell,1,1) / CC%ConservedQuantity(1,iCell,1,1) &
+                            & - 0.5d0 * dot_product(CC%ConservedQuantity(2:4,iCell,1,1),CC%ConservedQuantity(2:4,iCell,1,1))/(CC%ConservedQuantity(1,iCell,1,1)**2))
+        end do
+
+    end if
 
     if(RetryFlag == 0) then
         UCC%PastQuantity = UCC%ConservedQuantity
