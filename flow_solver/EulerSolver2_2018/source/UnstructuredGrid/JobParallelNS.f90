@@ -25,6 +25,12 @@ subroutine JobParallelNS(UConf)
     type(AeroCharacteristics) :: UAC
 
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
+
+    if(UConf%SwitchProgram == 7) then
+        UConf%UseResume = 1
+        IterationNumber = 1
+    end if
+
     call UInitialize(UConf,UG,UCC) !ReadInitial,MakeInternalBoundary
     iStep = 0
     call UReadInflowOutflowCondition(UG, UConf)
@@ -64,7 +70,9 @@ subroutine JobParallelNS(UConf)
 
     UCC%iEndFlag = 3
 
-    call JPUOutput(UConf,UG,UCC,0)
+    if(UConf%SwitchProgram /= 7) then
+        call JPUOutput(UConf,UG,UCC,0)
+    end if
 
     if (UCC%iEndFlag == 2) then
         iCalcStep = 100
