@@ -21,6 +21,8 @@ public CheckEdgeIntersect
 public GetEdgeIntersectionCoords
 public GetEdgeIntersectionCoordsWithTriangle
 public AbsVector
+public CheckBackOrFront
+public GetLengthBetweenEdge
 
 contains
     subroutine CrossProduct(A,B,C) !外積計算
@@ -287,6 +289,37 @@ contains
         length = sqrt(dot_product(vector, vector))
         return
     end function AbsVector
+
+    subroutine CheckBackOrFront(iMainCell, iAdjCell, iBackOrFront12, iBackOrFrontm11)
+        implicit none
+        integer, intent(in) :: iMainCell, iAdjCell
+        integer, intent(out) :: iBackOrFront12
+        double precision, intent(out) :: iBackOrFrontm11
+
+        if(iMainCell > iAdjCell) then ! Main側の数字が大きい = Main側が表
+            iBackOrFront12 = 1  ! GM%Width用
+            iBackOrFrontm11 = -1.0d0    ! GM%Normalの向き調整用
+        else    ! Main側の数字が小さい = Main側が裏
+            iBackOrFront12 = 2
+            iBackOrFrontm11 = 1.0d0
+        end if
+        return
+    end subroutine CheckBackOrFront
+
+    subroutine GetLengthBetweenEdge(UG, iEdge, FrontLength, BackLength)
+        use FrequentOperation
+        implicit none
+        type(UnstructuredGrid), intent(in) :: UG
+        integer, intent(in) :: iEdge
+        double precision, intent(out) :: FrontLength, BackLength
+        integer :: iFrontCell, iBackCell
+            iFrontCell = UG%Line%Cell(iEdge,1,1)
+            iBackCell =  UG%Line%Cell(iEdge,2,1)
+
+            FrontLength = AbsVector(UG%GM%Width(iFrontCell, UG%Line%Cell(iEdge,1,2), :))
+            BackLength = AbsVector(UG%GM%Width(iBackCell, UG%Line%Cell(iEdge,2,2), :))
+        return
+    end subroutine GetLengthBetweenEdge
 
 end module FrequentOperation
 
