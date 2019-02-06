@@ -29,6 +29,7 @@ implicit none
         double precision, allocatable :: VelocityNorm(:, :, :)  !(i,j,k)
         double precision, allocatable :: Temparature(:, :, :)    ! (i, j, k)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
+        double precision, allocatable :: TemparatureGrad(:,:,:,:) !セル中心温度勾配(xyz,i,j,k)
         double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
         !double precision, allocatable :: MachNumber(:,:,:)  ! i,j,k
 
