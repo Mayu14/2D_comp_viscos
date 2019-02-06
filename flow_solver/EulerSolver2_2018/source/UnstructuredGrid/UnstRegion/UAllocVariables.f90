@@ -114,6 +114,7 @@
             allocate(UCC%StrainRateTensor(iDim, iDim, UG%GI%AllCells, 1, 1))    !uvw, xyz, icell, 1, 1
             allocate(UCC%LaminarViscosity(UG%GI%AllCells, 1, 1))
             allocate(UCC%Temparature(UG%GI%AllCells,1,1))
+            allocate(UCC%VelocityNorm(UG%GI%AllCells,1,1))
 
             allocate(UCE%AbsoluteVortisity(UG%GI%Edges, 1, 1))
             allocate(UCE%LaminarViscosity(UG%GI%Edges, 1, 1))
