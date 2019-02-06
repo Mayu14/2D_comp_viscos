@@ -20,7 +20,7 @@ subroutine UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
-    type(CellEdge), intent(in) :: UCE
+    type(CellEdge), intent(inout) :: UCE
     double precision :: MyLength, AdjLength, totalLength
     integer :: iDirectionW !面基準でのの向き(1 or 2)
     double precision :: DirectionN  !法線ベクトルの向き(Normalにこれを掛けると外向き法線になる)
@@ -65,9 +65,9 @@ subroutine UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
             dVdi(1:2) = dVdi(1:2) + weight_ave_value(2) * (DirectionN * UG%GM%Normal(iEdge,1:2)) * UG%GM%Area(iEdge)
             dTdi(1:2) = dTdi(1:2) + weight_ave_value(4) * (DirectionN * UG%GM%Normal(iEdge,1:2)) * UG%GM%Area(iEdge)
         end do
-        UCC%StrainRateTensor(1,1:2,iCell,1,1) = dUdi(1:2)　/ UG%GM%Volume(iCell)
-        UCC%StrainRateTensor(2,1:2,iCell,1,1) = dUdi(1:2)　/ UG%GM%Volume(iCell)
-        UCC%TemparatureGrad(1:2,iCell,1,1) = dTdi(1:2)　/ UG%GM%Volume(iCell)
+        UCC%StrainRateTensor(1,1:2,iCell,1,1) = dUdi(1:2)/UG%GM%Volume(iCell)
+        UCC%StrainRateTensor(2,1:2,iCell,1,1) = dUdi(1:2)/UG%GM%Volume(iCell)
+        UCC%TemparatureGrad(1:2,iCell,1,1) = dTdi(1:2)/UG%GM%Volume(iCell)
 
     UCC%AbsoluteVortisity(iCell, 1, 1) = abs(UCC%StrainRateTensor(1, 2, iCell, 1, 1) &
                                          & - UCC%StrainRateTensor(2, 1, iCell, 1, 1))
