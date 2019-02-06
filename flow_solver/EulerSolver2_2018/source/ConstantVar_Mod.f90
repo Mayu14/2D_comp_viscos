@@ -28,7 +28,7 @@ implicit none
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
     integer :: RetryFlag = 0 !音速が負になる等の問題が発生するとこのフラグが点灯し，再計算を実施する．フラグが点灯した状態で再度フラグ点灯しようとすると強制終了させる
-    integer :: DetailedReport = 0   ! 0で画面出力なし，1で開始・終了報告のみ，2でリトライの通知を追加，3で反復回数の通知を追加，4で残差通知を追加
+    integer :: DetailedReport = 2   ! 0で画面出力なし，1で開始・終了報告のみ，2でリトライの通知を追加，3で反復回数の通知を追加，4で残差通知を追加
 
     double precision :: dAttackAngle = 0.0d0
 
@@ -44,10 +44,12 @@ implicit none
     double precision :: CFL_default = 0.5d0
 
     ! Physical Property Value
-    double precision :: ReynoldsNumber = 0.0d0
-    double precision :: MachNumber = 1.0d0
+    double precision :: ReynoldsNumber = 0.0d0  ! updateされる
+    double precision :: MachNumber = 1.0d0  ! updateされる
     double precision, parameter :: LaminarPrandtlNumber = 0.72d0
     double precision, parameter :: TurbulentPrandtlNumber = 0.9d0
+
+    double precision :: ObjLength = 1.0d0
 
     ! Dimensional Parameter (高度10km前後の遷音速巡行を想定)
     double precision :: InfinityDensity = 0.4135d0    ! [kg/m3]
