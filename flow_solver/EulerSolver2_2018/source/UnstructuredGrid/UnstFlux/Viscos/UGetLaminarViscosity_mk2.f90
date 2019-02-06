@@ -21,30 +21,32 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     type(CellEdge), intent(inout) :: UCE
-    double precision :: Mu0, STS, SC1, Mach2, Tinf
+    double precision :: Mu0, SC1, Mach2, Tinflow
     double precision :: EdgeTemparature
     logical :: debug = .true.
 
     Mach2 = MachNumber ** 2
     if(UConf%UseSutherlandLaw == 0) then
         UCE%LaminarViscosity = 1.0d0
-        do iCell = 1, UG%GI%RealCells
-            UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Mach2 ! Calculate "NON"-Dimensional Value
-        end do
 
     else
-        Mu0 = ReferenceViscosity_Mu0
-        STS = SutherlandTemperature_S
-        SC1 = SutherlandCoefficient1
-        Tinf = InfinityTemperature
+        Mu0 = 1.0d0
+        Tinflow = gamma * UG%GM%BC%InFlowVariable(5) / UG%GM%BC%InFlowVariable(1)
+        SC1 = SutherlandTemperature_S / ReferenceTemperature_Tref
 
+        !　セル中心で温度・粘性・速度ノルム求める
         do iCell = 1, UG%GI%RealCells
-            UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Mach2 * Tinf ! Calculate Dimensional Value
+            UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Gmin1
+            UCC%VelocityNorm(iCell,1,1) = AbsVector(UCC%PrimitiveVariable(2:4,iCell,1,1))
+            UCC%LaminarViscosity(iCell,1,1) = Mu0 * ((UCC%Temparature(iCell,1,1)/Tinflow)**1.5d0) * ((Tinflow+SC1)/(UCC%Temparature(iCell,1,1) + SC1))
         end do
 
         do iEdge = 1, UG%GI%Edges
-            EdgeTemparature = 0.5d0 * (UCC%Temparature(UG%Line%Cell(iEdge, 1, 1), 1, 1) + UCC%Temparature(UG%Line%Cell(iEdge, 2, 1), 1, 1))
-            UCE%LaminarViscosity(iEdge,1,1) = SC1 * EdgeTemparature ** 1.5d0 / (EdgeTemparature + STS) / InfinityStaticViscosity ! Calculate Non-Dimensional Value
+            iFrontCell = UG%Line%Cell(iEdge,1,1)
+            iBackCell =  UG%Line%Cell(iEdge,2,1)
+            UCE%LaminarViscosity(iEdge,1,1) = (UCC%VelocityNorm(iFrontCell,1,1) * UCC%LaminarViscosity(iFrontCell,1,1) &
+                                         &  +  UCC%VelocityNorm(iBackCell,1,1) * UCC%LaminarViscosity(iBackCell,1,1))  &
+                                         &  / (UCC%VelocityNorm(iFrontCell,1,1) + UCC%VelocityNorm(iBackCell,1,1))
         end do
     end if
 
