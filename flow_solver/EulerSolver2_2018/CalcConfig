@@ -1,5 +1,5 @@
 計算の設定：CalculateConfigulation
-6 計算に用いるプログラム(0:構造格子Euler，1:非構造格子NS,3:構造+非構造重合格子Euler, 4:非構造格子NS(定常), 5:ジョブ並列NS)
+7 計算に用いるプログラム(0:構造格子Euler，1:非構造格子NS,3:構造+非構造重合格子Euler, 4:非構造格子NS(定常), 5:ジョブ並列NS)
 1 データから格子情報読み出し:UseReadRegion
 5 データから初期条件読み出し:UseResume !1でデータから読み出し，2でShockTubeXY,3:YZ:4:Diag,5:Flat
 Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
