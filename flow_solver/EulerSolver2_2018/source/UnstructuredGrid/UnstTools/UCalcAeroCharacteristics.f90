@@ -25,7 +25,7 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
     integer :: iWall
     double precision :: WallPressure
     double precision :: lift, drag
-    double precision :: scaling_factor, ObjLength = 1.0d0
+    double precision :: scaling_factor
     double precision :: cosA, sinA
     double precision :: static_pressure, kinetic_pressure
 
