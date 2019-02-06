@@ -206,7 +206,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             end do
 
             !read(iUnit,*) cAnnotate, UG%GM%BC%iWallTotal !"Wall2Cell_data "
-            if(UConf%TurbulenceModel /= 0) then
+            !if(UConf%TurbulenceModel /= 0) then
                 !do iEdge = 1, UG%GM%BC%iWallTotal
                     !read(iUnit,*) UG%GM%BC%VW(iEdge)%iGlobalEdge, UG%GM%BC%VW(iEdge)%iNumberOfMember
                     !allocate(UG%GM%BC%VW(iEdge)%iMemberCell(UG%GM%BC%VW(iEdge)%iNumberOfMember))
@@ -223,7 +223,7 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                         read(iUnit,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
                     end do
                 end do
-            end if
+            !end if
         end if
 
         close(iUnit)
