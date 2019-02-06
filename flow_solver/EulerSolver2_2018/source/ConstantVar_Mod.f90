@@ -70,6 +70,7 @@ implicit none
     double precision :: VenkatakrishnanParameterK = 0.3d0
 
     ! Sutherland's Law parameter (for gas)
+    public SutherlandViscosity
     double precision, parameter :: SutherlandTemperature_S = 110.4d0
     double precision, parameter :: ReferenceTemperature_Tref = 273.15d0
     double precision, parameter :: ReferenceViscosity_Mu0 = 0.00001716d0
@@ -84,5 +85,16 @@ implicit none
     ! Influence Area Splitting Method (Toyota, 2018)
     double precision :: SigmoidGain
     double precision :: SigmoidRange = 34.538776394910684d0 !=log((1.0d0 - 10.0d0**(-15))/10.0d0**(-15))
+
+contains
+    function SutherlandViscosity(Tcell, Tinflow) result(Mu)
+        implicit none
+        double precision, intent(in) :: Tcell, Tinflow
+        double precision, parameter :: Mu0 = 1.0d0
+        double precision :: SC1 = SutherlandTemperature_S / ReferenceTemperature_Tref   !110.4/273.15
+
+        Mu = Mu0 * ((Tcell/Tinflow)**1.5d0) * ((Tinflow+SC1)/(Tcell + SC1))
+        return
+    end function SutherlandViscosity
 
 end module ConstantVar_Mod
