@@ -67,7 +67,7 @@ program EulerEQ1D
     else if(Conf%SwitchProgram == 5) then
         Conf%UseJobParallel = 1
         call JobParallelControler(Conf, iOffset)
-    else if (Conf%SwitchProgram == 6) then
+    else if ((Conf%SwitchProgram == 6) .or. (Conf%SwitchProgram == 7)) then
         Conf%UseJobParallel = 0
         call JobParallelControler(Conf, iOffset)
     end if
