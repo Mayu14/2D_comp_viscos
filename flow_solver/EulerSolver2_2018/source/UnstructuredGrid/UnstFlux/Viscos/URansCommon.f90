@@ -23,11 +23,11 @@ subroutine URansCommon(UConf, UG, UCC, UCE)
     type(CellEdge), intent(inout) :: UCE
     logical :: debug = .true.
     ! RANS common
+    ! Calc Strain Rate Tensor & AbsoluteVortisity
+    call UGetStrainRateTensor_mk2(UConf, UG, UCC, UCE)
+
     ! Calc Laminar Viscosity from Sutherland's Law
     call UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
-
-    ! Calc Strain Rate Tensor & AbsoluteVortisity
-    call UGetStrainRateTensor_edge(UConf, UG, UCC, UCE)
 
     if(debug == .true.) then
         do iCell = 1, UG%GI%RealCells
