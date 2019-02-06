@@ -23,11 +23,18 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
     type(CellEdge), intent(inout) :: UCE
     double precision :: Mu0, SC1, Mach2, Tinflow
     double precision :: EdgeTemparature
+    double precision :: FrontLength, BackLength
     logical :: debug = .true.
 
     Mach2 = MachNumber ** 2
     if(UConf%UseSutherlandLaw == 0) then
         UCE%LaminarViscosity = 1.0d0
+        if(debug == .true.) then
+            do iCell = 1, UG%GI%RealCells
+                UCC%LaminarViscosity(iCell,1,1) = (UCE%LaminarViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
+                UCC%EddyViscosity(iCell,1,1) = (UCE%EddyViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
+            end do
+        end if
 
     else
         Mu0 = 1.0d0
@@ -37,23 +44,14 @@ subroutine UGetLaminarViscosity_mk2(UConf, UG, UCC, UCE)
         !　セル中心で温度・粘性・速度ノルム求める
         do iCell = 1, UG%GI%RealCells
             UCC%Temparature(iCell, 1, 1) = gamma * UCC%PrimitiveVariable(5, iCell, 1, 1) / UCC%PrimitiveVariable(1, iCell, 1, 1) * Gmin1
-            UCC%VelocityNorm(iCell,1,1) = AbsVector(UCC%PrimitiveVariable(2:4,iCell,1,1))
-            UCC%LaminarViscosity(iCell,1,1) = Mu0 * ((UCC%Temparature(iCell,1,1)/Tinflow)**1.5d0) * ((Tinflow+SC1)/(UCC%Temparature(iCell,1,1) + SC1))
+            UCC%LaminarViscosity(iCell,1,1) = SutherlandViscosity(UCC%Temparature(iCell,1,1), Tinflow)
         end do
 
         do iEdge = 1, UG%GI%Edges
-            iFrontCell = UG%Line%Cell(iEdge,1,1)
-            iBackCell =  UG%Line%Cell(iEdge,2,1)
-            UCE%LaminarViscosity(iEdge,1,1) = (UCC%VelocityNorm(iFrontCell,1,1) * UCC%LaminarViscosity(iFrontCell,1,1) &
-                                         &  +  UCC%VelocityNorm(iBackCell,1,1) * UCC%LaminarViscosity(iBackCell,1,1))  &
-                                         &  / (UCC%VelocityNorm(iFrontCell,1,1) + UCC%VelocityNorm(iBackCell,1,1))
-        end do
-    end if
-
-    if(debug == .true.) then
-        do iCell = 1, UG%GI%RealCells
-            UCC%LaminarViscosity(iCell,1,1) = (UCE%LaminarViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%LaminarViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
-            UCC%EddyViscosity(iCell,1,1) = (UCE%EddyViscosity(UG%Tri%Edge(iCell,1),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,2),1,1)+UCE%EddyViscosity(UG%Tri%Edge(iCell,3),1,1)) / 3.0
+            call GetLengthBetweenEdge(UG,iEdge,FrontLength,BackLength)
+            UCE%LaminarViscosity(iEdge,1,1) = (FrontLength * UCC%LaminarViscosity(iFrontCell,1,1) &
+                                         &  +  BackLength * UCC%LaminarViscosity(iBackCell,1,1))  &
+                                         &  / (FrontLength + BackLength)
         end do
     end if
 
