@@ -87,7 +87,7 @@ implicit none
     double precision :: SigmoidRange = 34.538776394910684d0 !=log((1.0d0 - 10.0d0**(-15))/10.0d0**(-15))
 
 contains
-    function SutherlandViscosity(Tcell, Tinflow) result(Mu)
+    double precision function SutherlandViscosity(Tcell, Tinflow) result(Mu)
         implicit none
         double precision, intent(in) :: Tcell, Tinflow
         double precision, parameter :: Mu0 = 1.0d0
