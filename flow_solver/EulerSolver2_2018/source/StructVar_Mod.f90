@@ -58,6 +58,7 @@ implicit none
         double precision, allocatable :: EddyViscosity(:, :, :)
         double precision, allocatable :: StrainRateTensor(:, :, :, :, :)   !ひずみ速度テンソル(uvw, xyz, i, j, k)
         double precision, allocatable :: AbsoluteVortisity(:, :, :) ! (i, j, k)
+        double precision, allocatable :: TemparatureGrad(:,:,:,:,:)   !(xyz,i,j,k,面番号)
     end type
 
     type ViscosityWall
@@ -99,7 +100,7 @@ implicit none
         integer :: SwitchProgram
         integer :: UseReadRegion = 1 !1でデータから格子情報読み出し
         integer :: UseResume = 0 !1でデータから初期条件読み出し
-            character(len=128) :: ResumeFileName !初期条件を読み出す際のファイル名
+            character(len=256) :: ResumeFileName !初期条件を読み出す際のファイル名
             integer :: ResumeFileFormat = 2 !初期条件ファイルの形式(1:vtk,2:gnuplot用txt)
             integer :: ResumeNumber !計算を再開する際の計算ステップ
         integer :: UseReadBoundaryCond = 0  !1でデータから境界条件読み出し
@@ -115,8 +116,9 @@ implicit none
         integer :: UseSutherlandLaw = 0    !0:not use, 1:use
         integer :: UseJobParallel = 0   ! 0:not use, 1:use
         double precision :: dAttackAngle    ! 迎角(JobParallel用)
-        character(len=128) :: cGridName  ! mayuファイル名(JobParallel用)
-        character(len=128) :: cFileName  ! 出力vtk名(JobParallel用)
+        character(len=256) :: cGridName  ! mayuファイル名(JobParallel用)
+        character(len=256) :: cFileName  ! 出力vtk名(JobParallel用)
+        character(len=256) :: cDirectory = ""   ! 出力先フルパス
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
         integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer
