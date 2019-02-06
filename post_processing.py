@@ -5,12 +5,40 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import os
 
-def main():
-    password = input("input password of FMa037@afifep.ifs.tohoku.ac.jp")
-    path = "/work/A/FMa/FMa037/Case2/ResultC/"
-    save_path = "G:\\Toyota\\Data\\Compressible_Viscos\\training_data\\NACA4\\"
-    number = 6  # data number per wing
+def main(online=False):
+    def main_process(online):
+        count = 0
+        for i1 in range(1, 10):
+            for i2 in range(1, 10):
+                for i34 in range(12, 92, 4):
+                    naca4 = str(i1).zfill(1) + str(i2).zfill(1) + str(i34).zfill(2)
+                    for deg in range(min_angle, max_angle + delta_angle, delta_angle):
+                        save_data[count, 1] = float(naca4)
+                        save_data[count, 3] = float(deg)
+                        
+                        fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_AC.dat"
+                        if online:
+                            stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
+                            cd_cl = stdout.readlines()[0].split()
+                        else:
+                            with open(path + fname, "r") as f:
+                                cd_cl = f.readline().split()
+                        
+                        save_data[count, 4] = cd_cl[1]  # CL
+                        save_data[count, 5] = cd_cl[0]  # CD
+                        count += 1
+                print(save_data[:100, :])
+                exit()
     
+    save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\"
+    number = 6  # data number per wing
+
+    if online:
+        password = input("input password of FMa037@afifep.ifs.tohoku.ac.jp")
+        path = "/work/A/FMa/FMa037/Case3/ResultC/"
+    else:
+        path = "G:\\Toyota\\Data\\Case3\\"
+        
     max_angle = 39  # [deg]
     min_angle = 0  # [deg]
     delta_angle = 3  # [deg]
@@ -24,25 +52,14 @@ def main():
     type = 3.0
     save_data[:, 0] = type
     
-    with paramiko.SSHClient() as ssh:
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname = "afifep.ifs.tohoku.ac.jp", port = 22, username = "FMa037", password = password)
+    if online:
+        with paramiko.SSHClient() as ssh:
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname = "afifep.ifs.tohoku.ac.jp", port = 22, username = "FMa037", password = password)
+            main_process(online)
+    else:
+        main_process(online)
         
-        count = 0
-        for i1 in range(1, 10):
-            for i2 in range(1, 10):
-                for i34 in range(12, 92, 4):
-                    naca4 = str(i1).zfill(1) + str(i2).zfill(1) + str(i34).zfill(2)
-                    for deg in range(min_angle, max_angle + delta_angle, delta_angle):
-                        save_data[count, 1] = float(naca4)
-                        save_data[count, 3] = float(deg)
-                        
-                        fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_AC.dat"
-                        stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
-                        cd_cl = stdout.readlines()[0].split()
-                        save_data[count, 4] = cd_cl[1]  # CL
-                        save_data[count, 5] = cd_cl[0]  # CD
-                        count += 1
     
     save_fname = save_path + "NACA4\\s1122_e9988_s4_a" + str(angle_variation).zfill(3) + ".csv"
     np.savetxt(save_fname, save_data, delimiter = ",")
