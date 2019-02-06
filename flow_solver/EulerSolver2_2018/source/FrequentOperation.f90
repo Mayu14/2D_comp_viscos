@@ -307,7 +307,7 @@ contains
     end subroutine CheckBackOrFront
 
     subroutine GetLengthBetweenEdge(UG, iEdge, FrontLength, BackLength)
-        use FrequentOperation
+        use StructVar_Mod
         implicit none
         type(UnstructuredGrid), intent(in) :: UG
         integer, intent(in) :: iEdge
