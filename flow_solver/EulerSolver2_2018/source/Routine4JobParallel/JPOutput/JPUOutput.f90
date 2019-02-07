@@ -208,20 +208,20 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         write(iUnit_num,"('SCALARS Sq_SoundSpeed float')")
         write(iUnit_num,"('LOOKUP_TABLE default')")
         do iCell=1, UG%GI%RealCells
-            write(iUnit_num, "(f22.14)") gamma*Gmin1*(CC%ConservedQuantity(5,iCell,1,1) / CC%ConservedQuantity(1,iCell,1,1) &
-                            & - 0.5d0 * dot_product(CC%ConservedQuantity(2:4,iCell,1,1),CC%ConservedQuantity(2:4,iCell,1,1))/(CC%ConservedQuantity(1,iCell,1,1)**2))
+            write(iUnit_num, "(f22.14)") gamma*Gmin1*(UCC%ConservedQuantity(5,iCell,1,1) / UCC%ConservedQuantity(1,iCell,1,1) &
+                            & - 0.5d0 * dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),UCC%ConservedQuantity(2:4,iCell,1,1))/(UCC%ConservedQuantity(1,iCell,1,1)**2))
         end do
 
     end if
 
-    if(RetryFlag == 0) then
-        UCC%PastQuantity = UCC%ConservedQuantity
-    else
-        UCC%ConservedQuantity = UCC%PastQuantity
-        CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
-        RetryFlag = 0
+    !if(RetryFlag == 0) then
+        !UCC%PastQuantity = UCC%ConservedQuantity
+    !else
+        !UCC%ConservedQuantity = UCC%PastQuantity
+        !CourantFriedrichsLewyCondition = 0.1d0*CourantFriedrichsLewyCondition
+        !RetryFlag = 0
         ! write(6,*) CourantFriedrichsLewyCondition
-    end if
+    !end if
 
     return
 end subroutine JPUOutput
