@@ -113,7 +113,7 @@ implicit none
             integer :: KindLimiter = 1 !1:Venkatakrishnan, 2(未実装)
         integer :: UseOverSet = 0
         integer :: TurbulenceModel = 0  !0:invicid flow, 1:Baldwin-Lomax(RANS)
-        integer :: UseSutherlandLaw = 0    !0:not use, 1:use
+        integer :: UseSutherlandLaw = 1    !0:not use, 1:use
         integer :: UseJobParallel = 0   ! 0:not use, 1:use
         double precision :: dAttackAngle    ! 迎角(JobParallel用)
         character(len=256) :: cGridName  ! mayuファイル名(JobParallel用)
