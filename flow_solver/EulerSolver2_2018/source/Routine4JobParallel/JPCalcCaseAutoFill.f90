@@ -37,8 +37,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                 i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
                 i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
             else
-                i12digit = mod(my_rank, 80) + 11
-                i34digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank),7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
+                i12digit = mod(UConf%my_rank, 80) + 11
+                i34digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank)/7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
             end if
             if(UConf%CalcEnv == 0) then
                 write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
