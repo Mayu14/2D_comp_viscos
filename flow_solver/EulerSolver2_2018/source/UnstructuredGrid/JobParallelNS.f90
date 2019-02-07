@@ -54,10 +54,10 @@ subroutine JobParallelNS(UConf)
 
             call UnstNS(iStep,UConf,UG,UCC,UCE)
 
-            !if(mod(iStep,OutputInterval) == 0) then
-                !iStep4Plot = iStep / OutputInterval
-                !call JPUOutput(UConf,UG,UCC,iStep4Plot)
-            !end if
+            if(mod(iStep,OutputInterval) == 0) then
+                iStep4Plot = iStep / OutputInterval
+                call JPUOutput(UConf,UG,UCC,iStep4Plot)
+            end if
 
             if(mod(iStep, CheckNaNInterval) == 0)then
                 if(DetailedReport > 2) write(6,*) "NaN Checking..."
