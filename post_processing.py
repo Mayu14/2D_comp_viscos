@@ -13,22 +13,21 @@ def main(online=False):
                 for i34 in range(12, 92, 4):
                     naca4 = str(i1).zfill(1) + str(i2).zfill(1) + str(i34).zfill(2)
                     for deg in range(min_angle, max_angle + delta_angle, delta_angle):
-                        save_data[count, 1] = float(naca4)
-                        save_data[count, 3] = float(deg)
-                        
-                        fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_AC.dat"
-                        if online:
-                            stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
-                            cd_cl = stdout.readlines()[0].split()
-                        else:
-                            with open(path + fname, "r") as f:
-                                cd_cl = f.readline().split()
-                        
-                        save_data[count, 4] = cd_cl[1]  # CL
-                        save_data[count, 5] = cd_cl[0]  # CD
-                        count += 1
-                print(save_data[:100, :])
-                exit()
+                        if(deg != 24):
+                            save_data[count, 1] = float(naca4)
+                            save_data[count, 3] = float(deg)
+                            
+                            fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_AC.dat"
+                            if online:
+                                stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
+                                cd_cl = stdout.readlines()[0].split()
+                            else:
+                                with open(path + fname, "r") as f:
+                                    cd_cl = f.readline().split()
+                            
+                            save_data[count, 4] = float(cd_cl[1])  # CL
+                            save_data[count, 5] = -float(cd_cl[0])  # CD
+                            count += 1
     
     save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\"
     number = 6  # data number per wing
@@ -42,7 +41,7 @@ def main(online=False):
     max_angle = 39  # [deg]
     min_angle = 0  # [deg]
     delta_angle = 3  # [deg]
-    angle_variation = int((max_angle - min_angle) / delta_angle) + 1
+    angle_variation = int((max_angle - min_angle) / delta_angle) + 1 - 1    # 24degは除く
     
     wing_valiation = 1620
     total_data = wing_valiation * angle_variation
@@ -61,7 +60,7 @@ def main(online=False):
         main_process(online)
         
     
-    save_fname = save_path + "NACA4\\s1122_e9988_s4_a" + str(angle_variation).zfill(3) + ".csv"
+    save_fname = save_path + "s1122_e9988_s4_a" + str(angle_variation).zfill(3) + ".csv"
     np.savetxt(save_fname, save_data, delimiter = ",")
     
 def cdcl_plot_test():
