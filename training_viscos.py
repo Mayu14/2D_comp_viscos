@@ -124,7 +124,8 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 model = Sequential()
                 if case_type == 3:
                     # ここ書き換えポイント
-                    X_train, y_train = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, skip_angle = s_skiptype)
+                    
+                    X_train, y_train = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0)
                     if validate:
                         x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd=s_odd, read_rate = rr)
 
@@ -211,18 +212,15 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
 if __name__ == '__main__':
     # env_in = input("Please set envirionment: 0:Lab, 1:Colab")
-    env_in = str(0)
-    if env_in == str(0):
+    env_in = os.name
+    if env_in == "nt":
         env = "Lab"
-    elif env_in == str(1):
-        env = "Colab"
     else:
-        print("env_error")
-        exit()
+        env = "Colab"
 
     # shape_type = input("please set shape_type: 0:fourier, 1:equidistant, 2:dense")
     # for i in range(3):
-    shape_type = str(2)
+    shape_type = str(0)
     fname_lift_train = "NACA4\\s1122_e9988_s4_a013.csv"
     fname_lift_test = "NACA5\\s21001_e25199_a040.csv"
 
