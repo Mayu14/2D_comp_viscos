@@ -26,14 +26,20 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: access
     character(len=256) :: cDirectory,cFileName, cCaseName
     character(len=256) :: cStep
+    integer :: naca4digit = 1
 
     if(UConf%UseJobParallel == 1) then
     !PETET = 0 ~ 1619を仮定
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
             ! do i34digit = 1, 40
-            i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
-            i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
+            if(naca4digit == 1)  then
+                i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
+                i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
+            else
+                !i12digit =
+                !i34digit =
+            end if
             if(UConf%CalcEnv == 0) then
                 write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
             else if(UConf%CalcEnv == 1) then
