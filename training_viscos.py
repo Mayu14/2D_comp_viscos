@@ -11,8 +11,8 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from read_training_data import read_csv_type3
-from scatter_plot import make_scatter_plot
+from read_training_data_viscos import read_csv_type3
+#from scatter_plot import make_scatter_plot
 
 def batch_iter(data, labels, batch_size, shuffle=True):
     num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
@@ -80,7 +80,7 @@ def get_case_number_beta(case_number, rr, sr, skiptype, shape_data=200, total_da
 
     return head + "_" + mid1 + "_" + mid2 + "_" + tail
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab"):
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True):
     r_rate = [1, 2, 4, 8]
     s_rate = [2, 4, 8]
     # s_skiptype = [True, False]
@@ -102,7 +102,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             old_session = KTF.get_session()
 
             with tf.Graph().as_default():
-                source = "Incompressible_Invicid\\training_data\\"
+                source = "Compressible_Invicid\\training_data\\"
                 if env == "Lab":
                     source = "G:\\Toyota\\Data\\" + source
                     # case_num = get_case_number(source, env, case_number)
@@ -123,8 +123,10 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
                 model = Sequential()
                 if case_type == 3:
+                    # ここ書き換えポイント
                     X_train, y_train = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, skip_angle = s_skiptype)
-                    x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd=s_odd, read_rate = rr)
+                    if validate:
+                        x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd=s_odd, read_rate = rr)
 
                 input_vector_dim = X_train.shape[1]
                 with tf.name_scope("inference") as scope:
@@ -153,7 +155,8 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     # model.add(Dense(units=half, activation='relu'))
                     # model.add(Dropout(0.5))
                     """
-                    model.add(Dense(units=1))
+                    # ここ書き換えポイント
+                    model.add(Dense(units=2))
 
                 model.summary()
 
@@ -166,7 +169,8 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
                 batch_size = 500
                 train_steps, train_batches = batch_iter(X_train, y_train, batch_size)
-                valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
+                if validate:
+                    valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                 #"""
                 model.fit(x=X_train, y=y_train,
                           batch_size=600, nb_epoch=1000,
@@ -182,6 +186,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 # X_train: [number, angle, shape001, shape002, ..., shapeMAX]
                 # y_train: [number, lift]
                 # 適当に中央付近の翼を抜き出しての-40-38degreeをプロットさせてみる
+                """
                 tekito = 1306 * 40  # NACA2613 or NACA2615
                 plt.figure()
                 plt.plot(X_train[tekito:tekito+40, 0], y_train[tekito:tekito+40])
@@ -196,7 +201,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 plt.savefig(source + case_num + "_test.png")
                 
                 make_scatter_plot(y_test, y_predict, "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Incompressible_Invicid\\fig\\", fname=case_num)
-
+                """
 
             json_string = model.to_json()
             open(source + json_name, 'w').write(json_string)
@@ -218,11 +223,11 @@ if __name__ == '__main__':
     # shape_type = input("please set shape_type: 0:fourier, 1:equidistant, 2:dense")
     # for i in range(3):
     shape_type = str(2)
-    fname_lift_train = "NACA4\\s0000_e5000_a040_odd.csv"
+    fname_lift_train = "NACA4\\s1122_e9988_s4_a013.csv"
     fname_lift_test = "NACA5\\s21001_e25199_a040.csv"
 
     if shape_type == str(0):
-        fname_shape_train = "NACA4\\shape_fourier_5000_odd.csv"
+        fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
         fname_shape_test = "NACA5\\shape_fourier_all.csv"
         case_number = 0
 
@@ -245,4 +250,4 @@ if __name__ == '__main__':
         fname_lift_test = fname_lift_test.replace("\\", "/")
         fname_shape_test = fname_shape_test.replace("\\", "/")
 
-    main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env)
+    main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env, validate=False)
