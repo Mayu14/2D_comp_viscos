@@ -96,16 +96,16 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             !do i2digit = 9, 1, -1
                 !do i34digit = 88, 12, -4
                 UConf%CalcEnv = 0
-                i1digit = 3
-                i2digit = 9
-                i34digit = 36
+                i1digit = 1
+                i2digit = 1
+                i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
                     !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 36
+                        iAngleDeg = 10
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
@@ -121,6 +121,14 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         else if(debug == 2) then
                             write(UConf%cGridName, '("NACA0012_fine_rev2.mayu")')
                             write(UConf%cFileName, '("NACA0012_fine_rev2_", i2.2)') iAngleDeg
+                        else if(debug == 4) then
+                            write(UConf%cGridName, '("mirror_Square_Half_fine_rev2.mayu")')
+                            if(UConf%UseFluxMethod == 0) then
+                                write(UConf%cFileName, '("ST_rev2_Roe")')
+                            else if(UConf%UseFluxMethod == 1) then
+                                write(UConf%cFileName, '("ST_rev2_SLAU2")')
+                            end if
+
                         end if
 
                         CourantFriedrichsLewyCondition = CFL_default

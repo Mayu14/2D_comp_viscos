@@ -7,21 +7,21 @@ Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 21 計算を再開する際の計算ステップ:ResumeNumber
 0 データから境界条件読み出し:UseReadBoundaryCond
 1 各時間段階ごとにCFL条件を満たす最大の時間刻み幅を用いる:UseVariableTimeWidth
-0 0:非定常計算，1:定常計算(UseSteadyCalcによる収束判定実施の有無)
+1 0:非定常計算，1:定常計算(UseSteadyCalcによる収束判定実施の有無)
 1 局所時間刻みを使用:UseLocalTimeStep 
 0 2段階有理ルンゲクッタ法による時間2次精度計算:UseRRK2
 1 MUSCLによる空間2次精度計算:UseMUSCL
 1 勾配制限関数の種類(1:Venkatakrishnanの制限関数，2:(未実装))
 1 重合格子法の利用
-0.01 最大時間刻み幅
-10 出力間隔
-25000 反復回数	
+0.001 最大時間刻み幅
+5000 出力間隔
+50000 反復回数	
 0 使用する重合格子の数(グローバル格子を除いたローカル格子の総数)
 0.5 影響域余裕k(影響域の大きさをk倍に見積もる)
 0.3 エントロピー補正量
 0.3 Venkatakrishnanの振動許容量
 0.3 クーラン数
-1	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
+0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
 50000 レイノルズ数
-1	非粘性流束評価	!0:Roe, 1:SLAU2
+0	非粘性流束評価	!0:Roe, 1:SLAU2
 8	収束条件	! ave(ΔQij)<10^(-x)で指定

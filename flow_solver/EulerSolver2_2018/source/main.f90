@@ -50,7 +50,7 @@ program EulerEQ1D
     !iSwitch = 3
     !write(6,*) "Please input use CPU number."
     !read(5,*) CoreNumberOfCPU
-    CoreNumberOfCPU = 80
+    CoreNumberOfCPU = 16
 
     if(Conf%SwitchProgram == 0) then
         call StructEulerEQ(Conf)
@@ -615,7 +615,7 @@ contains
         end do
 
         call UOutput(UConf,UG,UCC,iStep)
-        call UOutput_Characteristics(UConf, UG, UAC)
+        call UOutput_Characteristics(UConf, UG, UAC, 0)
     return
     end subroutine SteadUnstructEuler
 

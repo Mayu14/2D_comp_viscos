@@ -21,6 +21,8 @@ subroutine ReadConfigulation(Conf, my_rank)
     integer :: tolerance_exp
     logical :: debug = .false.
 
+    call make_logfile_name(Conf%cLogName)
+
     open(unit=my_rank+100, file='CalcConfig',status='unknown')
         read(my_rank+100,*) cAnnotate
         read(my_rank+100,*) Conf%SwitchProgram, cAnnotate
@@ -101,6 +103,17 @@ contains
 
         return
     end subroutine Show_Configulation
+
+    subroutine make_logfile_name(fname)
+        character(len=256), intent(inout) :: fname
+        integer :: datetime(8)
+        character(len=10) :: sys_time(3)
+
+        call date_and_time(sys_time(1), sys_time(2), sys_time(3), datetime)
+
+        fname = "CalcLog_"//trim(adjustl(sys_time(1)))//"_"//trim(adjustl(sys_time(2)))//".txt"
+        return
+    end subroutine make_logfile_name
 
 end subroutine ReadConfigulation
 

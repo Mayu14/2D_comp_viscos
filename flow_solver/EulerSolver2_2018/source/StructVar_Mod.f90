@@ -119,6 +119,7 @@ implicit none
         character(len=256) :: cGridName  ! mayuファイル名(JobParallel用)
         character(len=256) :: cFileName  ! 出力vtk名(JobParallel用)
         character(len=256) :: cDirectory = ""   ! 出力先フルパス
+        character(len=256) :: cLogName = "" ! 計算ログファイル名
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
         integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer

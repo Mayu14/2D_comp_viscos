@@ -196,7 +196,6 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num, "(f22.14)") sqrt(UCC%PrimitiveVariable(1,iCell,1,1) / (gamma*UCC%PrimitiveVariable(5,iCell,1,1)) &
                                         &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
         end do
-    close(iUnit_num)
 
     if(debug == 1) then
         write(iUnit_num,"('SCALARS TimeStep float')")
@@ -213,7 +212,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         end do
 
     end if
-
+    close(iUnit_num)
     !if(RetryFlag == 0) then
         !UCC%PastQuantity = UCC%ConservedQuantity
     !else
