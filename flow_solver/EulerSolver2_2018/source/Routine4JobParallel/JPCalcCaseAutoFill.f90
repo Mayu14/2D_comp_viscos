@@ -36,24 +36,33 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             if(naca4digit == 1)  then
                 i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
                 i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
+                if(UConf%CalcEnv == 0) then
+                    write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
+                else if(UConf%CalcEnv == 1) then
+                    write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
+                end if
             else
-                i12digit = mod(my_rank, 80) + 11
-                i34digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank),7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
+                i12digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank),7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
+                i34digit = mod(my_rank, 80) + 11
+                if(UConf%CalcEnv == 0) then
+                    write(UConf%cGridName, '("NACA", i3.3, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
+                else if(UConf%CalcEnv == 1) then
+                    write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i3.3, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
+                end if
             end if
-            if(UConf%CalcEnv == 0) then
-                write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
-            else if(UConf%CalcEnv == 1) then
-                write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 東北大スパコン用
-            end if
+
             !write(6,*) UConf%my_rank ,UConf%cGridName, i34digit
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
                 do iAngleDeg = 39, 0, -3
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
+                    if(naca4digit == 1) then
+                        write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
+                    else
+                        write(UConf%cFileName, '("NACA", i3.3, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
+                    end if
                     if(UConf%CalcEnv == 0) then
-                        write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
                         write(UConf%cDirectory, '("")')
                     else if(UConf%CalcEnv == 1) then
-                        write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg ! 東北大スパコン用
                         write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case3/")')
                     end if
 
