@@ -65,6 +65,8 @@ def main(online=False):
     
 def cdcl_plot_test():
     path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\test_NACA0012\\"
+    path = "G:\\Toyota\\Data\\Case3\\"
+
     for i in range(1800):
         i12digit = 0 #i % 100
         i34digit = 12 #5 * int(i / 100.0) + 11
@@ -75,7 +77,7 @@ def cdcl_plot_test():
             deg = int(angle / 3) + 1
 
             # fname = "NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + "_AC.dat"
-            fname = "NACA0012_fine_rev2_" + str(angle).zfill(2) + "_AC.dat"
+            fname = "NACA1112_" + str(angle).zfill(2) + "_AC.dat"
             
             if os.path.exists(path + fname):
                 # print(fname + " " + str(os.path.exists(path + fname)))
@@ -101,34 +103,34 @@ def cdcl_plot_test():
         
         # t = np.linspace(0, 39, 14)
         t = np.linspace(-3, 39, 15)
-        plt.plot(t, char_angle[:, 0], "x")
-        plt.plot(t, char_angle[:, 1], "o")
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        ax.set_title("NACA0012 Fine-Grid " + r'$C_D$' + " & " + r'$C_L$' + " vs Angle of Attack")
-        ax.plot(t, char_angle[:, 0], "x", label="Drag Coefficient: Re=5 mill. Ma=0.7")
-        ax.plot(t, char_angle[:, 1], "o", label="Lift Coefficient: Re=5 mill. Ma=0.7")
+        ax.set_title("NACA1112 Course-Grid "+r'$C_D$'+" and "+r'$C_L$'+" vs Angle of Attack")
+        ax.plot(t, char_angle[:, 0], "x", label="Drag Coefficient: Ma=0.7")
+        ax.plot(t, char_angle[:, 1], "o", label="Lift Coefficient: Ma=0.7")
         ax.legend()
         ax.set_xlabel(r"Angle of Attack [deg]")
-        ax.set_ylabel(r"$C_D$" + " & " + r"$C_L$")
+        ax.set_ylabel(r"$C_D$"+" and "+r"$C_L$")
         ax.grid()
+        ax.legend()
         ax.set_xlim(-3.0, 39.0)
-        ax.set_ylim(-0.5, 1.5)
+        ax.set_ylim(-0.25, 1.75)
         plt.show()
 
-        plt.show()
         exit()
         
 
 def cp_plot_test():
     path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\test_NACA0012\\"
+    path = "G:\\Toyota\\Data\\Case3\\"
     # fname = "CP_NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + ".dat"
-    fname = "CP_NACA0012_fine_rev2_" + str(angle).zfill(2) + ".dat"
+    angle = 9
+    fname = "CP_NACA1112_" + str(angle).zfill(2) + ".dat"
     char_angle = np.zeros((9, 2))
     i12digit = 00
     i34digit = 12
     # for angle in range(-3, 42, 3):
-    angle = 10
+    
     
     coord = np.zeros(5000, dtype = float)
     pressure = np.zeros(5000, dtype = float)
@@ -151,8 +153,8 @@ def cp_plot_test():
         alpha = r'$\alpha$'
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        ax.set_title("NACA0012 Fine-Grid " + alpha + " = 10 deg")
-        ax.plot(coord[:number], pressure[:number], ".", label="Toyota. Re=5 mill. Ma=0.7")
+        ax.set_title("NACA1112 Course-Grid " + alpha + " = " + str(angle) +" deg")
+        ax.plot(coord[:number], pressure[:number], ".", label="Toyota. Ma=0.7")
         ax.legend()
         ax.set_xlabel(r"$\frac{x}{c}$")
         ax.set_ylabel(r"$C_P$")
@@ -163,8 +165,8 @@ def cp_plot_test():
 
 
 if __name__ == '__main__':
-    main()
-    # rc('text', usetex=True)
-    # cp_plot_test()
+    # main()
+    rc('text', usetex=True)
+    cp_plot_test()
     # cdcl_plot_test()
     
