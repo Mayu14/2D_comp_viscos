@@ -1,11 +1,13 @@
-subroutine UOutput_Characteristics(UConf, UG, UAC)
+subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
     use StructVar_Mod
     implicit none
     type(Configulation), intent(in) :: UConf
     type(UnstructuredGrid), intent(in) :: UG
     type(AeroCharacteristics), intent(in) :: UAC
-    character(len=256) :: cDirectory,cFileName, cCaseName, cUFileName
+    integer, intent(in) :: iStep
+    character(len=256) :: cDirectory,cFileName, cCaseName, cUFileName, cStep
     integer :: iTime, iMaxTime, iWall, debug = 0
+
 
     if(debug == 1) then
         cUFileName = "test_NACA0012_course"
@@ -14,7 +16,12 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
     end if
 
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
+    write(cStep, *) iStep
+    if(iStep == 0) then
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
+    else
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//trim(adjustl(cStep))//"th_AC.dat"
+    end if
     iMaxTime = ubound(UAC%coefficient, 2)
 
     open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
@@ -23,7 +30,11 @@ subroutine UOutput_Characteristics(UConf, UG, UAC)
         end do
     close(UConf%my_rank+100)
 
-    cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//".dat"
+    if(iStep == 0) then
+        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//".dat"
+    else
+        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//trim(adjustl(cStep))//"th.dat"
+    end if
 
     open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
         !do iTime = 1, iMaxTime

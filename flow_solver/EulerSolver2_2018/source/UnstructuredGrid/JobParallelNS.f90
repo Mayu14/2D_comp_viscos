@@ -19,7 +19,7 @@ subroutine JobParallelNS(UConf)
     type(CellCenter) :: UCC
     type(CellEdge) :: UCE
     type(UnstructuredGrid) :: UG
-    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot, iCalcStep !時間分割
+    integer :: iStep, iStartStep, iLoop, iSplit, iStep4Plot, iCalcStep, iTry !時間分割
     integer :: iAccel = 1
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
@@ -43,9 +43,10 @@ subroutine JobParallelNS(UConf)
 
     call CheckNaN(UConf, UCC)   !
 
-    !do while (UCC%iEndFlag < 2)
+    do iTry = 1, 100
+        !call JPUOutput(UConf,UG,UCC,0)  ! debug
         iStartStep = 1
-        do iStep = iStartStep, IterationNumber
+        do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
             if(DetailedReport > 2) then
                 if(mod(IterationNumber, 10) == 0) then
                     write(6,*) iStep, "/", IterationNumber, " th iteration"
@@ -68,38 +69,39 @@ subroutine JobParallelNS(UConf)
         end do
     !end do
 
-    UCC%iEndFlag = 3
+        UCC%iEndFlag = 3
 
-    if(UConf%SwitchProgram /= 7) then
-        call JPUOutput(UConf,UG,UCC,0)
-    end if
+        if(UConf%SwitchProgram /= 7) then
+            call JPUOutput(UConf,UG,UCC,0)
+        end if
 
-    if (UCC%iEndFlag == 2) then
-        iCalcStep = 100
-    else if(UCC%iEndFlag == 3) then
-        iCalcStep = 1
-    end if
+        if (UCC%iEndFlag == 2) then
+            iCalcStep = 100
+        else if(UCC%iEndFlag == 3) then
+            iCalcStep = 1
+        end if
 
-    allocate(UAC%coefficient(2, iCalcStep))
-    allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
+        allocate(UAC%coefficient(2, iCalcStep))
+        allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
 
-    !UConf%UseLocalTimeStep = 0
-    !UConf%UseSteadyCalc = 0
-    if(UCC%iEndFlag == 2) then
-        do iStep4Plot = 1, iCalcStep
-            call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
-            call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
-        end do
+        !UConf%UseLocalTimeStep = 0
+        !UConf%UseSteadyCalc = 0
+        if(UCC%iEndFlag == 2) then
+            do iStep4Plot = 1, iCalcStep
+                call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
+                call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
+            end do
 
-    else if(UCC%iEndFlag == 3) then
-        call UCalcAeroCharacteristics(UConf, UCC, UG, iCalcStep, UAC)
-    end if
+        else if(UCC%iEndFlag == 3) then
+            call UCalcAeroCharacteristics(UConf, UCC, UG, iCalcStep, UAC)  ! debug
+        end if
 
-    !call JPUOutput(UConf,UG,UCC,iCalcStep)
-    call UOutput_Characteristics(UConf, UG, UAC)
-
-    !UConf%UseLocalTimeStep = 1
-    !UConf%UseSteadyCalc = 1
+        !call JPUOutput(UConf,UG,UCC,iCalcStep)
+        call UOutput_Characteristics(UConf, UG, UAC, iTry)   ! debug
+        deallocate(UAC%coefficient, UAC%pressure_coefficient)   ! debug
+        !UConf%UseLocalTimeStep = 1
+        !UConf%UseSteadyCalc = 1
+    end do
 
     return
 contains
