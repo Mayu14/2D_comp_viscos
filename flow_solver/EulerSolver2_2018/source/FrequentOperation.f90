@@ -23,6 +23,7 @@ public GetEdgeIntersectionCoordsWithTriangle
 public AbsVector
 public CheckBackOrFront
 public GetLengthBetweenEdge
+public SaveLog
 
 contains
     subroutine CrossProduct(A,B,C) !外積計算
@@ -320,6 +321,21 @@ contains
             BackLength = AbsVector(UG%GM%Width(iBackCell, UG%Line%Cell(iEdge,2,2), :))
         return
     end subroutine GetLengthBetweenEdge
+
+    subroutine SaveLog(logMessage, UConf)
+        use StructVar_Mod
+        implicit none
+        character(len=256), intent(in) :: logMessage
+        type(Configulation), intent(in) :: UConf
+
+        open(9999, file=UConf%cLogName, status="unknown", position="append")
+            write(9999,*) trim(adjustl(logMessage))
+        close(9999)
+
+        return
+    end subroutine SaveLog
+
+    end subroutine
 
 end module FrequentOperation
 
