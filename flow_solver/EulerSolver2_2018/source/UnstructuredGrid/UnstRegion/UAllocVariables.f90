@@ -13,6 +13,7 @@
 !***********************************/
     subroutine UAllocVariables(UConf,UG,UCC,UCE)
     use StructVar_Mod
+    use ConstantVar_Mod
     use LoopVar_Mod
     implicit none
     type(Configulation) :: UConf
@@ -125,6 +126,14 @@
             allocate(UCC%debug(UG%GI%AllCells, 1))
             UCC%debug = 0.0d0
         !end if
+
+        if(UConf%UseSteadyCalc == 1) then
+            UCC%RH%iTime = 1
+            allocate(UCC%RH%MaxResidual(5+1, IterationNumber))
+            allocate(UCC%RH%AveResidual(5+1, IterationNumber))
+            UCC%RH%MaxResidual = 0.0d0
+            UCC%RH%AveResidual = 0.0d0
+        end if
 
         return
     end subroutine UAllocVariables

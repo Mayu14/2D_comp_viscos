@@ -66,14 +66,28 @@ implicit none
             UCC%ConservedQuantity(:,iCell,1,1) = UCC%ConservedQuantity(:,iCell,1,1) + DeltaQuantity
 
             !RMS
-            if(UCC%ConvergeCondition == 0) then
-                Residual = Residual + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
+            UCC%RH%AveResidual(1:5, UCC%RH%iTime) = UCC%RH%AveResidual(1:5, UCC%RH%iTime) + abs(DeltaQuantity)
+            UCC%RH%AveResidual(6, UCC%RH%iTime) = UCC%RH%AveResidual(6, UCC%RH%iTime) + 0.25d0*dot_product(DeltaQuantity,DeltaQuantity)
+
             !Max Residual
-            else if(UCC%ConvergeCondition == 1) then
-                Residual = max(Residual, abs(dot_product(DeltaQuantity,DeltaQuantity)))
-            end if
+            UCC%RH%MaxResidual(1, UCC%RH%iTime) = max(UCC%RH%AveResidual(1, UCC%RH%iTime), abs(DeltaQuantity(1)))
+            UCC%RH%MaxResidual(2, UCC%RH%iTime) = max(UCC%RH%AveResidual(2, UCC%RH%iTime), abs(DeltaQuantity(2)))
+            UCC%RH%MaxResidual(3, UCC%RH%iTime) = max(UCC%RH%AveResidual(3, UCC%RH%iTime), abs(DeltaQuantity(3)))
+            UCC%RH%MaxResidual(4, UCC%RH%iTime) = max(UCC%RH%AveResidual(4, UCC%RH%iTime), abs(DeltaQuantity(4)))
+            UCC%RH%MaxResidual(5, UCC%RH%iTime) = max(UCC%RH%AveResidual(5, UCC%RH%iTime), abs(DeltaQuantity(5)))
 
         end do
+
+        UCC%RH%AveResidual(:, UCC%RH%iTime) = UCC%RH%AveResidual(:, UCC%RH%iTime) / dble(UG%GI%RealCells)
+        UCC%RH%MaxResidual(6, UCC%RH%iTime) = maxval(UCC%RH%MaxResidual(1:5, UCC%RH%iTime))
+
+        if(UCC%ConvergeCondition == 0) then !RMS
+            Residual = UCC%RH%AveResidual(6, UCC%RH%iTime)
+        else if(UCC%ConvergeCondition == 1) then    !MAX
+            Residual = UCC%RH%MaxResidual(6, UCC%RH%iTime)
+        end if
+
+        UCC%RH%iTime = UCC%RH%iTime + 1
         !write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
         if(UCC%ConvergeCondition == 0) then
             Residual = sqrt(Residual/dble(UG%GI%RealCells))
