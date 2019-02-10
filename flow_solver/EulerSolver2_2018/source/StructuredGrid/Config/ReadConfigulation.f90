@@ -31,6 +31,7 @@ subroutine ReadConfigulation(Conf, my_rank)
         read(my_rank+100,*) Conf%ResumeFileName
         read(my_rank+100,*) Conf%ResumeFileFormat
         read(my_rank+100,*) Conf%ResumeNumber
+        read(my_rank+100,*) Conf%cCaseName
         read(my_rank+100,*) Conf%UseReadBoundaryCond,cAnnotate
         read(my_rank+100,*) Conf%UseVariableTime,cAnnotate
         read(my_rank+100,*) Conf%UseSteadyCalc,cAnnotate
@@ -53,6 +54,7 @@ subroutine ReadConfigulation(Conf, my_rank)
         read(my_rank+100,*) tolerance_exp, cAnnotate
     close(my_rank+100)
 
+    if(trim(adjustl(Conf%cCaseName)) == "null") Conf%cCaseName = ""
     if(Conf%TurbulenceModel /= 0) invicid = .false.
     if(Conf%UseRRK2 == 1) IterationNumber = 2*IterationNumber
     DefaultTimeStep = FixedTimeStep

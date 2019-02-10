@@ -16,7 +16,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
 
     write(cStep,*) iStep
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/")) !UConf%SaveDirectiry
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(UConf%cCaseName))//"_"//trim(adjustl(cStep))//"th.vtk"
 
     cCaseName = "UnstructuredShockTube" !UConf%CaseName
     iUnit_num = UConf%my_rank + 100
