@@ -121,11 +121,11 @@ def cdcl_plot_test():
         
 
 def cp_plot_test():
-    path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\test_NACA0012\\"
-    path = "G:\\Toyota\\Data\\Case3\\"
+    path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\ResultC\\"
+    # path = "G:\\Toyota\\Data\\Case3\\"
     # fname = "CP_NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + ".dat"
-    angle = 9
-    fname = "CP_NACA1112_" + str(angle).zfill(2) + ".dat"
+    angle = 15
+    fname = "CP_NACA0012_" + str(angle).zfill(2) + ".dat"
     char_angle = np.zeros((9, 2))
     i12digit = 00
     i34digit = 12
