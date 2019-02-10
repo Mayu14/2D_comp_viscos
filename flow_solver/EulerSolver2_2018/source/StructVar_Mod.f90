@@ -15,6 +15,13 @@ module StructVar_Mod
 implicit none
 !COMMON StructuredVariable
 !__________________________________________________________
+    type ResidualHistory
+        integer :: iTime = 1
+        integer :: iLastOutput = 1
+        double precision, allocatable :: MaxResidual(:, :) !1~5:variable+6:Mix
+        double precision, allocatable :: AveResidual(:, :) !1~5:variable+6:Mix
+    end type
+
     type CellCenter !セル中心(Center)にて定義される量
         double precision, allocatable :: ConservedQuantity(:,:,:,:) !保存変数(密度，運動量，全エネルギー)(非構造：変数番号，要素番号,1,1)(構造：変数番号，x,y,z)
         double precision, allocatable :: PreviousQuantity(:,:,:,:)  !時間積分処理に入る前の保存変数
@@ -44,6 +51,7 @@ implicit none
         double precision, allocatable :: InterpolatedQuantity(:,:,:,:) !補間したあとの保存変数(入れ方は一緒)
         integer :: iEndFlag !定常流計算を打ち切る判定
         integer :: ConvergeCondition = 1    ! 0:RMS, 1:Max
+        type(ResidualHistory) :: RH
 
         double precision, allocatable :: debug(:, :)  ! debug
     end type
@@ -120,6 +128,7 @@ implicit none
         character(len=256) :: cFileName  ! 出力vtk名(JobParallel用)
         character(len=256) :: cDirectory = ""   ! 出力先フルパス
         character(len=256) :: cLogName = "" ! 計算ログファイル名
+        character(len=256) :: cCaseName = ""    ! 計算ケース名
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
         integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer

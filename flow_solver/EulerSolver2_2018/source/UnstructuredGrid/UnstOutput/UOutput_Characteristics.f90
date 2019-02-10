@@ -18,9 +18,9 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
     write(cStep, *) iStep
     if(iStep == 0) then
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_AC.dat"
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//"_AC.dat"
     else
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//trim(adjustl(cStep))//"th_AC.dat"
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th_AC.dat"
     end if
     iMaxTime = ubound(UAC%coefficient, 2)
 
@@ -31,9 +31,9 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
     close(UConf%my_rank+100)
 
     if(iStep == 0) then
-        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//".dat"
+        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//".dat"
     else
-        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//trim(adjustl(cStep))//"th.dat"
+        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th.dat"
     end if
 
     open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')

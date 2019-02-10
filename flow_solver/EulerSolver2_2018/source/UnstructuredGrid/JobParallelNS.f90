@@ -43,10 +43,11 @@ subroutine JobParallelNS(UConf)
 
     call CheckNaN(UConf, UCC)   !
 
-    do iTry = 1, 100
+    !do iTry = 1, 100
         !call JPUOutput(UConf,UG,UCC,0)  ! debug
         iStartStep = 1
-        do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
+        !do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
+        do iStep = iStartStep, IterationNumber
             if(DetailedReport > 2) then
                 if(mod(IterationNumber, 10) == 0) then
                     write(6,*) iStep, "/", IterationNumber, " th iteration"
@@ -58,6 +59,7 @@ subroutine JobParallelNS(UConf)
             if(mod(iStep,OutputInterval) == 0) then
                 iStep4Plot = iStep / OutputInterval
                 call JPUOutput(UConf,UG,UCC,iStep4Plot)
+                if(UConf%UseSteadyCalc == 1) call UOutput_Residuals(UConf, UCC%RH)
             end if
 
             if(mod(iStep, CheckNaNInterval) == 0)then
@@ -65,7 +67,7 @@ subroutine JobParallelNS(UConf)
                 call CheckNaN(UConf, UCC)
             end if
 
-            if(UCC%iEndFlag > 1) exit
+            !if(UCC%iEndFlag > 1) exit
         end do
     !end do
 
@@ -101,7 +103,7 @@ subroutine JobParallelNS(UConf)
         deallocate(UAC%coefficient, UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
         !UConf%UseSteadyCalc = 1
-    end do
+    !end do
 
     return
 contains

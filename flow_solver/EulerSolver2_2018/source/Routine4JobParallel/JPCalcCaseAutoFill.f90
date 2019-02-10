@@ -96,8 +96,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             !do i2digit = 9, 1, -1
                 !do i34digit = 88, 12, -4
                 UConf%CalcEnv = 0
-                i1digit = 1
-                i2digit = 1
+                i1digit = 0
+                i2digit = 0
                 i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
@@ -105,7 +105,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
                     !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 10
+                        iAngleDeg = 15
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
@@ -136,14 +136,14 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         ! 出力先ファイルがないときのみ実行
                         write(cStep,*) 0
                         if(UConf%CalcEnv == 0) then
-                            cFileName = trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                            cFileName = trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl(UConf%cCaseName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         else if(UConf%CalcEnv == 1) then    ! 東北大スパコン用
-                            cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
+                            cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl(UConf%cCaseName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         end if
 
                         if(UConf%SwitchProgram /= 7) then
                             if(access(cFileName, " ") /= 0) then
-                                write(6,*) UConf%cFileName
+                                write(6,*) trim(adjustl(UConf%cFileName))//"_"//trim(adjustl(UConf%cCaseName))
                                 call JobParallelNS(Uconf)
                             end if
                         else
