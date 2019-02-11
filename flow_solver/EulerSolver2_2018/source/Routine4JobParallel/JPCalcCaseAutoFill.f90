@@ -55,7 +55,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             end if
             !write(6,*) UConf%my_rank ,UConf%cGridName, i34digit
                 ! write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit
-                do iAngleDeg = 39, 0, -3
+                !do iAngleDeg = 39, 0, -3
+                iAngleDeg = 0
                     UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                     if(naca4digit == 1) then
                         write(UConf%cFileName, '("NACA", i2.2, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
@@ -65,7 +66,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cDirectory, '("")')
                     else if(UConf%CalcEnv == 1) then
-                        write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case3/")')
+                        write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case4/")')
                     end if
 
                     if(debug == 1) then
@@ -86,7 +87,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     CourantFriedrichsLewyCondition = CFL_default
                     CheckNaNInterval = CheckNaNInterval_default
                     call JobParallelNS(Uconf)
-                end do
+                !end do
             ! end do
         ! end do
     ! end do
@@ -112,7 +113,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                             write(UConf%cDirectory, '("")')
                         else if(UConf%CalcEnv == 1) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg ! 東北大スパコン用
-                            write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case3/")')
+                            write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case4/")')
                         end if
 
                         if(debug == 1) then
