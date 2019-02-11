@@ -3,6 +3,7 @@ import numpy as np
 import paramiko
 import matplotlib.pyplot as plt
 from matplotlib import rc
+import pandas as pd
 import os
 
 def main(online=False):
@@ -163,10 +164,27 @@ def cp_plot_test():
         plt.show()
             # exit()
 
+def plot_residual_graph():
+    path = "path"
+    fname = "fname"
+
+    name = ["TimeStep", "Ave:Density", "Ave:Momentum_X", "Ave:Momentum_Y", "Ave:Momentum_Z", "Ave:Energy", "Ave:Mix",
+            "Max:Density", "Max:Momentum_X","Max:Momentum_Y", "Max:Momentum_Z", "Max:Energy", "Max:Entire"]
+
+    d_type = {"TimeStep":"int8", "Ave:Density":"float16", "Ave:Momentum_X":"float16", "Ave:Momentum_Y":"float16",
+             "Ave:Momentum_Z":"float16", "Ave:Energy":"float16", "Ave:Mix":"float16", "Max:Density":"float16",
+              "Max:Momentum_X":"float16", "Max:Momentum_Y":"float16", "Max:Momentum_Z":"float16",
+              "Max:Energy":"float16", "Max:Entire":"float16"}
+
+    df = pd.read_csv(path + fname)
+
+    plt.plot(df)
+    data_total = df.shape[0]
+    df.plot()
 
 if __name__ == '__main__':
     # main()
-    rc('text', usetex=True)
-    cp_plot_test()
+    # rc('text', usetex=True)
+    # cp_plot_test()
     # cdcl_plot_test()
-    
+    plot_residual_graph()
