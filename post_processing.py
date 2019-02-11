@@ -167,7 +167,7 @@ def cp_plot_test():
 
 def plot_residual_graph():
     path = "G:\\Toyota\\Data\\Compressible_Invicid\\solver_validation\\NACA0012\\M015_15deg_compare\\ResultR\\"
-    fname = "RES_NACA0012_15_M015_SLAU2_Non-LTS_CFL95.csv"
+    fname = "RES_NACA0012_15_M015_Roe_LTS_CFL95.csv"
 
     name = ["TimeStep", "Ave:Density", "Ave:Momentum_X", "Ave:Momentum_Y", "Ave:Momentum_Z", "Ave:Energy", "Ave:Mix",
             "Max:Density", "Max:Momentum_X","Max:Momentum_Y", "Max:Momentum_Z", "Max:Energy", "Max:Entire"]
@@ -183,7 +183,7 @@ def plot_residual_graph():
 
 
     angle = 15
-    case_name = "Residual History of NACA0012 Fine-Grid\n" + r'$\alpha$' + " = " + str(angle) + " deg, Ma = 0.15 with SLAU2"
+    case_name = "Residual History of NACA0012 Fine-Grid\n" + r'$\alpha$' + " = " + str(angle) + " deg, Ma = 0.15 with Roe + LTS"
     timestep = np.arange(data_total)
     
     def make_subplot(locate=1, data_label="Max:Density"):
@@ -200,6 +200,18 @@ def plot_residual_graph():
 
     fig = plt.figure()
     fig.suptitle(case_name)
+    
+    ax = fig.add_subplot(1,1,1)
+    data_label = "Max:Entire"
+    #ax.set_yscale("log")
+    ax.set_title(data_label)
+    ax.plot(timestep[75000:], df[data_label][75000:], ".", label = data_label)
+    ax.legend()
+    ax.set_xlabel(r"$Time Step$")
+    ax.set_ylabel(r"$Error$")
+    ax.grid()
+    plt.tight_layout()
+    plt.show()
     
     make_subplot()
     make_subplot(2, "Max:Momentum_X")

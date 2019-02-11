@@ -334,8 +334,5 @@ contains
 
         return
     end subroutine SaveLog
-
-    end subroutine
-
 end module FrequentOperation
 

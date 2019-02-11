@@ -104,8 +104,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     else if(UConf%CalcEnv == 1) then
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
-                    !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 15
+                    do iAngleDeg = 39, 0, -3
+                        !iAngleDeg = 15
                         UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         if(UConf%CalcEnv == 0) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg
@@ -149,7 +149,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         else
                             call JobParallelNS(UConf)
                         end if
-                    !end do
+                    end do
                 !end do
             !end do
         !end do
