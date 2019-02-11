@@ -1,5 +1,6 @@
 # coding: utf-8
 import numpy as np
+from scipy import interpolate
 import matplotlib.pyplot as plt
 
 class polygon(object):
@@ -11,6 +12,9 @@ class polygon(object):
 
         self.threshold = threshold
         self.resolution = resolution
+
+        self.radius = 0.5
+        self.center = 0.5 * (1 + 1j)
 
         if regular:
             self.header = "polygon_regular_"
@@ -36,67 +40,68 @@ class polygon(object):
             self.perimeter += np.sqrt(np.sum((self.vertex[i + 1] - self.vertex[i]) ** 2))
 
     def set_regular_polygon(self):
-        self.vertex = np.exp(1j * np.linspace(start = 0, stop = 2.0 * np.pi, num = self.num_vertex + 1))[1:]
+        self.vertex = self.radius * np.exp(1j * np.linspace(start = 0, stop = 2.0 * np.pi, num = self.num_vertex + 1))[1:] + self.center
         # self.sample_plot()
 
     def set_star_polygon(self):
-        outer_vertex = np.exp(1j * np.linspace(start=0, stop=2.0 * np.pi, num=self.num_vertex + 1)).reshape(1, -1)
+        outer_vertex = self.radius * np.exp(1j * np.linspace(start=0, stop=2.0 * np.pi, num=self.num_vertex + 1)).reshape(1, -1) + self.center
         phase_differnce = 2.0 * np.pi / (2.0 * self.num_vertex)
-        inner_vertex = self.inner_diameter * np.exp(1j * np.linspace(start=0 - phase_differnce, stop=2.0 * np.pi - phase_differnce, num=self.num_vertex + 1)).reshape(1, -1)
+        inner_vertex = self.radius * self.inner_diameter * np.exp(1j * np.linspace(start=0 - phase_differnce, stop=2.0 * np.pi - phase_differnce, num=self.num_vertex + 1)).reshape(1, -1) + self.center
         self.vertex = np.concatenate((inner_vertex, outer_vertex)).T.reshape(-1)[2:]
+        self.num_vertex = self.vertex.shape[0]
         # self.sample_plot()
 
     def make_edge(self):
-        # 辺のy両端の複素座標から傾きと切片求める
-        def get_a_and_b(z1, z2):
-            if abs(np.real(z2) - np.real(z1)) < self.threshold:
-                a = np.inf  # 直線がy軸と並行
-            else:
-                a = (np.imag(z2) - np.imag(z1)) / (np.real(z2) - np.real(z1))
+        trail = np.argmax(np.real(self.vertex)) # 後方
+        lead = np.argmin(np.real(self.vertex))  # 前方
 
-            if a != np.inf:
-                b = np.imag(z1) - a * np.real(z1)
-            else:
-                b = 0
-            return a, b
+        # 上側と下側とを分離(ここまでの処理で反時計回りに格納されていることに注意)
+        vertex_u = []
+        vertex_l = []
 
-        self.num_edge = self.vertex.shape[0]    # 植木算
-        self.edge_param = np.zeros((self.num_edge, 2))    # 傾き + 切片
-
-        self.edge_a = np.zeros(self.num_edge)
-        self.edge_b = np.zeros(self.num_edge)
-
-        for i in range(self.num_edge - 1):
-            self.edge_a[i], self.edge_b[i] = get_a_and_b(self.vertex[i], self.vertex[i + 1])
-
-        i = self.num_edge - 1
-        self.edge_a[i], self.edge_b[i] = get_a_and_b(self.vertex[i], self.vertex[0])
-
-        # 上側と下側とを分離
-        self.edge_u = np.zeros(self.num_edge)
-        trail = np.argmax(np.real(self.vertex))
-        lead = np.argmin(np.real(self.vertex))
-
-        # ここ，リストに変更する
-        """
-        # 辺番号を座標が小さい順に格納する
-        upper -> lower -? upperのときは
-        upper:逆順に格納，2回目のupperは
-        lower:順番に格納
-        """
+        # 点番号を座標が小さい順に格納する
+        tmp_vertex = []
         if lead < trail:    # upper -> lower -> upperの順
-            for i in range(lead):
-                self.edge_u[i] = 1
-            for i in range(trail, self.num_edge):
-                self.edge_u[i] = 1
+            for i in range(lead + 1):   # leadまで含める
+                vertex_u.insert(0, i)
+            for i in range(lead, trail+1):  # trailまで含める
+                vertex_l.append(i)
+            for i in range(trail, self.num_vertex):
+                tmp_vertex.insert(0, i)
+            vertex_u.extend(tmp_vertex)
 
         else:   # lower -> upper -> lowerの順
-            for i in range(trail, lead):
-                self.edge_u[i] = 1
+            for i in range(trail+1):    # trailまで含める
+                tmp_vertex.append(i)
+            for i in range(trail, lead+1):
+                vertex_u.insert(0, i)
+            for i in range(lead, self.num_vertex):
+                vertex_l.append(i)
+            vertex_l.extend(tmp_vertex)
+
+        self.z_l = np.zeros(len(vertex_l), dtype=complex)
+        self.z_u = np.zeros(len(vertex_l), dtype=complex)
+        i = 0
+        for p_num_u in vertex_u:
+            self.z_u[i] = self.vertex[p_num_u]
+            i += 1
+
+        i = 0
+        for p_num_l in vertex_l:
+            self.z_l[i] = self.vertex[p_num_l]
+            i += 1
+
+        self.get_equidistant_points()
 
     def get_equidistant_points(self):
-        y_u = np.zeros(self.resolution)
-        y_l = np.zeros(self.resolution)
+        x_eq = np.linspace(start=0, stop=1, num=self.resolution)
+        f_u = interpolate.interp1d(np.real(self.z_u), np.imag(self.z_u), kind="linear")
+        f_l = interpolate.interp1d(np.real(self.z_l), np.imag(self.z_l), kind="linear")
+
+        plt.plot(x_eq, f_u(x_eq), "x")
+        plt.plot(x_eq, f_l(x_eq), "o")
+        self.sample_plot()
+
 
 
 
