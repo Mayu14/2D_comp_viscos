@@ -24,6 +24,7 @@ subroutine JobParallelNS(UConf)
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
 
+    UCC%ConvergeCondition = Converge_Method
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
 
     if(UConf%SwitchProgram == 7) then
@@ -75,6 +76,7 @@ subroutine JobParallelNS(UConf)
 
         if(UConf%SwitchProgram /= 7) then
             call JPUOutput(UConf,UG,UCC,0)
+            call UOutput_Residuals(UConf, UCC%RH)
         end if
 
         if (UCC%iEndFlag == 2) then

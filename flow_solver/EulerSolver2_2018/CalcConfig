@@ -5,7 +5,7 @@
 Resume_20th_Result 初期条件の入ったファイルのファイル名:ResumeFileName
 1 初期条件ファイルの形式(1:vtk,2:gnuplot用txt,3:オリジナル形式)
 21 計算を再開する際の計算ステップ:ResumeNumber
-M015_SLAU2_LTS_CFL95	計算ケース名(nullでケース名なし)
+M015_Roe_LTS_CFL95	計算ケース名(nullでケース名なし)
 0 データから境界条件読み出し:UseReadBoundaryCond
 1 各時間段階ごとにCFL条件を満たす最大の時間刻み幅を用いる:UseVariableTimeWidth
 1 0:非定常計算，1:定常計算(UseSteadyCalcによる収束判定実施の有無)
@@ -24,5 +24,6 @@ M015_SLAU2_LTS_CFL95	計算ケース名(nullでケース名なし)
 0.95 クーラン数
 0	乱流モデル	!0:非粘性流, 1:Baldwin-Lomaxモデル
 50000 レイノルズ数
-1	非粘性流束評価	!0:Roe, 1:SLAU2
-8	収束条件	! ave(ΔQij)<10^(-x)で指定
+0	非粘性流束評価	!0:Roe, 1:SLAU2
+1	収束判定方法	!0:平均残差, 1:最大残差
+0.8	収束とみなす残差	! max(abs(ΔQij))<xで指定
