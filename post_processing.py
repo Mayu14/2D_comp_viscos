@@ -126,7 +126,8 @@ def cp_plot_test():
     # path = "G:\\Toyota\\Data\\Case3\\"
     # fname = "CP_NACA" + str(i12digit).zfill(2) + str(i34digit).zfill(2) + "_" + str(angle).zfill(2) + ".dat"
     angle = 15
-    fname = "CP_NACA0012_" + str(angle).zfill(2) + ".dat"
+    case_name = "_M015_Roe_LTS_CFL95"
+    fname = "CP_NACA0012_" + str(angle).zfill(2) + case_name + ".dat"
     char_angle = np.zeros((9, 2))
     i12digit = 00
     i34digit = 12
@@ -154,8 +155,8 @@ def cp_plot_test():
         alpha = r'$\alpha$'
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        ax.set_title("NACA1112 Course-Grid " + alpha + " = " + str(angle) +" deg")
-        ax.plot(coord[:number], pressure[:number], ".", label="Toyota. Ma=0.7")
+        ax.set_title("NACA0012 Fine-Grid " + alpha + " = " + str(angle) +" deg Roe + LTS")
+        ax.plot(coord[:number], pressure[:number], ".", label="Toyota. Ma=0.15")
         ax.legend()
         ax.set_xlabel(r"$\frac{x}{c}$")
         ax.set_ylabel(r"$C_P$")
@@ -165,8 +166,8 @@ def cp_plot_test():
             # exit()
 
 def plot_residual_graph():
-    path = "path"
-    fname = "fname"
+    path = "G:\\Toyota\\Data\\Compressible_Invicid\\solver_validation\\NACA0012\\M015_15deg_compare\\ResultR\\"
+    fname = "RES_NACA0012_15_M015_SLAU2_Non-LTS_CFL95.csv"
 
     name = ["TimeStep", "Ave:Density", "Ave:Momentum_X", "Ave:Momentum_Y", "Ave:Momentum_Z", "Ave:Energy", "Ave:Mix",
             "Max:Density", "Max:Momentum_X","Max:Momentum_Y", "Max:Momentum_Z", "Max:Energy", "Max:Entire"]
@@ -176,11 +177,50 @@ def plot_residual_graph():
               "Max:Momentum_X":"float16", "Max:Momentum_Y":"float16", "Max:Momentum_Z":"float16",
               "Max:Energy":"float16", "Max:Entire":"float16"}
 
-    df = pd.read_csv(path + fname)
+    df = pd.read_csv(path + fname, names=name, dtype = d_type)
 
-    plt.plot(df)
     data_total = df.shape[0]
-    df.plot()
+
+
+    angle = 15
+    case_name = "Residual History of NACA0012 Fine-Grid\n" + r'$\alpha$' + " = " + str(angle) + " deg, Ma = 0.15 with SLAU2"
+    timestep = np.arange(data_total)
+    
+    def make_subplot(locate=1, data_label="Max:Density"):
+        ax = fig.add_subplot(3, 2, locate)
+        if(data_label.find("Momentum_Z") == -1):
+            ax.set_yscale("log")
+        ax.set_title(data_label)
+        ax.plot(timestep, df[data_label], ".", label = data_label)
+        ax.legend()
+        ax.set_xlabel(r"$Time Step$")
+        ax.set_ylabel(r"$Error$")
+        ax.grid()
+        
+
+    fig = plt.figure()
+    fig.suptitle(case_name)
+    
+    make_subplot()
+    make_subplot(2, "Max:Momentum_X")
+    make_subplot(3, "Max:Momentum_Y")
+    make_subplot(4, "Max:Momentum_Z")
+    make_subplot(5, "Max:Energy")
+    make_subplot(6, "Max:Entire")
+    plt.tight_layout()
+    plt.show()
+
+    fig = plt.figure()
+    fig.suptitle(case_name)
+    make_subplot(1, "Ave:Density")
+    make_subplot(2, "Ave:Momentum_X")
+    make_subplot(3, "Ave:Momentum_Y")
+    make_subplot(4, "Ave:Momentum_Z")
+    make_subplot(5, "Ave:Energy")
+    make_subplot(6, "Ave:Mix")
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == '__main__':
     # main()
