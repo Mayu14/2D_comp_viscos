@@ -36,7 +36,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
             if(naca4digit == 1) then
                 i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
                 i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
-            else if(naca4digit == 2)
+            else if(naca4digit == 2) then
                 i12digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank)/7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
                 i34digit = mod(UConf%my_rank, 80) + 11
             end if
@@ -168,8 +168,8 @@ contains
     subroutine read_re_cal_file(UConf, iOffset)
         implicit none
         type(Configulation), intent(inout) :: UConf
-        integer, intent(in) : iOffset
-        integer :: iUnit
+        integer, intent(in) :: iOffset
+        integer :: iUnit, iDeg
         character(len=256) :: cDigit, cDeg, cMid
 
             iUnit = UConf%my_rank+100
@@ -179,7 +179,8 @@ contains
             end do
 
             UConf%cFileName = "NACA"//trim(adjustl(cDigit))//"_"//trim(adjustl(cDeg))
-            UConf%dAttackAngle = dPi * dble(int(cDeg)) / 180.0d0
+            read(cDeg, *) iDeg
+            UConf%dAttackAngle = dPi * dble(iDeg) / 180.0d0
             if(cMid /= "None") then
                 UConf%UseResume = 1
                 UConf%ResumeFileName = trim(adjustl(cMid))
