@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import pandas as pd
 import os
+from itertools import cycle, islice
 
 def main(online=False):
     def main_process(online):
@@ -233,10 +234,67 @@ def plot_residual_graph():
     plt.tight_layout()
     plt.show()
 
+def make_restart_list(digit, deg_list):
+
+    path = "D:\\Dropbox\\shareTH\\program\\"
+    fname = "Case4_C_02140520.txt"
+    mid_fname = "Case4_U_02140520.txt"
+    restart_fname = "re_cal_namelist.dat"
+
+    restart_list = []
+    restart_list_u = []
+    # 再計算しなければならないケースのリスト作成
+    for degree in deg_list:
+        deg = str(degree).zfill(2)
+        name_list = []
+        name_list_u = []
+        if digit == 4:
+            for i1 in range(1,10):
+                for i2 in range(1, 10):
+                    for i34 in range(12, 92, 4):
+                        naca4 = str(i1) + str(i2) + str(i34)
+                        name = "CP_NACA" + naca4 + "_" + deg + "_M015.dat"
+                        name_u = "NACA" + naca4 + "_" + deg + "_M015_"
+                        name_list.append(name)
+                        name_list_u.append(name_u)
+
+        with open(path + fname, "r") as f:
+            for line in f:
+                if(line[8+digit:10+digit] == deg):
+                    # print(line)
+                    if (line[:19+digit] in name_list):
+                        name_list.remove(line[:19+digit])
+
+
+        restart_list.extend(name_list)
+
+    total = len(restart_list)
+
+    # 中間出力の名前に変換
+    for i in range(total):
+        restart_list[i] = restart_list[i][3:15+digit] + "_"
+
+    # 中間出力が存在すればファイル名，存在しなければNoneを返す
+    mid_file = [None]*len(restart_list)
+    for degree in deg_list:
+        deg = str(degree).zfill(2)
+
+        with open(path + mid_fname) as f:
+            for line in f:
+                if(line[5+digit:7+digit] == deg):
+                    if(line[:13+digit] in restart_list):
+                        mid_file[restart_list.index(line[:13+digit])] = line
+
+    with open(path + restart_fname, "w") as f:
+        f.write(str(total) + " case Required.\n")
+        for i in range(total):
+            f.write(restart_list.pop(0) + " " + str(mid_file.pop(0)).replace("\n", "") + "\n")
+    exit()
 
 if __name__ == '__main__':
     # main()
     # rc('text', usetex=True)
     # cp_plot_test()
     # cdcl_plot_test()
-    plot_residual_graph()
+    # plot_residual_graph()
+    make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27])
