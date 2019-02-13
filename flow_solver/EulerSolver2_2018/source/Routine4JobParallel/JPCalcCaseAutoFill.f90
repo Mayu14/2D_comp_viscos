@@ -26,20 +26,21 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     integer :: access
     character(len=256) :: cDirectory,cFileName, cCaseName
     character(len=256) :: cStep
-    integer :: naca4digit = 1
+    integer :: naca4digit = 3
 
     if(UConf%UseJobParallel == 1) then
     !PETET = 0 ~ 1619を仮定    ! NACA5の場合1~559
     ! do i1digit = 0, 9
         ! do i2digit = 0, 9
             ! do i34digit = 1, 40
-            if(naca4digit == 1)  then
+            if(naca4digit == 1) then
                 i12digit = int(float(UConf%my_rank) / 20.0d0) + 11 + int(float(UConf%my_rank) / 180.0d0) ! 11~19, 21~29, 31~..., 91~99
                 i34digit = 4 * mod(UConf%my_rank, 20) + 12  ! 12~88, 4k+12
-            else
+            else if(naca4digit == 2)
                 i12digit = 10 * (21 + (4 - mod(int(float(UConf%my_rank)/7.0d0), 5))) + int(float(UConf%my_rank) / 5.0d0)
                 i34digit = mod(UConf%my_rank, 80) + 11
             end if
+
             if(UConf%CalcEnv == 0) then
                 if(naca4digit == 1) then
                     write(UConf%cGridName, '("NACA", i2.2, i2.2, ".mayu")') i12digit, i34digit ! 研究室PC用
@@ -63,6 +64,11 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     else
                         write(UConf%cFileName, '("NACA", i3.3, i2.2,  "_", i2.2)') i12digit, i34digit, iAngleDeg
                     end if
+
+                    if (naca4digit == 3) then
+                        call read_re_cal_file(UConf, iOffset)
+                    end if
+
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cDirectory, '("")')
                     else if(UConf%CalcEnv == 1) then
@@ -159,6 +165,25 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
 
     return
 contains
+    subroutine read_re_cal_file(UConf, iOffset)
+        implicit none
+        type(Configulation), intent(inout) :: UConf
+        integer, intent(in) : iOffset
+        integer :: iUnit
+        character(len=256) :: cDigit, cDeg, cMid
+
+            iUnit = UConf%my_rank+100
+            open(unit = iUnit, file="re_cal_namelist.dat", status = "unknown")
+            do iLoop = 1 + iOffset, 2 + UConf%my_rank + iOffset
+                read(iUnit, *) cDigit, cDeg, cMid
+            end do
+
+            UConf%cFileName = "NACA"//trim(adjustl(cDigit))//"_"//trim(adjustl(cDeg))
+            UConf%dAttackAngle = dPi * dble(int(cDeg)) / 180.0d0
+
+        return
+    end subroutine read_re_cal_file
+
     subroutine grid_change(Uconf)
         implicit none
         type(Configulation), intent(inout) :: UConf
