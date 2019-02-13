@@ -179,6 +179,11 @@ contains
             end do
 
             UConf%cFileName = "NACA"//trim(adjustl(cDigit))//"_"//trim(adjustl(cDeg))
+            UConf%cGridName = "NACA"//trim(adjustl(cDigit))//".mayu"
+            if(UConf%CalcEnv == 1) then
+                UConf%cGridName = "/work/A/FMa/FMa037/mayu_grid/"//trim(adjustl(UConf%cGridName))
+            end if
+
             read(cDeg, *) iDeg
             UConf%dAttackAngle = dPi * dble(iDeg) / 180.0d0
             if(cMid /= "None") then
