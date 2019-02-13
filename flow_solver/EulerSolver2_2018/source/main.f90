@@ -22,7 +22,7 @@ program EulerEQ1D
     type(Configulation) :: Conf
     character :: cConfirm
     ! コマンドライン引数読込用
-    integer :: i, length, status, iOffset
+    integer :: i, length, status
     character(:), allocatable :: arg
     intrinsic :: command_argument_count, get_command_argument
 
