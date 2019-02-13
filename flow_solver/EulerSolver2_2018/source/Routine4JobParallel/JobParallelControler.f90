@@ -11,14 +11,14 @@
 !	Update:2017.11.07
 !	Other:
 !***********************************/
-subroutine JobParallelControler(UConf, iOffset)
+subroutine JobParallelControler(UConf)
     use StructVar_Mod
     use ConstantVar_Mod
     use mpi
     !!$use omp_lib
     implicit none
     type(Configulation), intent(inout) :: UConf
-    integer :: ierr, my_rank, PETOT, iOffset
+    integer :: ierr, my_rank, PETOT
     integer :: Total_threads
 
     if(UConf%UseJobParallel == 1) then
