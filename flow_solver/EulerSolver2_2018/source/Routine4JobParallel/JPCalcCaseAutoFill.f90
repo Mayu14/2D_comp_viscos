@@ -180,6 +180,10 @@ contains
 
             UConf%cFileName = "NACA"//trim(adjustl(cDigit))//"_"//trim(adjustl(cDeg))
             UConf%dAttackAngle = dPi * dble(int(cDeg)) / 180.0d0
+            if(cMid /= "None") then
+                UConf%UseResume = 1
+                UConf%ResumeFileName = trim(adjustl(cMid))
+            end if
 
         return
     end subroutine read_re_cal_file
