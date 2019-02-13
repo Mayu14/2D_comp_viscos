@@ -2,12 +2,13 @@
 import numpy as np
 from scipy import interpolate
 import matplotlib.pyplot as plt
+from fourier_expansion_mk2 import fourier_expansion as fex
 
 class polygon(object):
     # 初期化
-    def __init__(self, num_vertex, regular = False, star = False, inner_diameter=0.5, threshold= 10.0**(-9), resolution=1000):
+    def __init__(self, num_vertex, regular = False, star = False, inner_radius_rate=0.5, threshold= 10.0**(-9), resolution=100):
         self.num_vertex = num_vertex
-        self.inner_diameter = inner_diameter
+        self.inner_radius_rate = inner_radius_rate
         self.vertex = []
 
         self.threshold = threshold
@@ -43,22 +44,28 @@ class polygon(object):
         self.vertex = self.radius * np.exp(1j * np.linspace(start = 0, stop = 2.0 * np.pi, num = self.num_vertex + 1))[1:] + self.center
         # self.sample_plot()
 
+    def get_max_and_min_inner_radius(self):
+        A =(self.num_vertex - 2) / (2 * self.num_vertex) * np.pi
+        B = np.pi / self.num_vertex
+        r_max = self.radius * np.sin(A)
+        r_min = r_max - self.radius * (np.sqrt((1 - np.cos(2*B))/2) * np.sin(B) / np.sin(A))
+        self.inner_radius = r_min + (r_max - r_min) * self.inner_radius_rate
+        
     def set_star_polygon(self):
         outer_vertex = self.radius * np.exp(1j * np.linspace(start=0, stop=2.0 * np.pi, num=self.num_vertex + 1)).reshape(1, -1) + self.center
         phase_differnce = 2.0 * np.pi / (2.0 * self.num_vertex)
-        inner_vertex = self.radius * self.inner_diameter * np.exp(1j * np.linspace(start=0 - phase_differnce, stop=2.0 * np.pi - phase_differnce, num=self.num_vertex + 1)).reshape(1, -1) + self.center
+        self.get_max_and_min_inner_radius()
+        inner_vertex = self.inner_radius * np.exp(1j * np.linspace(start=0 - phase_differnce, stop=2.0 * np.pi - phase_differnce, num=self.num_vertex + 1)).reshape(1, -1) + self.center
         self.vertex = np.concatenate((inner_vertex, outer_vertex)).T.reshape(-1)[2:]
         self.num_vertex = self.vertex.shape[0]
-        # self.sample_plot()
+        self.sample_plot()
 
     def make_edge(self):
         trail = np.argmax(np.real(self.vertex)) # 後方
         lead = np.argmin(np.real(self.vertex))  # 前方
-
         # 上側と下側とを分離(ここまでの処理で反時計回りに格納されていることに注意)
         vertex_u = []
         vertex_l = []
-
         # 点番号を座標が小さい順に格納する
         tmp_vertex = []
         if lead < trail:    # upper -> lower -> upperの順
@@ -97,13 +104,13 @@ class polygon(object):
         x_eq = np.linspace(start=0, stop=1, num=self.resolution)
         f_u = interpolate.interp1d(np.real(self.z_u), np.imag(self.z_u), kind="linear")
         f_l = interpolate.interp1d(np.real(self.z_l), np.imag(self.z_l), kind="linear")
-
-        plt.plot(x_eq, f_u(x_eq), "x")
-        plt.plot(x_eq, f_l(x_eq), "o")
-        self.sample_plot()
-
-
-
+        
+        # plt.plot(x_eq, f_u(x_eq), "x")
+        # plt.plot(x_eq, f_l(x_eq), "o")
+        # self.sample_plot()
+        self.x_ul = x_eq
+        self.y_u = f_u(x_eq)
+        self.y_l = f_l(x_eq)
 
     def sample_plot(self):
         plt.plot(np.real(self.vertex), np.imag(self.vertex))
@@ -111,8 +118,11 @@ class polygon(object):
 
 
 def main():
-    pol = polygon(6, star = True, inner_diameter=0.7)
-
+    pol = polygon(6, star = True, inner_radius_rate = 0.5)
+    # x_u, y_u, x_l, y_l, n = 128):
+    fourier = fex(x_u=pol.x_ul, y_u=pol.y_u, x_l=pol.x_ul, y_l=pol.y_u, n=200)
+    fourier.test_plot_decryption_data()
+    
 
 if __name__ == '__main__':
     main()
