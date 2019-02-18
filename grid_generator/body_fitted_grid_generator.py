@@ -4,8 +4,8 @@ from scipy import interpolate
 from scipy.spatial import Delaunay
 import numpy as np
 from numpy.linalg import norm
-from naca_4digit_test import Naca_4_digit, Naca_5_digit
-from joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
+from grid_generator.naca_4digit_test import Naca_4_digit, Naca_5_digit
+# from grid_generator.joukowski_wing import joukowski_wing_complex, karman_trefftz_wing_complex
 import matplotlib.pyplot as plt
 import os
 

@@ -42,7 +42,7 @@ class polygon(object):
 
     def set_regular_polygon(self):
         self.vertex = self.radius * np.exp(1j * np.linspace(start = 0, stop = 2.0 * np.pi, num = self.num_vertex + 1))[1:] + self.center
-        # self.sample_plot()
+        # self.make_edge()
 
     def get_max_and_min_inner_radius(self):
         A =(self.num_vertex - 2) / (2 * self.num_vertex) * np.pi
@@ -58,7 +58,7 @@ class polygon(object):
         inner_vertex = self.inner_radius * np.exp(1j * np.linspace(start=0 - phase_differnce, stop=2.0 * np.pi - phase_differnce, num=self.num_vertex + 1)).reshape(1, -1) + self.center
         self.vertex = np.concatenate((inner_vertex, outer_vertex)).T.reshape(-1)[2:]
         self.num_vertex = self.vertex.shape[0]
-        self.sample_plot()
+        # self.sample_plot()
 
     def make_edge(self):
         trail = np.argmax(np.real(self.vertex)) # 後方
@@ -108,9 +108,10 @@ class polygon(object):
         # plt.plot(x_eq, f_u(x_eq), "x")
         # plt.plot(x_eq, f_l(x_eq), "o")
         # self.sample_plot()
-        self.x_ul = x_eq
-        self.y_u = f_u(x_eq)
-        self.y_l = f_l(x_eq)
+        self.x_u = x_eq
+        self.x_l = x_eq[::-1]
+        self.y_u = f_u(self.x_u)
+        self.y_l = f_l(self.x_l)
 
     def sample_plot(self):
         plt.plot(np.real(self.vertex), np.imag(self.vertex))
@@ -118,10 +119,14 @@ class polygon(object):
 
 
 def main():
-    pol = polygon(6, star = True, inner_radius_rate = 0.5)
-    # x_u, y_u, x_l, y_l, n = 128):
-    fourier = fex(x_u=pol.x_ul, y_u=pol.y_u, x_l=pol.x_ul, y_l=pol.y_u, n=200)
-    fourier.test_plot_decryption_data()
+    vertex_list = [4,6,8,10,12]
+    in_rad_list = [0.05, 0.35, 0.70, 1.0]
+    for vertex in vertex_list:
+        for in_r in in_rad_list:
+            pol = polygon(vertex, star = True, inner_radius_rate = in_r)
+            # x_u, y_u, x_l, y_l, n = 128):
+            fourier = fex(x_u=pol.x_u, y_u=pol.y_u, x_l=pol.x_l, y_l=pol.y_u, n=200)
+            fourier.test_plot_decryption_data()
     
 
 if __name__ == '__main__':

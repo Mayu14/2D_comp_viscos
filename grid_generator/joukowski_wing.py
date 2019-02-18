@@ -1,7 +1,9 @@
 # -- coding: utf-8 --
 import numpy as np
 import matplotlib.pyplot as plt
-from naca_4digit_test import Naca_4_digit
+from grid_generator.naca_4digit_test import Naca_4_digit
+from grid_generator.body_fitted_grid_generator import get_equidistant_curve
+
 def re_numbering(z):
     start = np.argmax(np.real(z))
     return np.concatenate([z[start:z.shape[0] - 1], z[:start + 1]])
@@ -113,17 +115,34 @@ def main():
     # 複素数配列を作るときは
     # 実部の配列x，虚部の配列yをそれぞれ作ったあと，z = x + 1j * yで代入する
     size = 50
+
+    # c_x_list = [-0.16,-0.12, -0.08, 0.08] # 翼厚(0で厚みなし)
     center_x = -0.08
     center_y = 0.08
+    c_y_list = [-0.04, 0.0, 0.04, 0.08, 0.12, 0.16] # 反りのきつさ(-で逆向きに反るため，基本的に0~)
+    # for center_x in c_x_list:
+    # for center_y in c_y_list:
 
-    z = circle_center_a(size, center_x, center_y)
-    # z = circle_center_a_mk2(size, center_x, center_y)
-    z = joukowski_tr(z, 1.0)
-
-    x = np.real(z)
-    y = np.imag(z)
-    plt.plot(x, y)
-    plt.show()
+    for i in range(5):
+        for j in range(5):
+            center_x = 0.08 * (i+1)
+            center_y = 0.04 * j**2
+            z = circle_center_a(size, center_x, center_y)
+            # z = circle_center_a_mk2(size, center_x, center_y)
+            z = joukowski_tr(z, 1.0)
+            Lx = np.max(np.real(z)) - np.min(np.real(z))    # x方向の最大長さ
+            Ly = np.max(np.imag(z)) - np.min(np.imag(z))    # y方向の最大長さ
+            center = 0.5 * ((np.max(np.real(z)) + np.min(np.real(z))) + 1j * (np.max(np.imag(z)) + np.min(np.imag(z))))    # x,y方向の中心座標
+            z -= center # 中心位置を(0,0)に補正
+            z /= max(Lx, Ly)    # 大きい方の最大長さで正規化
+            z += 0.5 * (1+1j)   # 中心を(0.5,0.5)に合わせる
+            z = get_equidistant_curve(z, high_dens=False)
+            x = np.real(z)
+            y = np.imag(z)
+            plt.xlim([0,1])
+            plt.ylim([0,1])
+            plt.plot(x, y, "x")
+            plt.show()
 
     x_u = np.real(z[:size])
     y_u = np.imag(z[:size])
