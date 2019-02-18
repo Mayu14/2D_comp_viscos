@@ -291,10 +291,38 @@ def make_restart_list(digit, deg_list):
             f.write(restart_list.pop(0) + " " + str(mid_file.pop(0)).replace("\n", "") + "\n")
     exit()
 
+def del_duplication(cp=False):
+    # path = "/work/A/FMa/FMa037/Case4/ResultC/"
+    path = "D:\\Dropbox\\shareTH\\report\\20180615\\"
+    p_n = len(path)
+    if cp:
+        dir = glob.glob(path + "CP*")
+        for f_n in dir:
+            if (f_n[p_n+11] == "_"):    # 4digit
+                os.rename(f_n, f_n[:p_n+19] + ".dat")
+            else:   # 5digit
+                os.rename(f_n, f_n[:p_n+20] + ".dat")
+            print(f_n)
+            exit()
+
+    else:
+        dir = glob.glob(path + "NACA*.dat")
+        for f_n in dir:
+            if (f_n[p_n+8] == "_"): # 4digit
+                os.rename(f_n, f_n[:p_n+16] + ".dat")
+            else:
+                os.rename(f_n, f_n[:p_n+17] + ".dat")
+
+            print(f_n)
+            print(f_n[p_n+8])
+            print(f_n[:p_n+16] + ".dat")
+            exit()
+
 if __name__ == '__main__':
     # main()
     # rc('text', usetex=True)
     # cp_plot_test()
     # cdcl_plot_test()
     # plot_residual_graph()
-    make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27])
+    # make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27])
+    del_duplication(cp=True)
