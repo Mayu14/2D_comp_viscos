@@ -237,11 +237,11 @@ def plot_residual_graph():
 
 def make_restart_list(digit, deg_list):
 
-    path = "D:\\Dropbox\\shareTH\\program\\"
-    fname = "Case4_C_02140520.txt"
-    mid_fname = "Case4_U_02140520.txt"
+    path = "D:\\Toyota\\Dropbox\\shareTH\\program\\"
+    date = "02190507"
+    fname = "Case4_C_" + date + ".txt"
+    mid_fname = "Case4_U_" + date + ".txt"
     restart_fname = "re_cal_namelist.dat"
-
     restart_list = []
     restart_list_u = []
     # 再計算しなければならないケースのリスト作成
@@ -258,6 +258,15 @@ def make_restart_list(digit, deg_list):
                         name_u = "NACA" + naca4 + "_" + deg + "_M015_"
                         name_list.append(name)
                         name_list_u.append(name_u)
+        else:
+            head_list = [210, 220, 230, 240, 241, 250, 251]
+            for i123 in head_list:
+                for i45 in range(11, 91):
+                    naca5 = str(i123).zfill(3) + str(i45).zfill(2)
+                    name = "CP_NACA" + naca5 + "_" + deg + "_M015.dat"
+                    name_u = "NACA" + naca5 + "_" + deg + "_M015_"
+                    name_list.append(name)
+                    name_list_u.append(name_u)
 
         with open(path + fname, "r") as f:
             for line in f:
@@ -289,7 +298,10 @@ def make_restart_list(digit, deg_list):
     with open(path + restart_fname, "w") as f:
         f.write(str(total) + " case Required.\n")
         for i in range(total):
-            f.write(restart_list.pop(0) + " " + str(mid_file.pop(0)).replace("\n", "") + "\n")
+            name = restart_list.pop(0)
+            naca4 = name[4:4+digit]
+            deg = name[5+digit:7+digit]
+            f.write(naca4 + " " + deg + " " + str(mid_file.pop(0)).replace("\n", "") + "\n")
     exit()
 
 def del_duplication(cp=False):
@@ -330,5 +342,6 @@ if __name__ == '__main__':
     # cp_plot_test()
     # cdcl_plot_test()
     # plot_residual_graph()
-    # make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27])
-    del_duplication(cp = True)
+    # make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27,30,33,36,39])
+    make_restart_list(digit = 5, deg_list = [0,3,6,9,12,15,18,21,24,27,30,33,36,39])
+    # del_duplication(cp = True)
