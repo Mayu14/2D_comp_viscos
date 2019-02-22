@@ -6,7 +6,9 @@ from fourier_expansion_mk2 import fourier_expansion as fex
 
 class polygon(object):
     # 初期化
-    def __init__(self, num_vertex, regular = False, star = False, inner_radius_rate=0.5, threshold= 10.0**(-9), resolution=100):
+    def __init__(self, num_vertex, regular = False, star = False, inner_radius_rate=0.5, threshold= 10.0**(-9),
+                 resolution=100, path="G:\\Toyota\\Data\\grid_vtk\\csv\\PSTR\\"):
+        
         self.num_vertex = num_vertex
         self.inner_radius_rate = inner_radius_rate
         self.vertex = []
@@ -26,8 +28,14 @@ class polygon(object):
             self.set_star_polygon()
 
         self.make_edge()
+        # Polygon-Star
+        # 12digit => Number of Vertex
+        # 345digit => inner_radius_rate * 100 (percent)
+        self.name = "PSTR" + str(self.num_vertex).zfill(2) + (str(self.inner_radius_rate) + "00").replace(".", "")[:3]
+        self.path = path
+        self.output_csv()
 
-    # coord_xyzは座標[x, y, z]のリスト
+        # coord_xyzは座標[x, y, z]のリスト
     def define_vertex(self, coord_xyz):
         self.vertex.append(np.array(coord_xyz))
         if len(self.vertex) == self.num_vertex:
@@ -101,7 +109,7 @@ class polygon(object):
         self.get_equidistant_points()
 
     def get_equidistant_points(self):
-        x_eq = np.linspace(start=0, stop=1, num=self.resolution)
+        x_eq = np.linspace(start=0, stop=1, num=(2*self.resolution+1))
         f_u = interpolate.interp1d(np.real(self.z_u), np.imag(self.z_u), kind="linear")
         f_l = interpolate.interp1d(np.real(self.z_l), np.imag(self.z_l), kind="linear")
         
@@ -117,16 +125,25 @@ class polygon(object):
         plt.plot(np.real(self.vertex), np.imag(self.vertex))
         plt.show()
 
+    def output_csv(self):
+        z_u = self.x_u + 1j * self.y_u
+        z_l = self.x_l + 1j * self.y_l
+        z1 = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
+        np.savetxt(self.path + self.name + "_x.csv", np.real(z1), delimiter = ",")
+        np.savetxt(self.path + self.name + "_y.csv", np.imag(z1), delimiter = ",")
+    
+
 
 def main():
-    vertex_list = [4,6,8,10,12]
-    in_rad_list = [0.05, 0.35, 0.70, 1.0]
-    for vertex in vertex_list:
-        for in_r in in_rad_list:
+    # vertex_list = [4,6,8,10,12]
+    # in_rad_list = [0.05, 0.35, 0.70, 1.0]
+    for vertex in range(4,22,2):
+        for in_r in range(1,20):
+            in_r *= 0.05
             pol = polygon(vertex, star = True, inner_radius_rate = in_r)
             # x_u, y_u, x_l, y_l, n = 128):
-            fourier = fex(x_u=pol.x_u, y_u=pol.y_u, x_l=pol.x_l, y_l=pol.y_u, n=200)
-            fourier.test_plot_decryption_data()
+            # fourier = fex(x_u=pol.x_u, y_u=pol.y_u, x_l=pol.x_l, y_l=pol.y_u, n=200)
+            # fourier.test_plot_decryption_data()
     
 
 if __name__ == '__main__':
