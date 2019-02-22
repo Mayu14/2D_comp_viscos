@@ -238,7 +238,7 @@ def plot_residual_graph():
 def make_restart_list(digit, deg_list):
 
     path = "D:\\Toyota\\Dropbox\\shareTH\\program\\"
-    date = "02190507"
+    date = "02221855"
     fname = "Case4_C_" + date + ".txt"
     mid_fname = "Case4_U_" + date + ".txt"
     restart_fname = "re_cal_namelist.dat"
@@ -268,7 +268,7 @@ def make_restart_list(digit, deg_list):
                     name_list.append(name)
                     name_list_u.append(name_u)
 
-        with open(path + fname, "r") as f:
+        with open(path + fname, "r", encoding = "utf-8") as f:
             for line in f:
                 if(line[8+digit:10+digit] == deg):
                     # print(line)
@@ -289,7 +289,7 @@ def make_restart_list(digit, deg_list):
     for degree in deg_list:
         deg = str(degree).zfill(2)
 
-        with open(path + mid_fname) as f:
+        with open(path + mid_fname, encoding = "utf-8") as f:
             for line in f:
                 if(line[5+digit:7+digit] == deg):
                     if(line[:13+digit] in restart_list):
@@ -342,6 +342,6 @@ if __name__ == '__main__':
     # cp_plot_test()
     # cdcl_plot_test()
     # plot_residual_graph()
-    # make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27,30,33,36,39])
-    make_restart_list(digit = 5, deg_list = [0,3,6,9,12,15,18,21,24,27,30,33,36,39])
+    make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27,30,33,36,39])
+    # make_restart_list(digit = 5, deg_list = [0,3,6,9,12,15,18,21,24,27,30,33,36,39])
     # del_duplication(cp = True)
