@@ -8,6 +8,7 @@ subroutine UReadInitialCondition(UConf,UG,UCC)
     type(CellCenter), intent(inout) :: UCC
     character(len=256) :: cFileName, cDirectory, cStep
     character :: cAnnotate,cAnnotate1
+    integer :: iUnit
 
     if(UConf%SwitchProgram == 5) then
         cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//UConf%ResumeFileName
@@ -20,47 +21,48 @@ subroutine UReadInitialCondition(UConf,UG,UCC)
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
     end if
 
-    open(unit = 1, file =trim(adjustl(cFileName)), status = 'old')
+    iUnit = UConf%my_rank + 100
+    open(unit = iUnit, file =trim(adjustl(cFileName)), status = 'old')
         write(6,*) "Find VTK-Data"
         do iLoop=1,5
-            read(1,*) cAnnotate !Header
+            read(iUnit,*) cAnnotate !Header
         end do
 
         do iPoint=1, UG%GI%Points
-            read(1,*) cAnnotate,cAnnotate,cAnnotate !Point Coordinate
+            read(iUnit,*) cAnnotate,cAnnotate,cAnnotate !Point Coordinate
         end do
 
-        read(1,*) cAnnotate,cAnnotate
+        read(iUnit,*) cAnnotate,cAnnotate
         do iCell=1, UG%GI%RealCells
-            read(1,*) cAnnotate,cAnnotate,cAnnotate,cAnnotate
+            read(iUnit,*) cAnnotate,cAnnotate,cAnnotate,cAnnotate
         end do
 
-        read(1,*) cAnnotate
+        read(iUnit,*) cAnnotate
         do iCell=1, UG%GI%RealCells
-            read(1,*) cAnnotate
+            read(iUnit,*) cAnnotate
         end do
 
-        read(1,*) cAnnotate
+        read(iUnit,*) cAnnotate
 !密度プロット
-        read(1,*) cAnnotate
-        read(1,*) cAnnotate
+        read(iUnit,*) cAnnotate
+        read(iUnit,*) cAnnotate
 
         do iCell=1, UG%GI%RealCells
-            read(1,*) UCC%PrimitiveVariable(1,iCell,1,1)
+            read(iUnit,*) UCC%PrimitiveVariable(1,iCell,1,1)
         end do
 
-        read(1,*) cAnnotate
+        read(iUnit,*) cAnnotate
         do iCell=1, UG%GI%RealCells
-            read(1,*) (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
+            read(iUnit,*) (UCC%PrimitiveVariable(iLoop,iCell,1,1),iLoop=2,4)
         end do
 
-        read(1,*) cAnnotate
-        read(1,*) cAnnotate
+        read(iUnit,*) cAnnotate
+        read(iUnit,*) cAnnotate
         do iCell=1, UG%GI%RealCells
-            read(1,*) UCC%PrimitiveVariable(UG%GM%Dimension+2,iCell,1,1)
+            read(iUnit,*) UCC%PrimitiveVariable(UG%GM%Dimension+2,iCell,1,1)
         end do
 
-    close(1)
+    close(iUnit)
 
 return
 end subroutine UReadInitialCondition
