@@ -1,13 +1,18 @@
 # -- coding: utf-8 --
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 # source:データの置いてあるディレクトリのパス(絶対or相対)
 # fpath_lift:揚力係数の入ったcsvデータのsourceからの相対パス
 # fpath_shape:形状データの入ったcsvデータのsourceからの相対パス
 # shape_odd:物体形状ベクトルの次元の奇偶等（読み飛ばしに関する変数）
 # read_rate:物体形状ベクトルの次元をread_rateで割った値に変更する
 # skip_rate:揚力係数データ(教師データ)数をskip_rateで割った数に減らす
-def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1, total_data=1620*14, skip_rate = 1):
+# regularize:正規化の有無
+# scalar:正規化する際に、読み込んだデータを基準にz_scoreを求める場合"None"，別データ基準に正規化する場合はsklearnのStandardScalarを渡す
+# return_scalar:scalarも一緒に返す場合True
+def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1, total_data=1620*14, skip_rate = 1,
+                   regularize=True, scalar="None", return_scalar=False):
     name = ("naca4", "angle", "lift_coef", "drag_coef")
     # data_typeとusecolsを書き換えることで情報量の増加に対応
     data_type = {"naca4": int, "angle":float, "lift_coef":float, "drag_coef":float}
@@ -69,7 +74,17 @@ def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1
     # y_train = np.concatenate((y_train_l.T, y_train_d.T)).T
     y_train = np.concatenate((X_train["lift_coef"].values.reshape(-1, 1).T, X_train["drag_coef"].values.reshape(-1, 1).T)).T
     X_train = X_train.drop("lift_coef", axis=1).drop("naca4", axis=1).values
-    return X_train, y_train
+
+    if regularize:
+        if scalar == "None":
+            scalar = StandardScaler()
+            scalar.fit(X_train)
+        X_train = scalar.transform(X_train)
+        
+    if return_scalar:
+        return X_train, y_train, scalar
+    else:
+        return X_train, y_train
 
 if __name__ == '__main__':
     # 自宅で作成したのでLaboratory用に書き換える
