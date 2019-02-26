@@ -5,10 +5,10 @@ from keras.models import model_from_json
 from read_training_data_viscos import read_csv_type3
 from scatter_plot_viscos import make_scatter_plot
 from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.preprocessing import StandardScaler
+import pandas as pd
 import matplotlib.pyplot as plt
 
-def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False):
+def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False):
     json_name = "learned\\" + case_name + "_mlp_model_.json"
     weight_name = "learned\\" + case_name + "_mlp_weight.h5"
 
@@ -53,11 +53,13 @@ def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False)
         ax.legend(bbox_to_anchor=(0, 1), loc="upper left", borderaxespad=1, fontsize=12)
         ax.set_xlabel("Angle of Attack [deg]")
         ax.set_ylabel("$\it{C_{L}}$")
-        ax.set_title("NACA22012 Wing $\it{C_{L}}$ distribution")
+        ax.set_title("NACA22012 Wing $\it{C_{L}}$ , $\it{C_{D}}$ distribution")
         ax.grid(True)
 
         fig.savefig(source + case_name + "_NACA22012.png")
 
+    if return_r2rms:
+        return r2, rms
 
 # 保存先を検索し，ありそうなファイル名を検索，発見したらリストに追加
 def case_name_list_generator(source, fname_lift_test, some_case_test=False, some_case = [], scatter=True, anglerplot=False):
@@ -118,7 +120,8 @@ def some_case_test(source, fname_lift_test):
     
     # case_name_list_generator(source, fname_lift_test, some_case_test = True, some_case = some_case, scatter = True, anglerplot = True)
     #"""
-    nlist = ["25000", "50000", "100000", "200000"]
+    # nlist = ["25000", "50000", "100000", "200000"]
+    nlist = ["200000"]
     vlist = ["200"]
     """
     dens_list = [[1024],[512,512], [16,32,64],[64,128,256],[128,128,128],[256,256,256]]
@@ -152,14 +155,31 @@ def some_case_test(source, fname_lift_test):
     fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
     fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
     fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                       total_data = 0, return_scalar = True)
     x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
                                     total_data = 0, shape_odd = 0, read_rate = 1, scalar = scalar)
 
+    mid = []
     for fname0 in some_case:
-        inference(source, x_test, y_test, fname0, True, True)
-    #"""
+        r2_test, rms_test = inference(source, x_test, y_test, fname0, scatter=True, anglerplot=True, return_r2rms=True)
+        r2_train, rms_train = inference(source, X_train, y_train, fname0, scatter=False, anglerplot=False, return_r2rms=True)
+        mid.append([fname0[27:], r2_train, rms_train, r2_test, rms_test])
+
+    columns = ["case", "train_r2", "train_rms", "test_r2", "test_rms"]
+    dtypes = {'case': 'object', 'train_r2': 'float64', 'train_rms': 'float64', 'test_r2': 'float64',
+              'test_rms': 'float64'}
+    df = pd.DataFrame(mid, columns=columns, dtype=dtypes)
+    i = 0
+    find = True
+    while find:
+        fname = source + "inference" + str(i).zfill(4) + ".csv"
+        find = os.path.exists(fname)
+        i += 1
+
+    df.to_csv(fname)
+
 if __name__ == '__main__':
     source = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
     fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
