@@ -98,10 +98,11 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     sr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
     dr = []
-    for i in range(5):
-        for j in range(7):
-            dr.append([2 ** (i + 7)] * (j + 1))
-            
+    # for i in range(5):
+    i = 1
+    for j in range(7):
+        dr.append([2 ** (i + 7)] * (j + 1))
+        
         dr.append([2 ** (i + 5), 2 ** (i + 6), 2 ** (i + 7)])
 
     for dense_list in dr:
@@ -190,7 +191,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                 #"""
                 model.fit(x=X_train, y=y_train,
-                          batch_size=600, nb_epoch=100000,
+                          batch_size=600, nb_epoch=1000,
                           validation_split=0.1, callbacks=[tb_cb])
                 #"""
                 """
