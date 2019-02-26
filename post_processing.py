@@ -8,19 +8,20 @@ import os
 import glob
 from itertools import cycle, islice
 
-def main(online=False):
-    def main_process(online):
+def main(online=False, type=3):
+    def main_process_4(online, mach_list = [0.15]):
         count = 0
-        for i1 in range(1, 10):
-            for i2 in range(1, 10):
-                for i34 in range(12, 92, 4):
-                    naca4 = str(i1).zfill(1) + str(i2).zfill(1) + str(i34).zfill(2)
-                    for deg in range(min_angle, max_angle + delta_angle, delta_angle):
-                        if(deg != 24):
+        for mach in mach_list:
+            m_num = "M" + (str(mach) + "00").replace(".", "")[:3]
+            for i1 in range(1, 10):
+                for i2 in range(1, 10):
+                    for i34 in range(12, 92, 4):
+                        naca4 = str(i1).zfill(1) + str(i2).zfill(1) + str(i34).zfill(2)
+                        for deg in range(min_angle, max_angle + delta_angle, delta_angle):
                             save_data[count, 1] = float(naca4)
                             save_data[count, 3] = float(deg)
                             
-                            fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_AC.dat"
+                            fname = "NACA" + naca4 + "_" + str(deg).zfill(2) + "_" + m_num + ".dat"
                             if online:
                                 stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
                                 cd_cl = stdout.readlines()[0].split()
@@ -31,27 +32,60 @@ def main(online=False):
                             save_data[count, 4] = float(cd_cl[1])  # CL
                             save_data[count, 5] = -float(cd_cl[0])  # CD
                             count += 1
+
+    def main_process_5(online, mach_list = [0.15]):
+        count = 0
+        head_list = [210, 220, 230, 240, 241, 250, 251]
+        for mach in mach_list:
+            m_num = "M" + (str(mach) + "00").replace(".", "")[:3]
+            for head in head_list:
+                i123 = str(head)
+                for i45 in range(11, 91):
+                    naca5 = str(i123).zfill(3) + str(i45).zfill(2)
+                    for deg in range(min_angle, max_angle + delta_angle, delta_angle):
+                        save_data[count, 1] = float(naca5)
+                        save_data[count, 3] = float(deg)
+                    
+                        fname = "NACA" + naca5 + "_" + str(deg).zfill(2) + "_" + m_num + ".dat"
+                        if online:
+                            stdin, stdout, stderr = ssh.exec_command('cat ' + path + fname)
+                            cd_cl = stdout.readlines()[0].split()
+                        else:
+                            with open(path + fname, "r") as f:
+                                cd_cl = f.readline().split()
+                    
+                        save_data[count, 4] = float(cd_cl[1])  # CL
+                        save_data[count, 5] = -float(cd_cl[0])  # CD
+                        count += 1
+
+    max_angle = 39  # [deg]
+    min_angle = 0  # [deg]
+    delta_angle = 3  # [deg]
+    angle_variation = int((max_angle - min_angle) / delta_angle) + 1
     
-    save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\"
+    if type == 3:
+        save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\"
+        wing_valiation = 1620
+        save_fname = save_path + "s1122_e9988_s4_a" + str(angle_variation).zfill(3) + ".csv"
+        main_process = main_process_4
+    elif type == 4:
+        save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA5\\"
+        wing_valiation = 560
+        save_fname = save_path + "s21011_e25190_s1_a" + str(angle_variation).zfill(3) + ".csv"
+        main_process = main_process_5
+        
     number = 6  # data number per wing
 
     if online:
         password = input("input password of FMa037@afifep.ifs.tohoku.ac.jp")
         path = "/work/A/FMa/FMa037/Case3/ResultC/"
     else:
-        path = "G:\\Toyota\\Data\\Case3\\"
+        path = "G:\\Toyota\\Data\\Compressible_Invicid\\Case4\\ResultC\\"
         
-    max_angle = 39  # [deg]
-    min_angle = 0  # [deg]
-    delta_angle = 3  # [deg]
-    angle_variation = int((max_angle - min_angle) / delta_angle) + 1 - 1    # 24degは除く
     
-    wing_valiation = 1620
     total_data = wing_valiation * angle_variation
-    
     save_data = np.zeros((total_data, number), dtype = float)
     
-    type = 3.0
     save_data[:, 0] = type
     
     if online:
@@ -61,9 +95,7 @@ def main(online=False):
             main_process(online)
     else:
         main_process(online)
-        
     
-    save_fname = save_path + "s1122_e9988_s4_a" + str(angle_variation).zfill(3) + ".csv"
     np.savetxt(save_fname, save_data, delimiter = ",")
     
 def cdcl_plot_test():
@@ -337,11 +369,11 @@ def del_duplication(cp=False):
 
 
 if __name__ == '__main__':
-    # main()
+    main(type=4)
     # rc('text', usetex=True)
     # cp_plot_test()
     # cdcl_plot_test()
     # plot_residual_graph()
-    make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27,30,33,36,39])
+    # make_restart_list(digit=4, deg_list=[0,3,6,9,12,15,18,21,24,27,30,33,36,39])
     # make_restart_list(digit = 5, deg_list = [0,3,6,9,12,15,18,21,24,27,30,33,36,39])
-    # del_duplication(cp = True)
+    # del_duplication(cp=True)
