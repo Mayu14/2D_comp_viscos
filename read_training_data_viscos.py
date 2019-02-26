@@ -21,7 +21,7 @@ def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1
     df_l = pd.read_csv(source + fpath_lift, header=None,
                      usecols=[1, 3, 4, 5], names=name, dtype=data_type,
                        skiprows=skip_row)
-
+    
     def make_use_cols_for_shape(data, shape_odd, rate):
         # dataは，shapeを何項まで計算したのかによって変更(今回は200固定でよさげ)
         # shape_oddによって全部読む・奇数のみ読む・偶数のみ読む，前半だけ読む、みたいな順番変更
@@ -81,10 +81,10 @@ def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1
             scalar.fit(X_train)
         X_train = scalar.transform(X_train)
         
-    if return_scalar:
-        return X_train, y_train, scalar
-    else:
-        return X_train, y_train
+        if return_scalar:
+            return X_train, y_train, scalar
+    
+    return X_train, y_train
 
 if __name__ == '__main__':
     # 自宅で作成したのでLaboratory用に書き換える
