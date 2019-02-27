@@ -1,6 +1,7 @@
 # -- coding: utf-8 --
 import numpy as np
 import os
+import glob
 from keras.models import model_from_json
 from read_training_data_viscos import read_csv_type3
 from scatter_plot_viscos import make_scatter_plot
@@ -110,7 +111,7 @@ def case_name_list_generator(source, fname_lift_test, some_case_test=False, some
                                 
     return casename_list
 
-def some_case_test(source, fname_lift_test):
+def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train):
     # head_list = ["fourierSr_", "concertrate_", "equidistant_"]
     # mid1_list = [str(200000), str(100000), str(50000), str(25000)]
     # mid2_list = ["_less_angle_", "_less_shape_"]
@@ -152,10 +153,6 @@ def some_case_test(source, fname_lift_test):
             for vec in vlist:
                 some_case.append("fourierSr_" + num + "_less_angle_" + dname + "_" + vec)
 
-    fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
-    fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
-    fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
-
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                       total_data = 0, return_scalar = True)
     x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
@@ -180,9 +177,27 @@ def some_case_test(source, fname_lift_test):
 
     df.to_csv(fname)
 
+def all_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train):
+    dir = source + "learned\\"
+    fname_head = "fourierSr_200000_less_angle_"
+    fname_tail = "_200_mlp.json"
+
+    file_list = []
+    file_list = glob.glob(source + fname_head + "\*" + fname_tail)
+
+    for fname in file_list:
+        dens_name = fname[len(fname_head):].replace(fname_tail, "")
+
+    print(dens_name)
+
+
 if __name__ == '__main__':
     source = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
     fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
+    fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
+    fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
+    fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+
     some_case_test(source, fname_lift_test)
     # case_name_list_generator(source, fname_lift_test)
 
