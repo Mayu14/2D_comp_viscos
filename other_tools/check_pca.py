@@ -36,14 +36,47 @@ def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shap
                 X_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd = s_odd,
                                                 read_rate = rr, total_data = 0, regularize = False)
     
-            cos_distance(X_train, X_test)
-            
-            pca = PCA(n_components = 2)
+            # cos_distance(X_train, X_test)
+            plot_X_train_average=False
+            if plot_X_train_average:
+                ave = np.average(X_train, axis = 0)
+                print(ave.shape)
+                fig = plt.figure()
+                ax = fig.add_subplot(1,1,1)
+                ax.plot(np.arange(202) + 1, ave, marker="o", color="mediumvioletred", label="Non-Standardized Vector", linestyle="None")
+                ax.set_yscale("log")
+                ax.legend()
+                ax.set_title("Average Scale of Vector Components")
+                ax.set_xlabel("Number of Vector Components")
+                ax.set_ylabel("Order of magnitude")
+                plt.show()
+                exit()
+            pca = PCA(n_components = 10)
             pca.fit(X_train)
             transformed = pca.fit_transform(X_train)
             print(pca.explained_variance_ratio_)
             print(sum(pca.explained_variance_ratio_))
             
+            if standardized:
+                plot_var_ratio = True
+                if plot_var_ratio:
+                    pca2 = PCA(n_components = 10)
+                    X_train2, y_train2 = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd,
+                                                      read_rate = rr, total_data = 0, regularize = False)
+                    pca2.fit(X_train2)
+                    x = np.arange(10) + 1
+                    fig = plt.figure()
+                    ax = fig.add_subplot(1, 1, 1)
+                    ax.plot(x, pca2.explained_variance_ratio_, marker="o", color="mediumvioletred",  label="Non-Standardized")
+                    ax.plot(x, pca.explained_variance_ratio_, marker="*", color = "dodgerblue", label = "Standardized")
+                    ax.legend(bbox_to_anchor = (0, 1), loc = "upper left", borderaxespad = 1, fontsize = 12)
+                    ax.set_title("PCA of Standardized Dataset")
+                    ax.set_xlabel("Nth principal component")
+                    ax.set_ylabel("Explained Variance Ratio")
+                    ax.set_xlim(1,10)
+                    ax.set_ylim(0,1)
+                    plt.show()
+
             transformed_test = pca.fit_transform(X_test)
 
             fig = plt.figure()
@@ -67,14 +100,22 @@ def cos_distance(X_train, X_test):
     dist_ij = -(dist_ij - 1.0)  # cos類似度の絶対値に変換
     mean = np.mean(dist_ij)
     var = np.var(dist_ij)
-    
+
+    binnum = 100
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
-    ax.hist(dist_ij.reshape(-1), bins=200,range=(-1,1), label="Cosine Distance", normed = True)
-    ax.set_title("Cosine Distance Histogram: Training Data vs. Test Data")
+    ax.hist(dist_ij.reshape(-1), bins=binnum,range=(-1,1), label="Cosine Distance", density = True)
+    
+    ax_yticklocs = ax.yaxis.get_ticklocs()  # 目盛りの情報を取得
+    ax_yticklocs = list(map(lambda x: x * len(range(-1, 1)) * 1.0 / binnum, ax_yticklocs))  # 元の目盛りの値にbinの幅を掛ける
+    ax.yaxis.set_ticklabels(list(map(lambda x: "%0.3f" % x, ax_yticklocs)))
+    
+    ax.set_title("Cosine Distance Histogram: Training Data - Test Data (Standardized)")
     
     ax.set_xlabel("Cosine Distance")
     ax.set_ylabel("Rate of Appearance")
+    ax.set_xlim(-1,1)
+
     fig.show()
     plt.show()
 
@@ -92,5 +133,5 @@ if __name__ == '__main__':
     fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
     fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
 
-    pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shape_test)
+    pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shape_test, standardized = False)
     
