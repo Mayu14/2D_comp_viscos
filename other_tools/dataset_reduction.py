@@ -28,7 +28,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     
     def reduction2k_datas(X_data, y_data, k_cluster, indices = None, output_indices = False):
         nearest_indices = indices
-        if indices == None:
+        if type(indices) == type(None):
             nearest_indices = get_nearest_indices(X_data, k_cluster)
         X_data = X_data[nearest_indices, :]
         y_data = y_data[nearest_indices, :]
@@ -42,7 +42,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     
     def csv2indices(csvname):
         if os.path.exists(csvname):
-            return np.loadtxt(csvname, delimiter = ",")
+            return np.loadtxt(csvname, delimiter = ",", dtype = "int")
         else:
             return None
     
