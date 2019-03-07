@@ -51,6 +51,7 @@ def make_scatter_plot(data_a, data_b, label_a, label_b, resolution=200, path="",
         plt.ylim(-4, 4)
         fname += "fixed"
     plt.savefig(path + fname + "_original.png")
+    plt.close()
     
     plt.figure()
     if imshow:
@@ -69,7 +70,8 @@ def make_scatter_plot(data_a, data_b, label_a, label_b, resolution=200, path="",
         fname += "fixed"
     plt.plot(label, label, color="white", linestyle="dashed")
     plt.savefig(path + fname + "_with_center_line.png")
-
+    plt.close()
+    
 def test():
     def test_func(x, r):
         return x ** 2 + 3 * x + r * np.random.standard_normal(x.shape[0])
