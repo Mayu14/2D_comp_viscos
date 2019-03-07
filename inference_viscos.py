@@ -9,7 +9,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False):
+def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False):
     json_name = "learned\\" + case_name + "_mlp_model_.json"
     weight_name = "learned\\" + case_name + "_mlp_weight.h5"
 
@@ -31,36 +31,63 @@ def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False,
     # print('test accuracy :', score[1])
     
     y_predict = model.predict(x_test)
-    r2 = r2_score(y_test, y_predict)
-    rms = np.sqrt(mean_squared_error(y_test, y_predict))
-    if scatter:
-        case_name += "r2_" + str(r2) + "_rms_" + str(rms)
-        make_scatter_plot(y_test[:, 1], y_predict[:, 1], "CL(Exact)", "CL(Predict)",
-                          path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CL_" + case_name)
-        make_scatter_plot(y_test[:, 0], y_predict[:, 0], "CD(Exact)", "CD(Predict)",
-                          path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CD_" + case_name)
-        make_scatter_plot(y_test[:,1], y_predict[:,1], "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname="CL_"+case_name, fix_scale = True)
-        make_scatter_plot(y_test[:,0], y_predict[:,0], "CD(Exact)", "CD(Predict)",
-                          path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CD_" + case_name, fix_scale = True)
+    error = False
+    if check_error:
+        r2 = np.nan
+        rms = np.nan
+        error = True
+        if np.isnan(y_predict).any() == False:
+            r2 = r2_score(y_test, y_predict)
+            rms = np.sqrt(mean_squared_error(y_test, y_predict))
+            error = False
+    else:
+        r2 = r2_score(y_test, y_predict)
+        rms = np.sqrt(mean_squared_error(y_test, y_predict))
 
-    if anglerplot:
-        tekito = (99 + 13) * 40  # 22012
-        fig = plt.figure()
-        ax = fig.add_subplot(1,1,1)
-        ax.plot(x_test[tekito:tekito + 10, 0], y_test[tekito:tekito + 10], marker="o", markersize=10, color="dodgerblue", label = "Exact")
-        ax.plot(x_test[tekito:tekito + 10, 0], y_predict[tekito:tekito + 10], marker="o", markersize=10, color="mediumvioletred", label = "Estimate")
-        ax.plot(x_test[tekito:tekito + 10, 0], y_test[tekito:tekito + 10], color="dodgerblue", linestyle="dashdot", linewidth=1.0)
-        ax.plot(x_test[tekito:tekito + 10, 0], y_predict[tekito:tekito + 10], color="mediumvioletred", linestyle="dashdot", linewidth=1.0)
-        ax.legend(bbox_to_anchor=(0, 1), loc="upper left", borderaxespad=1, fontsize=12)
-        ax.set_xlabel("Angle of Attack [deg]")
-        ax.set_ylabel("$\it{C_{L}}$")
-        ax.set_title("NACA22012 Wing $\it{C_{L}}$ , $\it{C_{D}}$ distribution")
-        ax.grid(True)
-
-        fig.savefig(source + case_name + "_NACA22012.png")
-
-    if return_r2rms:
-        return r2, rms
+    if error:
+        if return_r2rms:
+            return r2, rms, error
+        else:
+            return error
+    else:
+        if scatter:
+            case_name += "r2_" + str(r2) + "_rms_" + str(rms)
+            make_scatter_plot(y_test[:, 1], y_predict[:, 1], "CL(Exact)", "CL(Predict)",
+                              path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CL_" + case_name)
+            make_scatter_plot(y_test[:, 0], y_predict[:, 0], "CD(Exact)", "CD(Predict)",
+                              path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CD_" + case_name)
+            make_scatter_plot(y_test[:,1], y_predict[:,1], "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname="CL_"+case_name, fix_scale = True)
+            make_scatter_plot(y_test[:,0], y_predict[:,0], "CD(Exact)", "CD(Predict)",
+                              path = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\", fname = "CD_" + case_name, fix_scale = True)
+    
+        if anglerplot:
+            tekito = (99 + 13) * 40  # 22012
+            fig = plt.figure()
+            ax = fig.add_subplot(1,1,1)
+            if y_test.shape[1] == 2:
+                # label_list = ["$\it{C_{L}}$", "$\it{C_{D}}$"]
+                label_Ex = ["Exact", ""]
+                label_Es = ["Estimate", ""]
+            
+            for i in range(y_test.shape[1]):
+                ax.plot(x_test[tekito:tekito + 10, 0], y_test[tekito:tekito + 10, i], marker="o", markersize=10, color="dodgerblue", label = label_Ex[i])#"Exact_" + label_list[i])
+                ax.plot(x_test[tekito:tekito + 10, 0], y_predict[tekito:tekito + 10, i], marker="o", markersize=10, color="mediumvioletred", label = label_Es[i])#"Estimate_" + label_list[i])
+            ax.plot(x_test[tekito:tekito + 10, 0], y_test[tekito:tekito + 10], color="dodgerblue", linestyle="dashdot", linewidth=1.0)
+            ax.plot(x_test[tekito:tekito + 10, 0], y_predict[tekito:tekito + 10], color="mediumvioletred", linestyle="dashdot", linewidth=1.0)
+            ax.legend(bbox_to_anchor=(0, 1), loc="upper left", borderaxespad=1, fontsize=12)
+            ax.set_xlabel("Angle of Attack [deg]")
+            ax.set_ylabel("$\it{C_{L}}$, $\it{C_{D}}$")
+            ax.set_title("NACA22012 Wing $\it{C_{L}}$ , $\it{C_{D}}$ distribution")
+            ax.grid(True)
+    
+            fig.savefig(source + case_name + "_NACA22012.png")
+            plt.close()
+    
+        if return_r2rms:
+            if check_error:
+                return r2, rms, error
+            else:
+                return r2, rms
 
 # 保存先を検索し，ありそうなファイル名を検索，発見したらリストに追加
 def case_name_list_generator(source, fname_lift_test, some_case_test=False, some_case = [], scatter=True, anglerplot=False):
@@ -124,22 +151,13 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
     # nlist = ["25000", "50000", "100000", "200000"]
     nlist = ["200000"]
     vlist = ["200"]
-    """
-    dens_list = [[1024],[512,512], [16,32,64],[64,128,256],[128,128,128],[256,256,256]]
-    dens_list = [[1024, 1024], [1024,1024,1024], [1024,1024,1024,1024], [1024,1024,1024,1024,1024],
-                 [512, 512, 512,512,512], [32,64,128,256,512,1024],[2,16],[2,16,32]]
-    """
-    # dens_list = [[2048],[2048,2048], [2048,2048,2048],[2048,2048,2048,2048],[2048,2048,2048,2048,2048],[2048,2048,2048,2048,2048,2048],[2048,2048,2048,2048,2048,2048,2048]]
-    dens_list = [[1024, 1024, 1024, 1024, 1024],
-                 [1024, 1024, 1024, 1024, 1024, 1024], [1024, 1024, 1024, 1024, 1024, 1024,1024]]
-    dr = [[12, 24, 48, 96, 192, 384]]
     
-    for i in range(5):
-        for j in range(7):
-            dr.append([2 ** (i + 7)] * (j + 1))
-    
-        dr.append([2 ** (i + 5), 2 ** (i + 6), 2 ** (i + 7)])
-    dens_list = dr
+    fname_head = "fourierSr_200000_less_angle_"
+    fname_tail = "_200_mlp_model_.json"
+
+    dens_list = get_learned_dens_list(source, fname_head, fname_tail)
+    # dens_list = [["2048","4096","8192"],["512","1024","2048"]]
+    # dens_list = [["512"]*19]
     dens_name = []
     
     for dense in dens_list:
@@ -147,6 +165,7 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
         for i in range(len(dense)):
             name += "_" + str(dense[i])
         dens_name.append(name)
+    
     some_case = []
     for num in nlist:
         for dname in dens_name:
@@ -157,17 +176,20 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
                                       total_data = 0, return_scalar = True)
     x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
                                     total_data = 0, shape_odd = 0, read_rate = 1, scalar = scalar)
-
+    
     mid = []
     for fname0 in some_case:
-        r2_test, rms_test = inference(source, x_test, y_test, fname0, scatter=True, anglerplot=True, return_r2rms=True)
-        r2_train, rms_train = inference(source, X_train, y_train, fname0, scatter=False, anglerplot=False, return_r2rms=True)
-        mid.append([fname0[27:], r2_train, rms_train, r2_test, rms_test])
+    # fname0 = some_case[0]
+        r2_test, rms_test, error = inference(source, x_test, y_test, fname0, scatter=True, anglerplot=True, return_r2rms=True, check_error=True)
+        if  error == False:
+            r2_train, rms_train = inference(source, X_train, y_train, fname0, scatter=False, anglerplot=False, return_r2rms=True)
+            mid.append([fname0[27:], r2_train, rms_train, r2_test, rms_test])
 
     columns = ["case", "train_r2", "train_rms", "test_r2", "test_rms"]
     dtypes = {'case': 'object', 'train_r2': 'float64', 'train_rms': 'float64', 'test_r2': 'float64',
               'test_rms': 'float64'}
-    df = pd.DataFrame(mid, columns=columns, dtype=dtypes)
+    
+    df = pd.DataFrame(mid, columns=columns)
     i = 0
     find = True
     while find:
@@ -177,18 +199,22 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
 
     df.to_csv(fname)
 
-def all_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train):
-    dir = source + "learned\\"
-    fname_head = "fourierSr_200000_less_angle_"
-    fname_tail = "_200_mlp.json"
+def get_learned_dens_list(source, fname_head, fname_tail, dir_name = "learned\\"):
+    dir = source + dir_name
 
-    file_list = []
-    file_list = glob.glob(source + fname_head + "\*" + fname_tail)
+    case_list = glob.glob(dir + "\*.json")
+    total_cases = len(case_list)
+    for i in range(total_cases):
+        case_list[i] = case_list[i][len(dir):].replace(fname_tail, "")
 
-    for fname in file_list:
-        dens_name = fname[len(fname_head):].replace(fname_tail, "")
+    dens_list = []
+    for fname in case_list:
+        if fname[len(fname_head)+2] == "_":
+            dens_list.append(fname[len(fname_head)+3:].split("_"))
+        else:
+            dens_list.append(fname[len(fname_head)+4:].split("_"))
 
-    print(dens_name)
+    return dens_list
 
 
 if __name__ == '__main__':
@@ -197,8 +223,7 @@ if __name__ == '__main__':
     fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
     fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
     fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
-
-    some_case_test(source, fname_lift_test)
+    some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train)
     # case_name_list_generator(source, fname_lift_test)
 
     
