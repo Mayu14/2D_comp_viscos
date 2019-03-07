@@ -84,7 +84,7 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, shape_data=2
         mid3 += "_" + str(dense_list[i])
     return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True):
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.5):
     # r_rate = [1, 2, 4, 8]
     # s_rate = [1, 2, 4, 8]
     # s_skiptype = [True, False]
@@ -98,13 +98,14 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     sr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
     dr = []
+    
     # for i in range(5):
+    
     i = 1
-    for j in range(7):
-        dr.append([2 ** (i + 7)] * (j + 1))
-        
-        dr.append([2 ** (i + 5), 2 ** (i + 6), 2 ** (i + 7)])
-
+    for j in range(6, 20):
+        dr.append([1024]*(j+1))
+    
+    print(dr)
     for dense_list in dr:
         print(dense_list)
         for rr in r_rate:
@@ -115,6 +116,9 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             else:
                 s_odd = 4   # 全体にわたって等間隔に読み出す(equidistant, dense用)
 
+            config = tf.ConfigProto()
+            config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_usage
+            KTF.set_session(tf.Session(config = config))
             old_session = KTF.get_session()
             with tf.Graph().as_default():
                 source = "Compressible_Invicid\\training_data\\"
@@ -146,7 +150,6 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         
 
                 input_vector_dim = X_train.shape[1]
-
                 with tf.name_scope("inference") as scope:
                     # model.add(Dense(units=2, input_dim=input_vector_dim))
                     model.add(Dense(units = dense_list[0], input_dim = input_vector_dim))
@@ -185,13 +188,13 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 model.compile(loss="mean_squared_error",
                               optimizer='Adam')
 
-                batch_size = 500
+                batch_size = 3402
                 train_steps, train_batches = batch_iter(X_train, y_train, batch_size)
                 if validate:
                     valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                 #"""
                 model.fit(x=X_train, y=y_train,
-                          batch_size=600, nb_epoch=1000,
+                          batch_size=batch_size, nb_epoch=1000,
                           validation_split=0.1, callbacks=[tb_cb])
                 #"""
                 """
