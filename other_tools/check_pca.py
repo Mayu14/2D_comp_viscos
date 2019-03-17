@@ -4,7 +4,7 @@ from read_training_data_viscos import read_csv_type3
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
-
+from other_tools.dataset_reduction import data_reduction
 def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shape_test, standardized=True):
     
     # r_rate = [1, 2, 4, 8]
@@ -17,8 +17,9 @@ def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shap
     # r_rate = [4, 8]
     # r_rate = [16, 32]
     # r_rate = [64, 160]
-
-    for sr in s_rate:
+    sr = s_rate[0]
+    for i in range(40):
+        cluster = 500 * (i + 1)
         for rr in r_rate:
             if rr == 1:
                 s_odd = 0  # 全部読みだす
@@ -27,17 +28,24 @@ def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shap
             else:
                 s_odd = 4  # 全体にわたって等間隔に読み出す(equidistant, dense用)
 
+            check_reduct = True             # reductionの確認
+            plot_X_train_average = False    # 入力ベクトルの各列成分のノルム平均値をグラフにプロット
+            plot_var_ratio = False           # 各主成分の寄与率をプロット
             if standardized:
                 X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, total_data = 0, return_scalar = True)
                 X_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd = s_odd,
                                                 read_rate = rr, total_data = 0, scalar = scalar)
+                if check_reduct:
+                    X_reduct, y_reduct = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False)
+
             else:
                 X_train, y_train = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, total_data = 0, regularize = False)
                 X_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, shape_odd = s_odd,
                                                 read_rate = rr, total_data = 0, regularize = False)
-    
+
             # cos_distance(X_train, X_test)
-            plot_X_train_average=False
+            # 入力ベクトルの各列成分のノルム平均値をグラフにプロット
+            
             if plot_X_train_average:
                 ave = np.average(X_train, axis = 0)
                 print(ave.shape)
@@ -51,14 +59,16 @@ def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shap
                 ax.set_ylabel("Order of magnitude")
                 plt.show()
                 exit()
+            # 主成分分析
             pca = PCA(n_components = 10)
             pca.fit(X_train)
             transformed = pca.fit_transform(X_train)
             print(pca.explained_variance_ratio_)
             print(sum(pca.explained_variance_ratio_))
             
+            # 正規化されているとき
             if standardized:
-                plot_var_ratio = True
+                # 第N主成分の寄与率をプロット
                 if plot_var_ratio:
                     pca2 = PCA(n_components = 10)
                     X_train2, y_train2 = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd,
@@ -76,19 +86,24 @@ def pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shap
                     ax.set_xlim(1,10)
                     ax.set_ylim(0,1)
                     plt.show()
-
+            # testデータに同じ座標変換を施す
             transformed_test = pca.fit_transform(X_test)
-
+            if check_reduct:
+                transformed_reduct = pca.fit_transform(X_reduct)
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1)
-            ax.scatter(transformed[:,0], transformed[:,1], alpha=0.3, color="dodgerblue", label = "Training")
+            if check_reduct:
+                ax.scatter(transformed_reduct[:, 0], transformed_reduct[:, 1], alpha = 0.3, color = "dodgerblue", label = "Training_" + str(cluster).zfill(5))
+            else:
+                ax.scatter(transformed[:,0], transformed[:,1], alpha=0.3, color="dodgerblue", label = "Training")
             ax.scatter(transformed_test[:, 0], transformed_test[:, 1], marker="*", alpha=0.5, color="mediumvioletred", label = "Test")
+            
             ax.legend(bbox_to_anchor = (0, 1), loc = "upper left", borderaxespad = 1, fontsize = 12)
             ax.set_title("PCA of Standardized Dataset")
             ax.set_xlabel("1st principal component")
             ax.set_ylabel("2nd principal component")
-            plt.show()
-            fig.show()
+            plt.savefig("PCA_Scatter_" + str(cluster).zfill(5) + ".png")
+            plt.close()
 
 
 # X_train & X_test :(N_samples, N_features)
@@ -133,5 +148,5 @@ if __name__ == '__main__':
     fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
     fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
 
-    pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shape_test, standardized = False)
+    pca(source, fname_lift_train, fname_lift_test, fname_shape_train, fname_shape_test, standardized = True)
     
