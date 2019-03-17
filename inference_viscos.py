@@ -155,9 +155,9 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
     fname_head = "fourierSr_200000_less_angle_"
     fname_tail = "_200_mlp_model_.json"
 
-    dens_list = get_learned_dens_list(source, fname_head, fname_tail)
+    # dens_list = get_learned_dens_list(source, fname_head, fname_tail)
     # dens_list = [["2048","4096","8192"],["512","1024","2048"]]
-    # dens_list = [["512"]*19]
+    dens_list = [["128"]*8]
     dens_name = []
     
     for dense in dens_list:
@@ -166,11 +166,19 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
             name += "_" + str(dense[i])
         dens_name.append(name)
     
+    preprocesses = ["None"] #["rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
     some_case = []
-    for num in nlist:
+    num = nlist[0]
+    # for num in nlist:
+    for preprocess in preprocesses:
         for dname in dens_name:
             for vec in vlist:
-                some_case.append("fourierSr_" + num + "_less_angle_" + dname + "_" + vec)
+                for i in range(40):
+                    tail2 = str(500 * (i+1)).zfill(5) + preprocess
+                    some_case.append("fourierSr_" + num + "_less_angle_" + dname + "_" + vec + "_" + tail2)
+                # tail2 = str(22680).zfill(5) + preprocess
+                # some_case.append("equidistant_" + num + "_less_angle_" + dname + "_" + vec + "_" + tail2)
+                # some_case.append("concertrate_" + num + "_less_angle_" + dname + "_" + vec + "_" + tail2)
 
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                       total_data = 0, return_scalar = True)
@@ -221,8 +229,18 @@ if __name__ == '__main__':
     source = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
     fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
     fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
-    fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
-    fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+
+    shape_type = 2
+    if shape_type == 0:
+        fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
+        fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+    elif shape_type == 1:
+        fname_shape_train = "NACA4\\shape_equidistant_1112_9988_s04.csv"
+        fname_shape_test = "NACA5\\shape_equidistant_21011_25190_s1.csv"
+    elif shape_type == 2:
+        fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_1112_9988_d4.csv"
+        fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
+    
     some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train)
     # case_name_list_generator(source, fname_lift_test)
 

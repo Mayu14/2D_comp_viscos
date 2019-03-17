@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import os
 from read_training_data_viscos import read_csv_type3
 #from scatter_plot import make_scatter_plot
-from sklearn.preprocessing import StandardScaler
+from other_tools.dataset_reduction import data_reduction
+from math import floor
 
 def batch_iter(data, labels, batch_size, shuffle=True):
     num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
@@ -62,7 +63,7 @@ def get_case_number(source, env, case_number):
 
 # case_numberから何のデータだったか思い出せない問題が起きたのでファイル名の命名規則を変更する
 # (形状)_(データ数)とする
-def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, shape_data=200, total_data=200000):
+def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess = "", shape_data=200, total_data=200000):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -78,13 +79,15 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, shape_data=2
     else:
         mid2 = "less_shape"
     tail = str(int(shape_data / rr))
-
+    
+    tail2 = str(cluster).zfill(5)
+    
     mid3 = str(len(dense_list)) + "L"
     for i in range(len(dense_list)):
         mid3 += "_" + str(dense_list[i])
-    return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail
+    return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.5):
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.8):
     # r_rate = [1, 2, 4, 8]
     # s_rate = [1, 2, 4, 8]
     # s_skiptype = [True, False]
@@ -96,19 +99,24 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # r_rate = [16, 32]
     # r_rate = [64, 160]
     sr = 1
+    rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
-    dr = []
+    dr = [[128]*8]
     
     # for i in range(5):
-    
-    i = 1
-    for j in range(6, 20):
-        dr.append([1024]*(j+1))
-    
-    print(dr)
+    data_reduction_test = False
+    # i = 1
+    # for j in range(6, 20):
+        # dr.append([1024]*(j+1))
+    preprocesses = ["None"]
+    # preprocesses = ["rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
+    # dense_list = dr[0]
     for dense_list in dr:
-        print(dense_list)
-        for rr in r_rate:
+    # for reduct in range(40):
+        # cluster = 500 * (reduct + 1)
+        cluster = 22680
+        # for rr in r_rate:
+        for preprocess in preprocesses:
             if rr == 1:
                 s_odd = 0   # 全部読みだす
             elif fname_shape_train.find("fourier") != -1:
@@ -125,7 +133,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 if env == "Lab":
                     source = "G:\\Toyota\\Data\\" + source
                     # case_num = get_case_number(source, env, case_number)
-                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype)
+                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess)
                     log_name = "learned\\" + case_num + "_tb_log.hdf5"
                     json_name = "learned\\" + case_num + "_mlp_model_.json"
                     weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -145,10 +153,12 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     # ここ書き換えポイント
                     
                     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
+                    if data_reduction_test:
+                        X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess)
+                        
                     if validate:
                         x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
                         
-
                 input_vector_dim = X_train.shape[1]
                 with tf.name_scope("inference") as scope:
                     # model.add(Dense(units=2, input_dim=input_vector_dim))
@@ -188,7 +198,12 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 model.compile(loss="mean_squared_error",
                               optimizer='Adam')
 
-                batch_size = 3402
+                batch_size = y_train.shape[0]
+                threshold = 3000
+                if batch_size > threshold:
+                    split = floor(float(batch_size) / threshold)
+                    batch_size = floor(float(batch_size) / split)
+                    
                 train_steps, train_batches = batch_iter(X_train, y_train, batch_size)
                 if validate:
                     valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
@@ -239,34 +254,34 @@ if __name__ == '__main__':
         env = "Colab"
 
     # shape_type = input("please set shape_type: 0:fourier, 1:equidistant, 2:dense")
-    # for i in range(3):
-    shape_type = str(0)
-    fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
-    fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
-
-    if shape_type == str(0):
-        fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
-        fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
-        case_number = 0
-        """
-    elif shape_type == str(1):
-        fname_shape_train = "NACA4\\shape_equidistant_5000_odd.csv"
-        fname_shape_test = "NACA5\\shape_equidistant_all.csv"
-        case_number = 1000
-
-    elif shape_type == str(2):
-        fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_5000_odd.csv"
-        fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_all.csv"
-        case_number = 2000
-        """
-    else:
-        print("shape_type error")
-        exit()
-
-    if env == "Colab":
-        fname_lift_train = fname_lift_train.replace("\\", "/")
-        fname_shape_train = fname_shape_train.replace("\\", "/")
-        fname_lift_test = fname_lift_test.replace("\\", "/")
-        fname_shape_test = fname_shape_test.replace("\\", "/")
-
-    main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env, validate=False)
+    for i in range(1,3):
+        shape_type = str(i)
+        fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
+        fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
+    
+        if shape_type == str(0):
+            fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
+            fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+            case_number = 0
+            #"""
+        elif shape_type == str(1):
+            fname_shape_train = "NACA4\\shape_equidistant_1112_9988_s04.csv"
+            fname_shape_test = "NACA5\\shape_equidistant_21011_25190_s1.csv"
+            case_number = 1000
+    
+        elif shape_type == str(2):
+            fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_1112_9988_d4.csv"
+            fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
+            case_number = 2000
+            #"""
+        else:
+            print("shape_type error")
+            exit()
+    
+        if env == "Colab":
+            fname_lift_train = fname_lift_train.replace("\\", "/")
+            fname_shape_train = fname_shape_train.replace("\\", "/")
+            fname_lift_test = fname_lift_test.replace("\\", "/")
+            fname_shape_test = fname_shape_test.replace("\\", "/")
+    
+        main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env, validate=False)
