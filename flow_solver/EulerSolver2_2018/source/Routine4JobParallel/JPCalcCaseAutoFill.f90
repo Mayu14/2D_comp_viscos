@@ -24,9 +24,11 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
     character(len=256) :: cGridName, cResultName, cLoop, cAngle
     integer :: debug = 0
     integer :: access
-    character(len=256) :: cDirectory,cFileName, cCaseName
+    character(len=256) :: cDirectory,cFileName, cCaseName, cTmpDir
     character(len=256) :: cStep
     integer :: naca4digit = 3
+
+    write(cTmpDir, '("/work/A/FMa/FMa037/CaseM030/")')
 
     if(UConf%UseJobParallel == 1) then
     !PETET = 0 ~ 1619を仮定    ! NACA5の場合1~559
@@ -72,7 +74,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                     if(UConf%CalcEnv == 0) then
                         write(UConf%cDirectory, '("")')
                     else if(UConf%CalcEnv == 1) then
-                        write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case4/")')
+                        UConf%cDirectory = cTmpDir
                     end if
 
                     if(debug == 1) then
@@ -119,7 +121,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                             write(UConf%cDirectory, '("")')
                         else if(UConf%CalcEnv == 1) then
                             write(UConf%cFileName, '("NACA", i1, i1, i2.2,  "_", i2.2)') i1digit, i2digit, i34digit, iAngleDeg ! 東北大スパコン用
-                            write(UConf%cDirectory, '("/work/A/FMa/FMa037/Case4/")')
+                            UConf%cDirectory = cTmpDir
                         end if
 
                         if(debug == 1) then
