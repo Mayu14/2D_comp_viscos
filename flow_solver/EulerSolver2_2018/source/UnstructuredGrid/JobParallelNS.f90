@@ -24,6 +24,7 @@ subroutine JobParallelNS(UConf)
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
 
+! 初期化
     UCC%ConvergeCondition = Converge_Method
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
 
@@ -44,11 +45,12 @@ subroutine JobParallelNS(UConf)
 
     call CheckNaN(UConf, UCC)   !
 
-    !do iTry = 1, 100
+    do iTry = 1, 100
         !call JPUOutput(UConf,UG,UCC,0)  ! debug
         iStartStep = 1
-        !do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
-        do iStep = iStartStep, IterationNumber
+        ! 時間積分
+        do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
+        !do iStep = iStartStep, IterationNumber
             if(DetailedReport > 2) then
                 if(mod(IterationNumber, 10) == 0) then
                     write(6,*) iStep, "/", IterationNumber, " th iteration"
@@ -56,13 +58,13 @@ subroutine JobParallelNS(UConf)
             end if
 
             call UnstNS(iStep,UConf,UG,UCC,UCE)
-
+        ! 中間vtk出力
             if(mod(iStep,OutputInterval) == 0) then
                 iStep4Plot = iStep / OutputInterval
                 call JPUOutput(UConf,UG,UCC,iStep4Plot)
-                if(UConf%UseSteadyCalc == 1) call UOutput_Residuals(UConf, UCC%RH)
+                if(UConf%UseSteadyCalc == 1) call UOutput_Residuals(UConf, UCC%RH, iStep4Plot)
             end if
-
+        ! 画面出力＆NaN発生確認（発生時はデータをロールバックする）
             if(mod(iStep, CheckNaNInterval) == 0)then
                 if(DetailedReport > 2) write(6,*) "NaN Checking..."
                 call CheckNaN(UConf, UCC)
@@ -76,7 +78,7 @@ subroutine JobParallelNS(UConf)
 
         if(UConf%SwitchProgram /= 7) then
             call JPUOutput(UConf,UG,UCC,0)
-            call UOutput_Residuals(UConf, UCC%RH)
+            call UOutput_Residuals(UConf, UCC%RH, -1)
         end if
 
         if (UCC%iEndFlag == 2) then
@@ -105,7 +107,7 @@ subroutine JobParallelNS(UConf)
         deallocate(UAC%coefficient, UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
         !UConf%UseSteadyCalc = 1
-    !end do
+    end do
 
     return
 contains
