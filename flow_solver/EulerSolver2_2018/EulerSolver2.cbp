@@ -494,6 +494,7 @@
 		<Unit filename="source/UnstructuredGrid/UnstOutput/UOutput_Characteristics.f90">
 			<Option weight="1" />
 		</Unit>
+		<Unit filename="source/UnstructuredGrid/UnstOutput/UOutput_Residuals.f90" />
 		<Unit filename="source/UnstructuredGrid/UnstRegion/UAllocVariables.f90">
 			<Option weight="1" />
 		</Unit>
