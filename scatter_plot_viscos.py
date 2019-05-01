@@ -10,7 +10,7 @@ def make_scatter_plot(data_a, data_b, label_a, label_b, resolution=200, path="",
         return "error:invalid data size!"
 
     max_data = max(np.max(data_a), np.max(data_b))
-    min_data = min(np.max(data_a), np.min(data_b))
+    min_data = min(np.min(data_a), np.min(data_b))
 
     # データの調整
     data_a = data_a - min_data
