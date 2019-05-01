@@ -129,8 +129,8 @@
 
         if(UConf%UseSteadyCalc == 1) then
             UCC%RH%iTime = 1
-            allocate(UCC%RH%MaxResidual(5+1, IterationNumber))
-            allocate(UCC%RH%AveResidual(5+1, IterationNumber))
+            allocate(UCC%RH%MaxResidual(5+1, IterationNumber*100))
+            allocate(UCC%RH%AveResidual(5+1, IterationNumber*100))
             UCC%RH%MaxResidual = 0.0d0
             UCC%RH%AveResidual = 0.0d0
         end if
