@@ -60,7 +60,7 @@ implicit none
     double precision :: InfinityKineticViscosity = 6.42469d0 * (10.0d0 ** (-5))
 
     ! Roe's FDS parameter
-    double precision :: EntropyCorrection = 0.3d0 !FDS用エントロピー補正量
+    double precision :: EntropyCorrection = 0.15d0 !FDS用エントロピー補正量
 
     ! Rational Runge-Kutta 2 parameter
     double precision, parameter :: RungeKuttaParameterB1 = 2.0d0
@@ -68,7 +68,7 @@ implicit none
     double precision, parameter :: RungeKuttaParameterC2 = 0.5d0
 
     ! Venkatakrishnan Limiter parameter
-    double precision :: VenkatakrishnanParameterK = 0.3d0
+    double precision :: VenkatakrishnanParameterK = 0.03d0
 
     ! Sutherland's Law parameter (for gas)
     public SutherlandViscosity
