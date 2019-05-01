@@ -2,9 +2,9 @@
 # 単純な関数のデータを与えて元のデータを予測させてみる
 # 学習用データが(TesraK80の)メモリに乗らないため,Generatorを使ってバッチごとにデータをロードさせる感じで
 # 20万件のデータを200件ずつ取り出す
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import LeakyReLU, PReLU
+from keras.layers import LeakyReLU, PReLU, Input
 from keras.callbacks import EarlyStopping, TensorBoard
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
@@ -14,7 +14,9 @@ import os
 from read_training_data_viscos import read_csv_type3
 #from scatter_plot import make_scatter_plot
 from other_tools.dataset_reduction import data_reduction
+from other_tools.complex_layer import residual, highway, residual_dense
 from math import floor
+
 
 def batch_iter(data, labels, batch_size, shuffle=True):
     num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
@@ -63,7 +65,9 @@ def get_case_number(source, env, case_number):
 
 # case_numberから何のデータだったか思い出せない問題が起きたのでファイル名の命名規則を変更する
 # (形状)_(データ数)とする
-def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess = "", shape_data=200, total_data=200000):
+def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess="",
+                         criteria_method="nearest_centroid", shape_data=200, total_data=200000, resnet=False,
+                         highway=False, densenet=False):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -85,9 +89,21 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
     mid3 = str(len(dense_list)) + "L"
     for i in range(len(dense_list)):
         mid3 += "_" + str(dense_list[i])
-    return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.8):
+    cm = ""
+    if criteria_method == "farthest_from_center":
+        cm += "_FFC"
+
+    if resnet:
+        cm += "_resnet"
+    if highway:
+        cm += "_highway"
+    if densenet:
+        cm += "_densenet"
+
+    return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
+
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.5):
     # r_rate = [1, 2, 4, 8]
     # s_rate = [1, 2, 4, 8]
     # s_skiptype = [True, False]
@@ -108,13 +124,14 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # i = 1
     # for j in range(6, 20):
         # dr.append([1024]*(j+1))
-    preprocesses = ["None"]
-    # preprocesses = ["rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
-    # dense_list = dr[0]
-    for dense_list in dr:
-    # for reduct in range(40):
-        # cluster = 500 * (reduct + 1)
-        cluster = 22680
+    criteria_method = "farthest_from_center"
+    # preprocesses = ["None"]
+    preprocesses = ["rbf"]#, "poly", "linear", "cosine", "sigmoid", "PCA"]
+    dense_list = dr[0]
+    # for dense_list in dr:
+    for reduct in range(40):
+        cluster = 500 * (reduct + 1)
+        # cluster = 22680
         # for rr in r_rate:
         for preprocess in preprocesses:
             if rr == 1:
@@ -128,12 +145,15 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_usage
             KTF.set_session(tf.Session(config = config))
             old_session = KTF.get_session()
+            resnet = False
+            high_way = True
+            densenet = False
             with tf.Graph().as_default():
                 source = "Compressible_Invicid\\training_data\\"
                 if env == "Lab":
                     source = "G:\\Toyota\\Data\\" + source
                     # case_num = get_case_number(source, env, case_number)
-                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess)
+                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=densenet)
                     log_name = "learned\\" + case_num + "_tb_log.hdf5"
                     json_name = "learned\\" + case_num + "_mlp_model_.json"
                     weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -143,18 +163,20 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     log_name = "learned/" + case_num + "_log.hdf5"
                     json_name = "learned/" + case_num + "_mlp_model_.json"
                     weight_name = "learned/" + case_num + "_mlp_weight.h5"
+                print(case_num)
+
 
                 session = tf.Session('')
                 KTF.set_session(session)
                 KTF.set_learning_phase(1)
                 
-                model = Sequential()
+                # model = Sequential()
                 if case_type == 3:
                     # ここ書き換えポイント
                     
                     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
                     if data_reduction_test:
-                        X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess)
+                        X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
                         
                     if validate:
                         x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
@@ -162,34 +184,38 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 input_vector_dim = X_train.shape[1]
                 with tf.name_scope("inference") as scope:
                     # model.add(Dense(units=2, input_dim=input_vector_dim))
-                    model.add(Dense(units = dense_list[0], input_dim = input_vector_dim))
-                    model.add(LeakyReLU())
+                    # leaky_relu = LeakyReLU()
+                    inputs = Input(shape=(input_vector_dim,))
+                    dense_net_list = [133, 88, 60, 30, 10]
+                    x = Dense(units = dense_net_list[0])(inputs)
+                    # x = Activation(LeakyReLU())(x)
+                    x = LeakyReLU()(x)
+
+                    for i in range(1, len(dense_net_list)):
+                        dense_block =
+                        x = Dense(units = dense_list[0])(x)
+                        leaky_relu = LeakyReLU()
+                        # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                        x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+
+                    """
+                    x = Dense(units = dense_list[0])(inputs)
+                    # x = Activation(LeakyReLU())(x)
+                    x = LeakyReLU()(x)
+
                     for i in range(1, len(dense_list)):
-                        model.add(Dense(units=dense_list[i]))
-                        model.add(LeakyReLU())
+                        x = Dense(units = dense_list[0])(x)
+                        leaky_relu = LeakyReLU()
+                        # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                        x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                """
+
                     """
-                    model.add(Dense(units=192))
-                    model.add(LeakyReLU())
-                    model.add(Dense(units=2048))
-                    model.add(LeakyReLU())
-                    model.add(Dense(units=2048))
-                    model.add(LeakyReLU())
-                    """
-                    """
-                    model.add(Dense(units=512))
-                    model.add(LeakyReLU())
-        
-                    for i in range(5):
-                        model.add(Dense(units = 512))
-                        model.add(LeakyReLU())
-                        # model.add(Dropout(0.5))
-                    # model.add(Dense(units=half, activation='relu'))
-                    # model.add(Dropout(0.5))
                     """
                     # ここ書き換えポイント
-                    model.add(Dense(units=2))
-
-                model.summary()
+                    predictions = Dense(units = 2, activation = None)(x)
+                
+                model = Model(inputs = inputs, outputs = predictions)
 
                 save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
                 # es_cb = EarlyStopping(monitor='val_loss', patience=0, verbose=0, mode='auto')
@@ -199,7 +225,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                               optimizer='Adam')
 
                 batch_size = y_train.shape[0]
-                threshold = 3000
+                threshold = 30000
                 if batch_size > threshold:
                     split = floor(float(batch_size) / threshold)
                     batch_size = floor(float(batch_size) / split)
@@ -254,34 +280,35 @@ if __name__ == '__main__':
         env = "Colab"
 
     # shape_type = input("please set shape_type: 0:fourier, 1:equidistant, 2:dense")
-    for i in range(1,3):
-        shape_type = str(i)
-        fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
-        fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
-    
-        if shape_type == str(0):
-            fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
-            fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
-            case_number = 0
-            #"""
-        elif shape_type == str(1):
-            fname_shape_train = "NACA4\\shape_equidistant_1112_9988_s04.csv"
-            fname_shape_test = "NACA5\\shape_equidistant_21011_25190_s1.csv"
-            case_number = 1000
-    
-        elif shape_type == str(2):
-            fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_1112_9988_d4.csv"
-            fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
-            case_number = 2000
-            #"""
-        else:
-            print("shape_type error")
-            exit()
-    
-        if env == "Colab":
-            fname_lift_train = fname_lift_train.replace("\\", "/")
-            fname_shape_train = fname_shape_train.replace("\\", "/")
-            fname_lift_test = fname_lift_test.replace("\\", "/")
-            fname_shape_test = fname_shape_test.replace("\\", "/")
-    
-        main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env, validate=False)
+    # for i in range(1,3):
+    i = 0
+    shape_type = str(i)
+    fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
+    fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
+
+    if shape_type == str(0):
+        fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
+        fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
+        case_number = 0
+        #"""
+    elif shape_type == str(1):
+        fname_shape_train = "NACA4\\shape_equidistant_1112_9988_s04.csv"
+        fname_shape_test = "NACA5\\shape_equidistant_21011_25190_s1.csv"
+        case_number = 1000
+
+    elif shape_type == str(2):
+        fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_1112_9988_d4.csv"
+        fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
+        case_number = 2000
+        #"""
+    else:
+        print("shape_type error")
+        exit()
+
+    if env == "Colab":
+        fname_lift_train = fname_lift_train.replace("\\", "/")
+        fname_shape_train = fname_shape_train.replace("\\", "/")
+        fname_lift_test = fname_lift_test.replace("\\", "/")
+        fname_shape_test = fname_shape_test.replace("\\", "/")
+
+    main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env=env, validate=False)
