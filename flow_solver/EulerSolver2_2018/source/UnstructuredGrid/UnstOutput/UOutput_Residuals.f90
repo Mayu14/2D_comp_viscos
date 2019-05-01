@@ -1,9 +1,10 @@
-subroutine UOutput_Residuals(UConf, RH)
+subroutine UOutput_Residuals(UConf, RH, iStep)
     use StructVar_Mod
     implicit none
     type(Configulation), intent(in) :: UConf
     type(ResidualHistory), intent(inout) :: RH
-    character(len=256) :: cDirectory,cFileName, cCaseName, cUFileName
+    integer, intent(in) :: iStep
+    character(len=256) :: cDirectory,cFileName, cCaseName, cUFileName, cStep
     integer :: iTime, iMaxTime, iWall, debug = 0
 
     if(debug == 1) then
@@ -12,9 +13,10 @@ subroutine UOutput_Residuals(UConf, RH)
         cUFileName = UConf%cFileName
     end if
 
+    write(cStep, *) iStep
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultR/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
 
-    cFileName = trim(adjustl(cDirectory))//"RES_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//".csv"
+    cFileName = trim(adjustl(cDirectory))//"RES_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th.csv"
 
     if(RH%iLastOutput /= 1) then
         open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown', position ="append")
