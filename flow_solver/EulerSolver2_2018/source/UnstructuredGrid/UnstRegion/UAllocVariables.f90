@@ -47,17 +47,17 @@
 
         allocate(UG%GM%BC%InFlowVariable(5),UG%GM%BC%OutFlowVariable(5))
         allocate(UG%InscribedCircle(UG%GI%RealCells))
-        if(UConf%UseMUSCL == 1) then!
+        !if(UConf%UseMUSCL == 1) then!
             allocate(UG%GM%AverageWidth(UG%GI%RealCells)) !セル中心から界面までの平均距離は(実格子番号)だけ確保
-        end if
+        !end if
 
-        if(UConf%UseOverSet == 1) then
+        !if(UConf%UseOverSet == 1) then
             allocate(UG%CH%PointNum(UG%CH%iTotal))
-        end if
+        !end if
 
-        if(UG%IO%iTotal /= 0) then
+        !if(UG%IO%iTotal /= 0) then
             allocate(UG%IO%PointNum(UG%IO%iTotal))
-        end if
+        !end if
 
         iDim = UG%GM%Dimension
         allocate(UCC%ConservedQuantity(iDim+2,UG%GI%AllCells,1,1)) !保存変数は(変数の種類，要素番号,1,1)で確保
