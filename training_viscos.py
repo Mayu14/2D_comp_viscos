@@ -4,6 +4,7 @@
 # 20万件のデータを200件ずつ取り出す
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Activation
+from keras.layers.normalization import BatchNormalization
 from keras.layers import LeakyReLU, PReLU, Input
 from keras.callbacks import EarlyStopping, TensorBoard
 import keras.backend.tensorflow_backend as KTF
@@ -16,6 +17,7 @@ from read_training_data_viscos import read_csv_type3
 from other_tools.dataset_reduction import data_reduction
 from other_tools.complex_layer import residual, highway, residual_dense
 from math import floor
+
 
 
 def batch_iter(data, labels, batch_size, shuffle=True):
@@ -67,7 +69,7 @@ def get_case_number(source, env, case_number):
 # (形状)_(データ数)とする
 def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess="",
                          criteria_method="nearest_centroid", shape_data=200, total_data=200000, resnet=False,
-                         highway=False, densenet=False):
+                         highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -87,9 +89,13 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
     tail2 = str(cluster).zfill(5)
     
     mid3 = str(len(dense_list)) + "L"
+    
     for i in range(len(dense_list)):
         mid3 += "_" + str(dense_list[i])
-
+        if i == 10:
+            mid3 += "..._"
+            break
+    
     cm = ""
     if criteria_method == "farthest_from_center":
         cm += "_FFC"
@@ -100,6 +106,10 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         cm += "_highway"
     if densenet:
         cm += "_densenet"
+    if useBN:
+        cm += "_BN"
+    if useDrop:
+        cm += "_DR" + str(dor)
 
     return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
 
@@ -118,6 +128,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
     dr = [[128]*8]
+    dr = [[128] * 32]
     
     # for i in range(5):
     data_reduction_test = False
@@ -125,15 +136,35 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # for j in range(6, 20):
         # dr.append([1024]*(j+1))
     criteria_method = "farthest_from_center"
+    useBN_list = [True, False, True, False, True, False]
+    useDrop = True
+    dor_list = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    resnet = True
+    high_way = False
+    densenet = False
     # preprocesses = ["None"]
-    preprocesses = ["rbf"]#, "poly", "linear", "cosine", "sigmoid", "PCA"]
+    preprocesses = [""]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
     dense_list = dr[0]
     # for dense_list in dr:
-    for reduct in range(40):
-        cluster = 500 * (reduct + 1)
-        # cluster = 22680
+    # for reduct in range(40):
+    for dor in dor_list:
+        # cluster = 500 * (reduct + 1)
+        cluster = 22680
         # for rr in r_rate:
-        for preprocess in preprocesses:
+        i = 0
+        for useBN in useBN_list:
+            preprocess = ""
+            if i == 0:
+                resnet = True
+                densenet = False
+            elif i == 2:
+                resnet = False
+                high_way = True
+            elif i == 4:
+                high_way = False
+                densenet = True
+            i += 1
+            
             if rr == 1:
                 s_odd = 0   # 全部読みだす
             elif fname_shape_train.find("fourier") != -1:
@@ -145,15 +176,13 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_usage
             KTF.set_session(tf.Session(config = config))
             old_session = KTF.get_session()
-            resnet = False
-            high_way = True
-            densenet = False
+
             with tf.Graph().as_default():
                 source = "Compressible_Invicid\\training_data\\"
                 if env == "Lab":
                     source = "G:\\Toyota\\Data\\" + source
                     # case_num = get_case_number(source, env, case_number)
-                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=densenet)
+                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=densenet, useBN = useBN, useDrop = useDrop, dor = dor)
                     log_name = "learned\\" + case_num + "_tb_log.hdf5"
                     json_name = "learned\\" + case_num + "_mlp_model_.json"
                     weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -173,46 +202,61 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 # model = Sequential()
                 if case_type == 3:
                     # ここ書き換えポイント
-                    
                     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
+                    
                     if data_reduction_test:
                         X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
                         
                     if validate:
                         x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+
+                
                         
                 input_vector_dim = X_train.shape[1]
-                with tf.name_scope("inference") as scope:
-                    # model.add(Dense(units=2, input_dim=input_vector_dim))
+
+                def simple_network(dense_list, inputs, resnet = False, highwaynet = False):
                     # leaky_relu = LeakyReLU()
-                    inputs = Input(shape=(input_vector_dim,))
-                    dense_net_list = [133, 88, 60, 30, 10]
+                    # input layer
+                    x = Dense(units = dense_list[0])(inputs)
+                    # mid layer
+                    for i in range(1, len(dense_list)):
+                        leaky_relu = LeakyReLU()
+                        if resnet:
+                            x = residual(inputs = x, Activator = leaky_relu, batch_normalization = useBN,
+                                         dropout = useDrop, dropout_rate = dor)
+                        else:
+                            if highwaynet:
+                                x = highway(inputs = x, Activator = leaky_relu, batch_normalization = useBN,
+                                            dropout = useDrop, dropout_rate = dor)
+                            else:
+                                if useBN:
+                                    x = BatchNormalization()(x)
+                                x = Dense(units = dense_list[i])(x)
+                                x = LeakyReLU()(x)
+                                if useDrop:
+                                    x = Dropout(rate = dor)(x)
+                    return x
+                
+                with tf.name_scope("inference") as scope:
+                    inputs = Input(shape = (input_vector_dim,))
+                    
+                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way)
+                    
+                    """
                     x = Dense(units = dense_net_list[0])(inputs)
                     # x = Activation(LeakyReLU())(x)
                     x = LeakyReLU()(x)
-
+                    """
+                    """
                     for i in range(1, len(dense_net_list)):
                         dense_block =
                         x = Dense(units = dense_list[0])(x)
                         leaky_relu = LeakyReLU()
                         # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
                         x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-
                     """
-                    x = Dense(units = dense_list[0])(inputs)
-                    # x = Activation(LeakyReLU())(x)
-                    x = LeakyReLU()(x)
-
-                    for i in range(1, len(dense_list)):
-                        x = Dense(units = dense_list[0])(x)
-                        leaky_relu = LeakyReLU()
-                        # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                        x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                """
-
-                    """
-                    """
-                    # ここ書き換えポイント
+                    
+                    # output layer
                     predictions = Dense(units = 2, activation = None)(x)
                 
                 model = Model(inputs = inputs, outputs = predictions)
