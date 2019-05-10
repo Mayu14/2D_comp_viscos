@@ -3,6 +3,8 @@ import numpy as np
 import os
 import glob
 from keras.models import model_from_json
+import keras.backend.tensorflow_backend as KTF
+from keras.utils import plot_model
 from read_training_data_viscos import read_csv_type3
 from scatter_plot_viscos import make_scatter_plot
 from sklearn.metrics import r2_score, mean_squared_error
@@ -13,7 +15,7 @@ import keras.backend.tensorflow_backend as KTF
 import glob
 import shutil
 
-def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False, gpu_mem_usage=0.5):
+def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False, model2png = True, gpu_mem_usage=0.25):
     json_name = "learned\\" + case_name + "_mlp_model_.json"
     weight_name = "learned\\" + case_name + "_mlp_weight.h5"
 
@@ -35,6 +37,9 @@ def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False,
     model.compile(loss="mean_squared_error",
                   optimizer='Adam')
 
+    if model2png:
+        fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_name + ".png"
+        plot_model(model, to_file=fname, show_shapes=True)
     # score = model.evaluate()
     # print('test loss :', score[0])
     # print('test accuracy :', score[1])
@@ -208,45 +213,70 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
                     # some_case.append("equidistant_" + num + "_less_angle_" + dname + "_" + vec + "_" + tail2)
                     # some_case.append("concertrate_" + num + "_less_angle_" + dname + "_" + vec + "_" + tail2)
     else:
-        inputDir = source + "learned" + os.sep
-        outputDir = inputDir + "rated" + os.sep
-        for inputPath in glob.glob(inputDir + os.sep + "*.json"):
-            some_case.append(inputPath.replace(inputDir, "").replace("_mlp_model_.json", ""))
 
-    X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
-                                      total_data = 0, return_scalar = True)
-    x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
-                                    total_data = 0, shape_odd = 0, read_rate = 1, scalar = scalar)
-    
-    mid = []
-    for fname0 in some_case:
-    # fname0 = some_case[0]
-        r2_test, rms_test, error = inference(source, x_test, y_test, fname0, scatter=True, anglerplot=True, return_r2rms=True, check_error=True)
-        if error == False:
-            r2_train, rms_train = inference(source, X_train, y_train, fname0, scatter=False, anglerplot=False, return_r2rms=True)
-            mid.append([fname0[27:], r2_train, rms_train, r2_test, rms_test])
+        # wordlist = ["DR", "None", "rbf", "poly", "linear", "cosine", "sigmoid", "PCA", ""]
+        wordlist = ["DR"]
+        for search in wordlist:
+            some_case = []
+            inputDir = source + "learned" + os.sep
+            outputDir = inputDir + "rated" + os.sep
+            filetype = ["_mlp_model_.json", "_mlp_weight.h5", "_tb_log.hdf5"]
+            
+            for inputPath in glob.glob(inputDir + os.sep + "*" + search + "*.json"):
+                tmp_fname_mid = inputPath.replace(inputDir, "").replace(filetype[0], "")
 
-    columns = ["case", "train_r2", "train_rms", "test_r2", "test_rms"]
-    dtypes = {'case': 'object', 'train_r2': 'float64', 'train_rms': 'float64', 'test_r2': 'float64',
-              'test_rms': 'float64'}
-    
-    df = pd.DataFrame(mid, columns=columns)
-    i = 0
-    find = True
-    while find:
-        fname = source + "inference" + str(i).zfill(4) + ".csv"
-        find = os.path.exists(fname)
-        i += 1
+                # 3点セットのデータがすべて存在する場合に限り処理を行う
+                switch = 1
+                for kind in filetype:
+                    fname = tmp_fname_mid + kind
+                    if os.path.exists(inputDir + fname) == False:
+                        switch = 0
+                
+                if switch == 1:
+                    some_case.append(tmp_fname_mid)
 
-    df.to_csv(fname)
-    
-    if oldstyle == False:
-        filetype = ["_mlp_model_.json", "_mlp_weight.h5", "_tb_log.hdf5"]
-        for fname0 in some_case:
-            for kind in filetype:
-                fname = fname0 + kind
-                new_path = shutil.move(inputDir + fname, outputDir)
-
+            
+            if len(some_case) == 0:
+                print("no target selected")
+            else:
+                X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
+                                                  total_data = 0, return_scalar = True)
+               
+                x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
+                                                total_data = 0, shape_odd = 0, read_rate = 1, scalar = scalar)
+                
+                mid = []
+                for fname0 in some_case:
+                # fname0 = some_case[0]
+                    print(fname0)
+                    r2_test, rms_test, error = inference(source, x_test, y_test, fname0, scatter=True, anglerplot=True, return_r2rms=True, check_error=True)
+                    if error == False:
+                        r2_train, rms_train = inference(source, X_train, y_train, fname0, scatter=False, anglerplot=False, return_r2rms=True)
+                        mid.append([fname0[27:], r2_train, rms_train, r2_test, rms_test])
+                    KTF.clear_session()
+                columns = ["case", "train_r2", "train_rms", "test_r2", "test_rms"]
+                dtypes = {'case': 'object', 'train_r2': 'float64', 'train_rms': 'float64', 'test_r2': 'float64',
+                          'test_rms': 'float64'}
+                
+                df = pd.DataFrame(mid, columns=columns)
+                i = 0
+                find = True
+                while find:
+                    fname = source + "inference\\rated" + str(i).zfill(4) + ".csv"
+                    find = os.path.exists(fname)
+                    i += 1
+            
+                df.to_csv(fname)
+                
+                if oldstyle == False:
+                    filetype = ["_mlp_model_.json", "_mlp_weight.h5", "_tb_log.hdf5"]
+                    for fname0 in some_case:
+                        for kind in filetype:
+                            fname = fname0 + kind
+                            new_path = shutil.move(inputDir + fname, outputDir)
+                            print(inputDir + fname)
+            
+                
 def get_learned_dens_list(source, fname_head, fname_tail, dir_name = "learned\\"):
     dir = source + dir_name
 
@@ -270,7 +300,7 @@ if __name__ == '__main__':
     fname_lift_test = "NACA5\\s21011_e25190_s1_a014.csv"
     fname_lift_train = "NACA4\\s1122_e9988_s4_a014.csv"
 
-    shape_type = 2
+    shape_type = 0
     if shape_type == 0:
         fname_shape_train = "NACA4\\shape_fourier_1112_9988_s04.csv"
         fname_shape_test = "NACA5\\shape_fourier_21011_25190_s1.csv"
