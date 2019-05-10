@@ -114,8 +114,8 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                     end if
                     !do iAngleDeg = 39, 0, -3
-                        !iAngleDeg = 1.25
-                        dAngleDeg = 1.25d0
+                        iAngleDeg = 2.0!1.25
+                        dAngleDeg = 2.0d0!1.25d0
 
                         !UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         UConf%dAttackAngle = dPi * dAngleDeg / 180.0d0
