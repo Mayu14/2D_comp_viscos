@@ -6,9 +6,9 @@ import os
 
 def common(cp=False):
     #path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\\ResultC\\"
-    fname_head = "NACA0012_00_VALIDATE_M080_A01_25"
-    path = "D:\\Toyota\\Downloads\\mk2\\ResultC\\"
-    #fname_head = "NACA0012_00_VALIDATE_M050_A02_00"
+    fname_head = "NACA0012_01_VALIDATE_M080_A01_25"
+    path = "D:\\Toyota\\Downloads\\mk12\\ResultC\\"
+    # fname_head = "NACA0012_02_VALIDATE_M050_A02_00"
 
     fname_tail = "th_AC.dat"
     if cp:
@@ -16,11 +16,10 @@ def common(cp=False):
         fname_tail = "th.dat"
     return path, fname_head, fname_tail
 
-def dat2csv():
+def dat2csv(end = 101):
     path, fname_head, fname_tail = common()
 
     start = 1
-    end = 101
 
     ac = np.zeros((end - start, 2))
 
@@ -71,21 +70,19 @@ def dat2csv_cp(end=100, gif=False):
         plt.show()
 
 
+def test():
+    import sklearn.mixture
+    
+    
+    
 if __name__ == '__main__':
     a = 0.2864
     b = 2.1 * 10e-7
     c = 0.0019
     d = 0.24715
-    import glob
-    source = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
-    inputDir = source + "learned" + os.sep
-    outputDir = inputDir + "rated" + os.sep
-    case_list = []
-    for inputPath in glob.glob(inputDir + os.sep + "*.json"):
-        case_list.append(inputPath.replace(inputDir, "").replace("_mlp_model_.json", ""))
-    print(case_list)
+    # test()
+    end = 50
+    dat2csv_cp(end = end, gif = True)
+    dat2csv(end=end)
     
-    exit()
-
-    dat2csv_cp(gif=True)
     
