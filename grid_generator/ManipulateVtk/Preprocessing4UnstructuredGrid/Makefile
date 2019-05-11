@@ -64,7 +64,8 @@ EXE = Preprocessing4UnstructuredGrid
 FC = ifort
 LD = ifort
 IDIR = 
-CFLAGS = -O3
+CFLAGS = -O4
+# CFLAGS = -check uninit -check pointers -check bounds -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full
 LFLAGS = 
 LIBS = 
 
