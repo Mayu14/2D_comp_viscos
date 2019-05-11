@@ -19,8 +19,10 @@ program Preprocessing4UnstructuredGrid
     character(len=256) :: cFileName, cWing, cInPath="", cOutPath=""
     logical :: ExistBound
     integer :: MultipleConvertMode = 0, i1, i2, i34, i1234
-    integer :: i, length, status
+    integer :: i, length, status, access
     character(:), allocatable :: arg
+    character(len=16), allocatable :: cUAR(:), cPAR(:), cMR(:), cSCN(:)
+    integer :: iUAR, iPAR, iMR, iSCN
     intrinsic :: command_argument_count, get_command_argument
 
     do i = 0, command_argument_count()
@@ -58,6 +60,40 @@ program Preprocessing4UnstructuredGrid
         write(6,*) cFileName
         stop
         call main_process(UG, cInPath, cOutPath, cFileName)
+    else if(MultipleConvertMode == 2) then
+        cInPath = "/mnt/g/Toyota/Data/grid_vtk/valid/vtk/"
+        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
+        allocate(cUAR(3), cPAR(3), cMR(4), cSCN(3))
+        cUAR(1) = "_10"
+        cUAR(2) = "_15"
+        cUAR(3) = "_20"
+        cPAR(1) = "_200"
+        cPAR(2) = "_400"
+        cPAR(3) = "_800"
+        cMR(1) = "_0005"
+        cMR(2) = "_0010"
+        cMR(3) = "_0050"
+        cMR(4) = "_0100"
+        cSCN(1) = "_0100"
+        cSCN(2) = "_0200"
+        cSCN(3) = "_0250"
+        do iUAR = 1, 3
+            do iPAR = 3, 1, -1!1, 3
+                !do iMR = 4, 1, -1!1, 4
+                iMR = 2
+                    !do iSCN = 3, 1, -1!1, 3
+                    iSCN = 2
+                        cFileName = "NACA0012"//trim(adjustl(cUAR(iUAR)))//trim(adjustl(cPAR(iPAR)))//trim(adjustl(cMR(iMR)))//trim(adjustl(cSCN(iSCN)))
+                        if(access(trim(adjustl(cOutPath))//trim(adjustl(cFileName))//trim(adjustl(".mayu")), " ") /= 0) then
+                            write(6,*) trim(adjustl(cFileName))
+                            call main_process(UG, cInPath, cOutPath, cFileName)
+                            call deallocate_UG
+                        end if
+                    !end do
+                !end do
+            end do
+        end do
+
     else
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA5_vtk_HD_course_rev2_true/"
         cOutPath = "/mnt/g/Toyota/Data/grid_vtk/NACA5_mayu_HD_course_rev2_true/"
