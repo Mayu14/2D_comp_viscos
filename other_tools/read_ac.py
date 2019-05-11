@@ -7,7 +7,8 @@ import os
 def common(cp=False):
     #path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\\ResultC\\"
     fname_head = "NACA0012_01_VALIDATE_M080_A01_25"
-    path = "D:\\Toyota\\Downloads\\mk12\\ResultC\\"
+    # path = "D:\\Toyota\\Downloads\\mk12\\ResultC\\"
+    path = "G:\\Toyota\\validQ\\20_800_0100_0100\\ResultC\\"
     # fname_head = "NACA0012_02_VALIDATE_M050_A02_00"
 
     fname_tail = "th_AC.dat"
@@ -56,7 +57,7 @@ def dat2csv_cp(end=100, gif=False):
         if gif:
             plt.grid(which="major", color="black", linestyle="-")
             plt.xlim([0, 1])
-            plt.ylim([1.5, -1.0])
+            plt.ylim([1.5, -1.5])
             line, = plt.plot(cp[:, 0], cp[:, 1], ".", color="blue")
             ims.append([line])
         else:
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     c = 0.0019
     d = 0.24715
     # test()
-    end = 50
+    end = 32
     dat2csv_cp(end = end, gif = True)
     dat2csv(end=end)
     
