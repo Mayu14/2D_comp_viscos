@@ -221,14 +221,14 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     if output_csv:
         indices2csv(csvname, nearest_indices)
        
-    def make_plot(nearest_indices, X_data, X_origin, preprocess, criteria_method, main_process, fname):
+    def make_plot(nearest_indices, X_origin, y_origin, preprocess, criteria_method, main_process, fname):
         from sklearn.decomposition import PCA
         import matplotlib.pyplot as plt
 
         plot_pca = PCA(n_components = 2)
-        plot_pca.fit(X_origin)
         tr_origin = plot_pca.fit_transform(X_origin)
-        transformed = plot_pca.fit_transform(X_data)
+        X_data4plot, y_data4plot, indices = reduction2k_datas(X_data = X_origin, y_data = y_origin, k_cluster = reduction_target, output_indices = False, criteria_method = criteria_method, indices=nearest_indices, main_process=main_process)
+        transformed = plot_pca.transform(X_data4plot)
 
         for i in range(2):
             fig = plt.figure()
@@ -245,13 +245,14 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
                 ax.plot(tr_origin[:, 0], tr_origin[:, 1], color = "dodgerblue", marker = ".", linestyle = "None", alpha = 0.1,
                         label = "origin")
                 tail += "with_original"
+                
             ax.legend()
             
             plt.savefig(fname + tail + ".png")
             plt.close()
 
     if check_plot:
-        make_plot(nearest_indices, X_data, X_origin, preprocess, criteria_method, main_process, csvname)
+        make_plot(nearest_indices, X_origin, y_origin, preprocess, criteria_method, main_process, csvname)
 
     if update_xy:
         return X_data, y_data
@@ -270,7 +271,7 @@ if __name__ == '__main__':
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                               total_data = 0, return_scalar = True)
 
-    main_processes = ["gmm"]#, "kmeans++"]
+    main_processes = ["kmeans++"]#, "kmeans++"]
     # main_process = "kmeans++"
     preprocesses = ["None"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
@@ -279,9 +280,9 @@ if __name__ == '__main__':
     for preproc in preprocesses:
         for mainproc in main_processes:
             for postproc in postprocesses:
-                for i in range(40):
+                for i in range(1):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = False, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = True, force_overwrite=False)
                 
     
     
