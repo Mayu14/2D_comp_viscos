@@ -24,7 +24,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     # y_data:[N_samples, K_features]
     def get_nearest_indices(X_data, k_cluster, criteria_method, main_process):
         # main_process
-        def main_kmeans(k_cluster):
+        def main_kmeans(k_cluster, X_data):
             threshold = 3000
             if k_cluster < threshold:
                 kmeans = KMeans(n_clusters = k_cluster,  # クラスタ数
@@ -46,26 +46,35 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
                                          tol = 1e-04,  # 収束判定条件
                                          random_state = 0)
 
-            return kmeans
+            return kmeans.fit_predict(X_data), kmeans.cluster_centers_
             
-        def main_hdbscan(k_cluster):
-            clusterer = hdbscan.HDBSCAN(min_cluster_size = k_cluster, allow_single_cluster = True)
-            return clusterer
+
+        def main_gmm(k_cluster, X_data):
+            bic = []
+            lowest_bic = np.infty
+            cv_types = ['spherical', 'tied', 'diag', 'full']
+            for cv_type in cv_types:
+                gmm = GMM(n_components = k_cluster, covariance_type = cv_type)
+                gmm.fit(X_data)
+                bic.append(gmm.bic(X_data))
+                if bic[-1] < lowest_bic:
+                    lowest_bic = bic[-1]
+                    best_gmm = gmm
+            
+            print(bic)
+            return best_gmm.predict(X_data), best_gmm.means_
         
         if main_process == "kmeans++":
-            main_proc = main_kmeans(k_cluster)
-        elif main_process == "hdbscan": # 使えない(クラスター数が不定のため)
-            main_proc = main_hdbscan(k_cluster)
+            y_cluster, centroids = main_kmeans(k_cluster, X_data)
+        
+        elif main_process == "gmm":
+            y_cluster, centroids = main_gmm(k_cluster, X_data)
+        
         else:
             print("process name error!, please check variable 'main process'")
             exit()
             
-        y_cluster = main_proc.fit_predict(X_data)
-        print(y_cluster, y_cluster.shape, np.unique(y_cluster))
-        main_proc = main_kmeans(k_cluster)
-        y_cluster_k = main_proc.fit_predict(X_data)
-        print(y_cluster_k, y_cluster_k.shape, np.unique(y_cluster_k))
-        exit()
+        
         # post_process
         def nearest_centroid(X_data, centroids, metric="minkowski"):
             nn = NearestNeighbors(metric = metric)
@@ -79,19 +88,15 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             
             for i in range(k_cluster):
                 dif = X_data[y_cluster == i, :] - center
-                print(i, dif)
                 norm = np.linalg.norm(dif, axis = 1)
-                print(i, norm)
                 max_index = np.argmax(norm)
-                print(i, max_index)
                 nearest_indices[i] = max_index
                 # nearest_indices[i] = np.argmax(np.linalg.norm((X_data[y_cluster == i, :] - center), axis = 1))
             return nearest_indices
+        
         print(preprocess, main_process, criteria_method)
         if criteria_method == "nearest_centroid":
-            if main_process == "kmeans++":
-                centroids = main_proc.cluster_centers_
-                nearest_indices = nearest_centroid(X_data, centroids)
+            nearest_indices = nearest_centroid(X_data, centroids)
                 
         elif criteria_method == "farthest_from_center":
             center = np.sum(X_data, axis = 0) / X_data.shape[0]
@@ -151,18 +156,25 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         return X_data
     
     def get_fname(preprocess, criteria_method, main_process):
-        if preprocess == "None":
-            mid = ""
-        elif preprocess == "PCA":
-            mid = "_PCA_"
-        elif (preprocess == "rbf") or (preprocess == "poly") or (preprocess == "linear") or (
-                preprocess == "sigmoid") or (preprocess == "cosine"):
-            mid = "_" + preprocess + "_"
+        mid = "Pre"
+        if (preprocess == "None") or (preprocess == "PCA") or (preprocess == "rbf") or (preprocess == "poly") or (
+                preprocess == "linear") or (preprocess == "sigmoid") or (preprocess == "cosine"):
+            mid += "_" + preprocess + "_"
         else:
             print("Error! input preprocess")
             exit()
+
+        mid += "Main_"
+        
+        if (main_process == "kmeans++") or (main_process == "gmm"):
+            mid += main_process
+        else:
+            print('please check value of "main_process"')
+            exit()
+
+        mid += "_Post_"
         if criteria_method == "nearest_centroid":
-            pass
+            mid += "NeC_"
         elif criteria_method == "farthest_from_center":
             mid += "FFC_"
         elif criteria_method == "triangle_only":
@@ -172,13 +184,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         else:
             print('please check value of "criteria_method"')
             exit()
-        if main_process == "kmeans++":
-            pass
-        elif main_process == "hdbscan":
-            mid += "HDBSCAN_"
-        else:
-            print('please check value of "main_process"')
-            exit()
+            
         return mid
         
     header = path + fname
@@ -200,7 +206,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         X_data = preprocessing(X_data, preprocess)
     
     X_data, y_data, nearest_indices = reduction2k_datas(X_data = X_data, y_data = y_data, k_cluster = reduction_target, criteria_method = criteria_method, indices=nearest_indices, main_process=main_process)
-    
+
     if output_csv:
         indices2csv(csvname, nearest_indices)
        
@@ -212,7 +218,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         plot_pca.fit(X_origin)
         tr_origin = plot_pca.fit_transform(X_origin)
         transformed = plot_pca.fit_transform(X_data)
-        
+
         for i in range(2):
             fig = plt.figure()
             ax = fig.add_subplot(1,1,1)
@@ -253,22 +259,19 @@ if __name__ == '__main__':
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                               total_data = 0, return_scalar = True)
 
-    # main_process = "hdbscan"
-    main_process = "kmeans++"
-    preprocesses = ["None"]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
+    main_processes = ["gmm"]#, "kmeans++"]
+    # main_process = "kmeans++"
+    preprocesses = ["None"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
-    postprocess = ["nearest_centroid", "farthest_from_center"]
-    post_proc = postprocess[0]
+    postprocesses = ["nearest_centroid"]#, "farthest_from_center"]
     
     for preproc in preprocesses:
-        for i in range(40):
-            cluster = 500 * (i + 1)
-            if main_process == "hdbscan":
-                cluster = i + 2
-            cluster = 30
-            print(cluster)
-            data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = main_process, criteria_method = post_proc, check_plot = True, force_overwrite=True)
-        
+        for mainproc in main_processes:
+            for postproc in postprocesses:
+                for i in range(40):
+                    cluster = 500 * (i + 1)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, check_plot = False, force_overwrite=False)
+                
     
     
     
