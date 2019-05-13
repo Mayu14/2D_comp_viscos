@@ -15,7 +15,7 @@ import os
 from read_training_data_viscos import read_csv_type3
 #from scatter_plot import make_scatter_plot
 from other_tools.dataset_reduction import data_reduction
-from other_tools.complex_layer import residual, highway, residual_dense
+from other_tools.complex_layer import MLPLayer
 from math import floor
 
 
@@ -127,7 +127,9 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     sr = 1
     rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
-    dr = [[128]*8]
+    block_total = 8
+    dr = [[128]*block_total]
+    weight_layer_list = [[3]*block_total]
     """
     dr = [[100] * 100]
     dr = []
@@ -146,11 +148,12 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         # dr.append([1024]*(j+1))
     criteria_method = "farthest_from_center"
     useBN_list = [True, False, True, False, True, False]
+    before_activate = True
     useDrop = True
     dor_list = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    resnet = True
+    resnet = False
     high_way = False
-    densenet = False
+    dense_net = False
     # preprocesses = ["None"]
     preprocesses = [""]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
     dense_list = dr[0]
@@ -164,14 +167,17 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         for useBN in useBN_list:
             preprocess = ""
             if i == 0:
-                resnet = False
-                high_way = True
-            elif i == 2:
+                dense_net = True
                 high_way = False
-                densenet = True
-            elif i == 4:
+            elif i == 2:
                 resnet = True
-                densenet = False
+                dense_net = False
+            elif i == 4:
+                high_way = True
+                resnet = False
+            else:
+                high_way = False
+
             i += 1
             
             if rr == 1:
@@ -191,7 +197,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 if env == "Lab":
                     source = "G:\\Toyota\\Data\\" + source
                     # case_num = get_case_number(source, env, case_number)
-                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=densenet, useBN = useBN, useDrop = useDrop, dor = dor)
+                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor)
                     log_name = "learned\\" + case_num + "_tb_log.hdf5"
                     json_name = "learned\\" + case_num + "_mlp_model_.json"
                     weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -223,33 +229,39 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         
                 input_vector_dim = X_train.shape[1]
 
-                def simple_network(dense_list, inputs, resnet = False, highwaynet = False):
+                def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False, units_list = None):
                     # leaky_relu = LeakyReLU()
                     # input layer
+                    MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
+                                   dropout_rate=dor, dropout_timing = "final", gate_bias=-3, growth_rate = 32)
+
                     x = Dense(units = dense_list[0])(inputs)
                     # mid layer
                     for i in range(1, len(dense_list)):
                         leaky_relu = LeakyReLU()
-                        if resnet:
-                            x = residual(inputs = x, Activator = leaky_relu, batch_normalization = useBN,
-                                         dropout = useDrop, dropout_rate = dor)
+                        if dense_net:
+                            x = MLP.denseblock(inputs=x, Activator=leaky_relu,
+                                               weight_layer_number=weight_layer_list[i])
+                            x = Dense(units=dense_list[i])(x)
                         else:
-                            if highwaynet:
-                                x = highway(inputs = x, Activator = leaky_relu, batch_normalization = useBN,
-                                            dropout = useDrop, dropout_rate = dor)
+                            # units_list = [dense_list[i], int(dense_list[i]/2), dense_list[i]]
+                            units_list = [dense_list[i]*weight_layer_list]
+                            if resnet:
+                                x = MLP.residual(inputs = x, Activator = leaky_relu,
+                                                 weight_layer_number=weight_layer_list[i], units_list=units_list)
                             else:
-                                if useBN:
-                                    x = BatchNormalization()(x)
-                                x = Dense(units = dense_list[i])(x)
-                                x = LeakyReLU()(x)
-                                if useDrop:
-                                    x = Dropout(rate = dor)(x)
+                                if highwaynet:
+                                    x = MLP.highway(inputs = x, Activator = leaky_relu,
+                                                    weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                else:
+                                    x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu)
+
                     return x
                 
                 with tf.name_scope("inference") as scope:
                     inputs = Input(shape = (input_vector_dim,))
                     
-                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way)
+                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net, units_list=units_list)
                     
                     """
                     x = Dense(units = dense_net_list[0])(inputs)
