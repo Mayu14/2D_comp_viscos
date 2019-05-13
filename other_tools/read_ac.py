@@ -7,19 +7,23 @@ import os
 def common(cp=False):
     #path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\\ResultC\\"
     fname_head = "NACA0012_01_VALIDATE_M080_A01_25"
+    # fname_head = "NACA0012_02_VALIDATE_M080_A01_25"
     # path = "D:\\Toyota\\Downloads\\mk12\\ResultC\\"
     # path = "G:\\Toyota\\validQ\\20_800_0100_0100\\ResultC\\"
-    path = "D:\\Toyota\\Data\\validR\\so_15_200_0100_0100\\ResultC\\"
+    # path = "D:\\Toyota\\Data\\validR\\m5_15_200_0100_0100\\ResultC\\"
+    case = "so_20_800_0010_0100"
+    path = "G:\\Toyota\\validS\\" + case + "\\ResultC\\"
     # fname_head = "NACA0012_02_VALIDATE_M050_A02_00"
+    
 
     fname_tail = "th_AC.dat"
     if cp:
         fname_head = "CP_" + fname_head
         fname_tail = "th.dat"
-    return path, fname_head, fname_tail
+    return path, fname_head, fname_tail, case
 
 def dat2csv(end = 101):
-    path, fname_head, fname_tail = common()
+    path, fname_head, fname_tail, case = common()
 
     start = 1
 
@@ -37,7 +41,7 @@ def dat2csv(end = 101):
     exit()
 
 def dat2csv_cp(end=100, gif=False):
-    path, fname_head, fname_tail = common(cp=True)
+    path, fname_head, fname_tail, case = common(cp=True)
     step = end
     if gif:
         step = 1
@@ -67,9 +71,9 @@ def dat2csv_cp(end=100, gif=False):
 
     if gif:
         ani = animation.ArtistAnimation(fig, ims)
-        ani.save("anim.gif", writer="imagemagick")
-        ani.save("anim.mp4", writer="ffmpeg")
-        plt.show()
+        ani.save(case + ".gif", writer="imagemagick")
+        ani.save(case + ".mp4", writer="ffmpeg")
+        # plt.show()
 
 
 def test():
@@ -83,7 +87,7 @@ if __name__ == '__main__':
     c = 0.0019
     d = 0.24715
     # test()
-    end = 73
+    end = 27
     dat2csv_cp(end = end, gif = True)
     dat2csv(end=end)
     
