@@ -13,16 +13,16 @@ def residual(inputs, Activator, batch_normalization=False, dropout=False, dropou
     if batch_normalization:
         fx = BatchNormalization()(fx)
 
+    fx = Activator(fx)
+    if dropout:
+        fx = Dropout(rate=dropout_rate)(fx)
+    # F(x)
     fx = Dense(units, activation=None, use_bias=True, kernel_initializer='he_normal',
                        bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
                        activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
-    fx = Activator(fx) # F(x)
-
-    if dropout:
-        fx = Dropout(rate=dropout_rate)(fx)
-
-    return Add()([fx, inputs])  # F(x) + x
+    fx = Add()([fx, inputs])
+    return Activator(fx)    # F(x) + x
 
 # referred by https://gist.github.com/iskandr/a874e4cf358697037d14a17020304535
 def highway(inputs, Activator=Activation("tanh"), gate_bias=-3,
@@ -42,17 +42,20 @@ def highway(inputs, Activator=Activation("tanh"), gate_bias=-3,
     if batch_normalization:
         fx = BatchNormalization()(fx)
 
-    fx = Dense(units, activation=None, use_bias=True, kernel_initializer='glorot_uniform',
-                       bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
-                       activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
-    fx = Activator(fx)   # F(x)
+    fx = Activator(fx)  # F(x)
 
     if dropout:
         fx = Dropout(rate=dropout_rate)(fx)
 
+    fx = Dense(units, activation=None, use_bias=True, kernel_initializer='glorot_uniform',
+                       bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
+                       activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
+
     fx_gated = Multiply()([gate, fx]) # sF(x)
     identity_gated = Multiply()([negated_gate, inputs]) # (1-s)x
-    return Add()([fx_gated, identity_gated])   # sF(x) + (1-s)x
+
+    fx = Add()([fx_gated, identity_gated])   # sF(x) + (1-s)x
+    return Activator(fx)
 
 # dense_blockはDense + Activation + Dropoutをまとめた関数として与える．(inputを入れれば全結合層の出力が得られる形にする)
 def residual_dense(dense_block, inputs, *other_inputs):
