@@ -14,6 +14,7 @@
 subroutine JobParallelNS(UConf)
     use StructVar_Mod
     use ConstantVar_Mod
+    !$ use omp_lib
     implicit none
     type(Configulation), intent(inout) :: UConf
     type(CellCenter) :: UCC
@@ -23,7 +24,9 @@ subroutine JobParallelNS(UConf)
     integer :: iAccel = 1
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
-
+    double precision :: time_start, time_step, time_elapsed, time_specified
+    time_specified = 70200.0d0
+    !$ time_start = omp_get_wtime()
 ! 初期化
     UCC%ConvergeCondition = Converge_Method
     call UReadUnStrGrid(UConf,UCC,UCE,UG)
@@ -46,6 +49,7 @@ subroutine JobParallelNS(UConf)
     call CheckNaN(UConf, UCC)   !
 
     do iTry = 1, 100
+        !$ time_elapsed = omp_get_wtime()
         !call JPUOutput(UConf,UG,UCC,0)  ! debug
         iStartStep = 1
         ! 時間積分
@@ -107,6 +111,9 @@ subroutine JobParallelNS(UConf)
         deallocate(UAC%coefficient, UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
         !UConf%UseSteadyCalc = 1
+        !$ time_step = omp_get_wtime()
+        !$ time_elapsed = time_step - time_start
+        !$ write(6,*) time_elapsed, time_specified
     end do
 
     return
