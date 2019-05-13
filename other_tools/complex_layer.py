@@ -151,7 +151,7 @@ class MLPLayer():
 
         for i in range(weight_layer_number):
             fx = self.fully_connected(units=self.growth_rate, inputs=concat_feat, Activator=Activator)
-            concat_feat = Concatenate([concat_feat, fx])
+            concat_feat = Concatenate()([concat_feat, fx])
 
         return Activator(concat_feat)    # F(x) + x
 
