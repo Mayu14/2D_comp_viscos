@@ -71,14 +71,15 @@ contains
     implicit none
     double precision, allocatable :: DuplicateConvexPoint(:)
     integer, intent(in) :: iBoundaryCellNumber
-    integer :: iTmp,iTotal
+    integer :: iTmp,iTotal, iTmpCell
 
         allocate(DuplicateConvexPoint(2*(iBoundaryCellNumber)))
-
+        iTmpCell = 1
         do iCell=1, UG%VC%Total
-            if(UG%VC%Type(iCell) == iKind) then
-                DuplicateConvexPoint(2*iCell-1) = UG%Line%Point(UG%VC%Edge(iCell+UG%GI%RealCells),1)
-                DuplicateConvexPoint(2*iCell) = UG%Line%Point(UG%VC%Edge(iCell+UG%GI%RealCells),2)
+            if(UG%VC%Type(UG%GI%RealCells + iCell) == iKind) then
+                DuplicateConvexPoint(2*iTmpCell-1) = UG%Line%Point(UG%VC%Edge(iCell+UG%GI%RealCells),1)
+                DuplicateConvexPoint(2*iTmpCell) = UG%Line%Point(UG%VC%Edge(iCell+UG%GI%RealCells),2)
+                iTmpCell = iTmpCell + 1
             end if
         end do
 
