@@ -1,7 +1,6 @@
 # -- coding: utf-8 --
 import numpy as np
 import os
-import glob
 from keras.models import model_from_json
 import keras.backend.tensorflow_backend as KTF
 from keras.utils import plot_model
@@ -13,6 +12,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 import glob
+import datetime
 import shutil
 
 def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False, model2png = True, gpu_mem_usage=0.25):
@@ -152,7 +152,8 @@ def case_name_list_generator(source, fname_lift_test, some_case_test=False, some
                                 
     return casename_list
 
-def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train, oldstyle):
+def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train, oldstyle,
+                   data_after_x_years = 1970, data_after_x_months = 1, data_after_x_days = 1):
     some_case = []
     if oldstyle:
         # head_list = ["fourierSr_", "concertrate_", "equidistant_"]
@@ -216,6 +217,9 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
 
         # wordlist = ["DR", "None", "rbf", "poly", "linear", "cosine", "sigmoid", "PCA", ""]
         wordlist = ["DR"]
+
+        x_day = datetime.datetime(data_after_x_years, data_after_x_months, data_after_x_days)
+        x_day = x_day.timestamp()
         for search in wordlist:
             some_case = []
             inputDir = source + "learned" + os.sep
@@ -225,15 +229,16 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
             for inputPath in glob.glob(inputDir + os.sep + "*" + search + "*.json"):
                 tmp_fname_mid = inputPath.replace(inputDir, "").replace(filetype[0], "")
 
-                # 3点セットのデータがすべて存在する場合に限り処理を行う
-                switch = 1
-                for kind in filetype:
-                    fname = tmp_fname_mid + kind
-                    if os.path.exists(inputDir + fname) == False:
-                        switch = 0
-                
-                if switch == 1:
-                    some_case.append(tmp_fname_mid)
+                if os.path.getctime(inputPath) > x_day: # ファイルがx-day以降に作成されているとき
+                    # 3点セットのデータがすべて存在する場合に限り処理を行う
+                    switch = 1
+                    for kind in filetype:
+                        fname = tmp_fname_mid + kind
+                        if os.path.exists(inputDir + fname) == False:
+                            switch = 0
+
+                    if switch == 1:
+                        some_case.append(tmp_fname_mid)
 
             
             if len(some_case) == 0:
@@ -311,7 +316,8 @@ if __name__ == '__main__':
         fname_shape_train = "NACA4\\shape_crowd_0.1_0.15_30_50_20_1112_9988_d4.csv"
         fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
     
-    some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train, oldstyle=False)
+    some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train, oldstyle=False,
+                   data_after_x_years=2019, data_after_x_months=5, data_after_x_days=10)
     # case_name_list_generator(source, fname_lift_test)
     
     
