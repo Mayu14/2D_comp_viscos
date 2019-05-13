@@ -1,6 +1,6 @@
 # coding: utf-8
 import keras.backend as K
-from keras.layers import Dense, Activation, Dropout, Multiply, Add, Lambda
+from keras.layers import Dense, Activation, Dropout, Multiply, Add, Lambda, Concatenate
 from keras.layers.normalization import BatchNormalization
 import keras.initializers
 
@@ -79,17 +79,29 @@ def highway(inputs, Activator=Activation("tanh"), gate_bias=-3,
     fx = Add()([fx_gated, identity_gated])   # sF(x) + (1-s)x
     return Activator(fx)
 
+# refered by https://github.com/flyyufelix/DenseNet-Keras/blob/master/densenet121.py
 # dense_blockはDense + Activation + Dropoutをまとめた関数として与える．(inputを入れれば全結合層の出力が得られる形にする)
-def residual_dense(dense_block, inputs, *other_inputs):
-    fx_N = dense_block(inputs)    # F(x_N)
+def densenet(inputs, Activator, growth_rate = 32, batch_normalization=False, dropout=False, dropout_rate=0.3,
+                   weight_layer_number=1):
 
-    sumlist = [fx_N, inputs]
+    units = K.int_shape(inputs)[-1]
+    concat_feat = Lambda(lambda x: x, output_shape=(units,))(inputs)   # concat_feat = x
+    for i in range(1, weight_layer_number + 1):
+        fx = Lambda(lambda x: x, output_shape=(units,))(concat_feat)
+        if batch_normalization:
+            fx = BatchNormalization()(fx)
 
-    other_inputs = list(other_inputs)
-    if len(other_inputs) != 0:
-        sumlist.extend(other_inputs)
+        fx = Activator(fx)
+        if (dropout) and (i == weight_layer_number):    # only Final Layer
+            fx = Dropout(rate=dropout_rate)(fx)
 
-    return Add()(sumlist)
+        fx = Dense(growth_rate, activation=None, use_bias=True, kernel_initializer='he_normal',
+                      bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
+                      activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
+
+        concat_feat = Concatenate([concat_feat, fx])
+
+    return Activator(concat_feat)    # F(x) + x
 
 def rec23(x):
     print(x)
