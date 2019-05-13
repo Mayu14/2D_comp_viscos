@@ -95,7 +95,7 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         if i == 10:
             mid3 += "..._"
             break
-    
+    mid += "_new"
     cm = ""
     if criteria_method == "farthest_from_center":
         cm += "_FFC"
@@ -128,8 +128,8 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
     dr = [[128]*8]
+    """
     dr = [[100] * 100]
-
     dr = []
     dr.append(202)
     for i in range(1, 18):
@@ -138,7 +138,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     dr = [dr]
     print(dr)
     exit()
-    
+    """
     # for i in range(5):
     data_reduction_test = False
     # i = 1
