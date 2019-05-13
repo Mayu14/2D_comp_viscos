@@ -5,7 +5,7 @@ from keras.layers.normalization import BatchNormalization
 import keras.initializers
 
 # inputs: (tensor) 入力テンソル
-# Activation: (function) 活性化関数(種類指定ではなく，関数で与える)例：Activation=Activation("sigmoid")
+# Activator: (function) 活性化関数(種類指定ではなく，関数で与える)例：Activation=Activation("sigmoid")
 # batch_normalization: (bool) BNを有効にするかどうか
 # dropout: (bool) Dropoutを入れるかどうか
 # dropout_rate: (float) Dropoutさせる割合(0.0 ~ 1.0)
@@ -18,7 +18,7 @@ def residual(inputs, Activator, batch_normalization=False, dropout=False, dropou
         units_list = [K.int_shape(inputs)[-1]] * weight_layer_number
 
     fx = Lambda(lambda x: x, output_shape=(units_list[0],))(inputs)  # fx = x
-
+    # F(x)
     for i in range(weight_layer_number):
         if batch_normalization:
             fx = BatchNormalization()(fx)
@@ -26,7 +26,7 @@ def residual(inputs, Activator, batch_normalization=False, dropout=False, dropou
         fx = Activator(fx)
         if (dropout) and (i + 1 == weight_layer_number):    # only Final Layer
             fx = Dropout(rate=dropout_rate)(fx)
-        # F(x)
+
         fx = Dense(units_list[i], activation=None, use_bias=True, kernel_initializer='he_normal',
                            bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
                            activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
@@ -34,32 +34,44 @@ def residual(inputs, Activator, batch_normalization=False, dropout=False, dropou
     fx = Add()([fx, inputs])
     return Activator(fx)    # F(x) + x
 
+# inputs: (tensor) 入力テンソル
+# Activator: (function) 活性化関数(種類指定ではなく，関数で与える)例：Activation=Activation("sigmoid")
+# gate_bias: (float) ゲートバイアス(シグモイド関数側)の初期化設定(デフォルトが推奨値)
+# batch_normalization: (bool) BNを有効にするかどうか
+# dropout: (bool) Dropoutを入れるかどうか
+# dropout_rate: (float) Dropoutさせる割合(0.0 ~ 1.0)
+# weight_layer_number: (int) skipしない側の層数
+# units_list: (list[int, int, ...]) weight_layerの素子数
 # referred by https://gist.github.com/iskandr/a874e4cf358697037d14a17020304535
 def highway(inputs, Activator=Activation("tanh"), gate_bias=-3,
-            batch_normalization=False, dropout=False, dropout_rate=0.3):
+            batch_normalization=False, dropout=False, dropout_rate=0.3,
+            weight_layer_number=1, units_list=None):
 
-    units = K.int_shape(inputs)[-1]
+    if type(units_list) == type(None):
+        units_list = [K.int_shape(inputs)[-1]] * weight_layer_number
 
     gate_bias_initializer = keras.initializers.Constant(gate_bias)
-    gate = Dense(units=units, bias_initializer=gate_bias_initializer)(inputs)
+    gate = Dense(units=units_list[0], bias_initializer=gate_bias_initializer)(inputs)
     gate = Activation("sigmoid")(gate)  # s
 
     negated_gate = Lambda(
         lambda x: 1.0 - x,
-        output_shape=(units,))(gate)  # (1 - s)
+        output_shape=(units_list[0],))(gate)  # (1 - s)
 
-    fx = Lambda(lambda x: x, output_shape=(units,))(inputs)  # fx = x
-    if batch_normalization:
-        fx = BatchNormalization()(fx)
+    # F(x)
+    fx = Lambda(lambda x: x, output_shape=(units_list[0],))(inputs)  # fx = x
+    for i in range(weight_layer_number):
+        if batch_normalization:
+            fx = BatchNormalization()(fx)
 
-    fx = Activator(fx)  # F(x)
+        fx = Activator(fx)
 
-    if dropout:
-        fx = Dropout(rate=dropout_rate)(fx)
+        if (dropout) and (i + 1 == weight_layer_number):  # only Final Layer
+            fx = Dropout(rate=dropout_rate)(fx)
 
-    fx = Dense(units, activation=None, use_bias=True, kernel_initializer='glorot_uniform',
-                       bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
-                       activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
+        fx = Dense(units_list[i], activation=None, use_bias=True, kernel_initializer='glorot_uniform',
+                   bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
+                   activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
     fx_gated = Multiply()([gate, fx]) # sF(x)
     identity_gated = Multiply()([negated_gate, inputs]) # (1-s)x
