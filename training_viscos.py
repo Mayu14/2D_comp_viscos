@@ -128,7 +128,16 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
     dr = [[128]*8]
-    dr = [[128] * 32]
+    dr = [[100] * 100]
+
+    dr = []
+    dr.append(202)
+    for i in range(1, 18):
+        dr.append(int(dr[i - 1] / 5.0 * 4.0))
+
+    dr = [dr]
+    print(dr)
+    exit()
     
     # for i in range(5):
     data_reduction_test = False
@@ -155,14 +164,14 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         for useBN in useBN_list:
             preprocess = ""
             if i == 0:
-                resnet = True
-                densenet = False
-            elif i == 2:
                 resnet = False
                 high_way = True
-            elif i == 4:
+            elif i == 2:
                 high_way = False
                 densenet = True
+            elif i == 4:
+                resnet = True
+                densenet = False
             i += 1
             
             if rr == 1:
