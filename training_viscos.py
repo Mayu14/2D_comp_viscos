@@ -95,7 +95,7 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         if i == 10:
             mid3 += "..._"
             break
-    mid += "_new"
+    mid2 += "_new"
     cm = ""
     if criteria_method == "farthest_from_center":
         cm += "_FFC"
