@@ -105,7 +105,9 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
     if highway:
         cm += "_highway"
     if densenet:
-        cm += "_densenet"
+        cm += "_denseblock"
+    elif (resnet==False) and (highway==False):
+        cm += "_FC"
     if useBN:
         cm += "_BN"
     if useDrop:
@@ -147,10 +149,9 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # for j in range(6, 20):
         # dr.append([1024]*(j+1))
     criteria_method = "farthest_from_center"
-    useBN_list = [True, False, True, False, True, False]
+    useBN_list = [True, False]
     before_activate = True
-    useDrop = True
-    dor_list = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    dor_list = [0.0, 0.1, 0.2, 0.3, 0.4]
     resnet = False
     high_way = False
     dense_net = False
