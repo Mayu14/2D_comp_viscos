@@ -15,10 +15,14 @@ import matplotlib.pyplot as plt
 # preprocess: (charcter) Types of preprocessing to be performed before clustering processing (ex."PCA")
 # update_xy: (bool) Return preprocessed data
 # criteria_method:(character) Selection criteria for extracting data from each cluster
+# main_process: (character) set clustering algorithm
+# cv_types: (character) define Covariance Matrix type (only GMM)
+# check_plot : (bool) plot dataset on 2D-field after clustering
+# force_overwrite: (bool) overwrite existed csv data
 # fname: (character) name of csv file
 # path:  (character) name of path
 def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False, preprocess = "None", update_xy = False,
-                   criteria_method = "nearest_centroid", main_process = "kmeans++", check_plot = False, force_overwrite = False,
+                   criteria_method = "nearest_centroid", main_process = "kmeans++", cv_types="all", check_plot = False, force_overwrite = False,
                     fname = "reduct", path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\reduct_csv\\"):
     # X_data:[N_samples, M_features]
     # y_data:[N_samples, K_features]
@@ -48,11 +52,14 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
 
             return kmeans.fit_predict(X_data), kmeans.cluster_centers_
             
-
-        def main_gmm(k_cluster, X_data):
+        # cvにはcv_typesのうちいくつかをリストで入力する．
+        def main_gmm(k_cluster, X_data, cv = "all"):
             bic = []
             lowest_bic = np.infty
-            cv_types = ['spherical', 'tied', 'diag', 'full']
+            if cv == "all":
+                cv_types = ['spherical', 'tied', 'diag', 'full']
+            else:
+                cv_types = cv
             for cv_type in cv_types:
                 gmm = GMM(n_components = k_cluster, covariance_type = cv_type)
                 gmm.fit(X_data)
@@ -155,7 +162,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             exit()
         return X_data
     
-    def get_fname(preprocess, criteria_method, main_process):
+    def get_fname(preprocess, criteria_method, main_process, cv_types):
         mid = "Pre"
         if (preprocess == "None") or (preprocess == "PCA") or (preprocess == "rbf") or (preprocess == "poly") or (
                 preprocess == "linear") or (preprocess == "sigmoid") or (preprocess == "cosine"):
@@ -166,8 +173,11 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
 
         mid += "Main_"
         
-        if (main_process == "kmeans++") or (main_process == "gmm"):
+        if (main_process == "kmeans++"):
             mid += main_process
+        elif (main_process == "gmm"):
+            mid += main_process
+            mid += "cv_" + cv_types
         else:
             print('please check value of "main_process"')
             exit()
@@ -194,7 +204,8 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     X_origin = X_data
     y_origin = y_data
 
-    mid = get_fname(preprocess, criteria_method, main_process)
+    mid = get_fname(preprocess, criteria_method, main_process, cv_types)
+    print(mid + footer)
     csvname = header + mid + footer
     
     if force_overwrite:
@@ -270,7 +281,7 @@ if __name__ == '__main__':
             for postproc in postprocesses:
                 for i in range(40):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, check_plot = False, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = False, force_overwrite=False)
                 
     
     
