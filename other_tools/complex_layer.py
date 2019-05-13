@@ -4,22 +4,32 @@ from keras.layers import Dense, Activation, Dropout, Multiply, Add, Lambda
 from keras.layers.normalization import BatchNormalization
 import keras.initializers
 
-# inputs: 入力テンソル
-# Activation: 活性化関数(種類指定ではなく，関数で与える)例：Activation=Activation("sigmoid")
-def residual(inputs, Activator, batch_normalization=False, dropout=False, dropout_rate=0.3):
-    units = K.int_shape(inputs)[-1]
+# inputs: (tensor) 入力テンソル
+# Activation: (function) 活性化関数(種類指定ではなく，関数で与える)例：Activation=Activation("sigmoid")
+# batch_normalization: (bool) BNを有効にするかどうか
+# dropout: (bool) Dropoutを入れるかどうか
+# dropout_rate: (float) Dropoutさせる割合(0.0 ~ 1.0)
+# weight_layer_number: (int) skipしない側の層数
+# units_list: (list[int, int, ...]) weight_layerの素子数
+def residual(inputs, Activator, batch_normalization=False, dropout=False, dropout_rate=0.3,
+             weight_layer_number=1, units_list=None):
 
-    fx = Lambda(lambda x: x, output_shape=(units,))(inputs)  # fx = x
-    if batch_normalization:
-        fx = BatchNormalization()(fx)
+    if type(units_list) == type(None):
+        units_list = [K.int_shape(inputs)[-1]] * weight_layer_number
 
-    fx = Activator(fx)
-    if dropout:
-        fx = Dropout(rate=dropout_rate)(fx)
-    # F(x)
-    fx = Dense(units, activation=None, use_bias=True, kernel_initializer='he_normal',
-                       bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
-                       activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
+    fx = Lambda(lambda x: x, output_shape=(units_list[0],))(inputs)  # fx = x
+
+    for i in range(weight_layer_number):
+        if batch_normalization:
+            fx = BatchNormalization()(fx)
+
+        fx = Activator(fx)
+        if (dropout) and (i + 1 == weight_layer_number):    # only Final Layer
+            fx = Dropout(rate=dropout_rate)(fx)
+        # F(x)
+        fx = Dense(units_list[i], activation=None, use_bias=True, kernel_initializer='he_normal',
+                           bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
+                           activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
     fx = Add()([fx, inputs])
     return Activator(fx)    # F(x) + x
