@@ -131,7 +131,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # dr = [[12, 24, 48, 96, 192, 384]]
     block_total = 8
     dr = [[128]*block_total]
-    weight_layer_list = [[3]*block_total]
+    weight_layer_list = [3]*block_total
     """
     dr = [[100] * 100]
     dr = []
@@ -150,6 +150,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         # dr.append([1024]*(j+1))
     criteria_method = "farthest_from_center"
     useBN_list = [True, False]
+    useDrop = True
     before_activate = True
     dor_list = [0.0, 0.1, 0.2, 0.3, 0.4]
     resnet = False
@@ -230,7 +231,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         
                 input_vector_dim = X_train.shape[1]
 
-                def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False, units_list = None):
+                def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False):#, units_list = None):
                     # leaky_relu = LeakyReLU()
                     # input layer
                     MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
@@ -246,7 +247,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                             x = Dense(units=dense_list[i])(x)
                         else:
                             # units_list = [dense_list[i], int(dense_list[i]/2), dense_list[i]]
-                            units_list = [dense_list[i]*weight_layer_list]
+                            units_list = [dense_list[i]*weight_layer_list[i]]
                             if resnet:
                                 x = MLP.residual(inputs = x, Activator = leaky_relu,
                                                  weight_layer_number=weight_layer_list[i], units_list=units_list)
@@ -262,7 +263,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 with tf.name_scope("inference") as scope:
                     inputs = Input(shape = (input_vector_dim,))
                     
-                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net, units_list=units_list)
+                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
                     
                     """
                     x = Dense(units = dense_net_list[0])(inputs)
