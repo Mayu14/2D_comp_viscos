@@ -104,13 +104,13 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         !do i1digit = 1, 2
             !do i2digit = 9, 1, -1
                 !do i34digit = 88, 12, -4
-                UConf%CalcEnv = 1
+                UConf%CalcEnv = 0
                 i1digit = 0
                 i2digit = 0
                 i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         !write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
-                        write(UConf%cGridName, '("NACA0012_20_800_0100_0200.mayu")')! valid
+                        write(UConf%cGridName, '("NACA0012_10_200_0100_0200.mayu")')! valid
                     else if(UConf%CalcEnv == 1) then
                         !write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA0012_20_800_0010_0200.mayu")')! 東北大スパコン用 valid

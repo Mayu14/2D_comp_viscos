@@ -1,16 +1,16 @@
-#!/bin/bash
+﻿#!/bin/bash
 ###UGEオプション####
 #$ -P GR06APR18
 #$ -jc smb.A
-#$ -N pretest
+#$ -N 20_800_0010_0200
 #$ -cwd
 #$ -l h_rt=99:00:00
-#$ -pe OpenMP 80
+#$ -pe OpenMP 40
 
 . /etc/profile.d/modules.sh
 module load intel/2018.2.046
 
-./bin/Debug/EulerSolver2
+./ES2_20_800_0010_0200
 
 
 
