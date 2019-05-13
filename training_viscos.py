@@ -69,7 +69,7 @@ def get_case_number(source, env, case_number):
 # (形状)_(データ数)とする
 def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess="",
                          criteria_method="nearest_centroid", shape_data=200, total_data=200000, resnet=False,
-                         highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3):
+                         highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3, bottle_neck=False):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -112,10 +112,12 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         cm += "_BN"
     if useDrop:
         cm += "_DR" + str(dor)
+    if bottle_neck:
+        cm += "_BotNec"
 
     return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.5):
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.65):
     # r_rate = [1, 2, 4, 8]
     # s_rate = [1, 2, 4, 8]
     # s_skiptype = [True, False]
@@ -129,213 +131,215 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     sr = 1
     rr = 1
     # dr = [[12, 24, 48, 96, 192, 384]]
-    block_total = 8
-    dr = [[128]*block_total]
-    weight_layer_list = [3]*block_total
-    """
-    dr = [[100] * 100]
-    dr = []
-    dr.append(202)
-    for i in range(1, 18):
-        dr.append(int(dr[i - 1] / 5.0 * 4.0))
+    for i in range(10):
+        block_total = 10 * (i + 1)
+        dr = [[32]*block_total]
+        weight_layer_list = [3]*block_total
+        bottle_neck = True
+        """
+        dr = []
+        dr.append(202)
+        for i in range(1, block_total):
+            dr.append(int(dr[i - 1] / 7.0 * 6.0))
+    
+        dr = [dr]
+        
+        #"""
+        # for i in range(5):
+        data_reduction_test = False
+        # i = 1
+        # for j in range(6, 20):
+            # dr.append([1024]*(j+1))
+        criteria_method = "farthest_from_center"
+        useBN_list = [True, False, True, False, True, False, True, False]
+        useDrop = True
+        before_activate = True
+        dor_list = [0.4, 0.3, 0.2, 0.1, 0.0]
+        resnet = False
+        high_way = False
+        dense_net = False
+        # preprocesses = ["None"]
+        preprocesses = [""]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
+        dense_list = dr[0]
+        # for dense_list in dr:
+        # for reduct in range(40):
+        for dor in dor_list:
+            # cluster = 500 * (reduct + 1)
+            cluster = 22680
+            # for rr in r_rate:
+            i = 0
+            for useBN in useBN_list:
+                preprocess = ""
+                if i == 0:
+                    dense_net = True
+                    high_way = False
+                elif i == 2:
+                    resnet = True
+                    dense_net = False
+                elif i == 4:
+                    high_way = True
+                    resnet = False
+                else:
+                    high_way = False
 
-    dr = [dr]
-    print(dr)
-    exit()
-    """
-    # for i in range(5):
-    data_reduction_test = False
-    # i = 1
-    # for j in range(6, 20):
-        # dr.append([1024]*(j+1))
-    criteria_method = "farthest_from_center"
-    useBN_list = [True, False]
-    useDrop = True
-    before_activate = True
-    dor_list = [0.0, 0.1, 0.2, 0.3, 0.4]
-    resnet = False
-    high_way = False
-    dense_net = False
-    # preprocesses = ["None"]
-    preprocesses = [""]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
-    dense_list = dr[0]
-    # for dense_list in dr:
-    # for reduct in range(40):
-    for dor in dor_list:
-        # cluster = 500 * (reduct + 1)
-        cluster = 22680
-        # for rr in r_rate:
-        i = 0
-        for useBN in useBN_list:
-            preprocess = ""
-            if i == 0:
-                dense_net = True
-                high_way = False
-            elif i == 2:
-                resnet = True
-                dense_net = False
-            elif i == 4:
-                high_way = True
-                resnet = False
-            else:
-                high_way = False
+                i += 1
 
-            i += 1
-            
-            if rr == 1:
-                s_odd = 0   # 全部読みだす
-            elif fname_shape_train.find("fourier") != -1:
-                s_odd = 3   # 前方から読み出す(fourier用)
-            else:
-                s_odd = 4   # 全体にわたって等間隔に読み出す(equidistant, dense用)
+                if rr == 1:
+                    s_odd = 0   # 全部読みだす
+                elif fname_shape_train.find("fourier") != -1:
+                    s_odd = 3   # 前方から読み出す(fourier用)
+                else:
+                    s_odd = 4   # 全体にわたって等間隔に読み出す(equidistant, dense用)
 
-            config = tf.ConfigProto()
-            config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_usage
-            KTF.set_session(tf.Session(config = config))
-            old_session = KTF.get_session()
+                config = tf.ConfigProto()
+                config.gpu_options.per_process_gpu_memory_fraction = gpu_mem_usage
+                KTF.set_session(tf.Session(config = config))
+                old_session = KTF.get_session()
 
-            with tf.Graph().as_default():
-                source = "Compressible_Invicid\\training_data\\"
-                if env == "Lab":
-                    source = "G:\\Toyota\\Data\\" + source
-                    # case_num = get_case_number(source, env, case_number)
-                    case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor)
-                    log_name = "learned\\" + case_num + "_tb_log.hdf5"
-                    json_name = "learned\\" + case_num + "_mlp_model_.json"
-                    weight_name = "learned\\" + case_num + "_mlp_weight.h5"
-                elif env == "Colab":
-                    source = "/content/drive/Colab Notebooks/" + source.replace("\\", "/")
-                    case_num = get_case_number(source, env, case_number)
-                    log_name = "learned/" + case_num + "_log.hdf5"
-                    json_name = "learned/" + case_num + "_mlp_model_.json"
-                    weight_name = "learned/" + case_num + "_mlp_weight.h5"
-                print(case_num)
+                with tf.Graph().as_default():
+                    source = "Compressible_Invicid\\training_data\\"
+                    if env == "Lab":
+                        source = "G:\\Toyota\\Data\\" + source
+                        # case_num = get_case_number(source, env, case_number)
+                        case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor, bottle_neck=bottle_neck)
+                        log_name = "learned\\" + case_num + "_tb_log.hdf5"
+                        json_name = "learned\\" + case_num + "_mlp_model_.json"
+                        weight_name = "learned\\" + case_num + "_mlp_weight.h5"
+                    elif env == "Colab":
+                        source = "/content/drive/Colab Notebooks/" + source.replace("\\", "/")
+                        case_num = get_case_number(source, env, case_number)
+                        log_name = "learned/" + case_num + "_log.hdf5"
+                        json_name = "learned/" + case_num + "_mlp_model_.json"
+                        weight_name = "learned/" + case_num + "_mlp_weight.h5"
+                    print(case_num)
 
 
-                session = tf.Session('')
-                KTF.set_session(session)
-                KTF.set_learning_phase(1)
-                
-                # model = Sequential()
-                if case_type == 3:
-                    # ここ書き換えポイント
-                    X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
-                    
-                    if data_reduction_test:
-                        X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
-                        
-                    if validate:
-                        x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+                    session = tf.Session('')
+                    KTF.set_session(session)
+                    KTF.set_learning_phase(1)
 
-                
-                        
-                input_vector_dim = X_train.shape[1]
+                    # model = Sequential()
+                    if case_type == 3:
+                        # ここ書き換えポイント
+                        X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
 
-                def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False):#, units_list = None):
-                    # leaky_relu = LeakyReLU()
-                    # input layer
-                    MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
-                                   dropout_rate=dor, dropout_timing = "final", gate_bias=-3, growth_rate = 32)
+                        if data_reduction_test:
+                            X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
 
-                    x = Dense(units = dense_list[0])(inputs)
-                    # mid layer
-                    for i in range(1, len(dense_list)):
-                        leaky_relu = LeakyReLU()
-                        if dense_net:
-                            x = MLP.denseblock(inputs=x, Activator=leaky_relu,
-                                               weight_layer_number=weight_layer_list[i])
-                            x = Dense(units=dense_list[i])(x)
-                        else:
-                            # units_list = [dense_list[i], int(dense_list[i]/2), dense_list[i]]
-                            units_list = [dense_list[i]*weight_layer_list[i]]
-                            if resnet:
-                                x = MLP.residual(inputs = x, Activator = leaky_relu,
-                                                 weight_layer_number=weight_layer_list[i], units_list=units_list)
+                        if validate:
+                            x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+
+
+
+                    input_vector_dim = X_train.shape[1]
+
+                    def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False):#, units_list = None):
+                        # leaky_relu = LeakyReLU()
+                        # input layer
+                        MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
+                                       dropout_rate=dor, dropout_timing = "final", gate_bias=-3, growth_rate = 32)
+
+                        x = Dense(units = dense_list[0])(inputs)
+                        # mid layer
+                        for i in range(1, len(dense_list)):
+                            leaky_relu = LeakyReLU()
+                            if dense_net:
+                                x = MLP.denseblock(inputs=x, Activator=leaky_relu,
+                                                   weight_layer_number=weight_layer_list[i])
+                                x = Dense(units=dense_list[i])(x)
                             else:
-                                if highwaynet:
-                                    x = MLP.highway(inputs = x, Activator = leaky_relu,
-                                                    weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                if bottle_neck:
+                                    units_list = [dense_list[i], max(int(dense_list[i]/2), 2), dense_list[i]]
                                 else:
-                                    x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu)
+                                    units_list = [dense_list[i]*weight_layer_list[i]]
+                                if resnet:
+                                    x = MLP.residual(inputs = x, Activator = leaky_relu,
+                                                     weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                else:
+                                    if highwaynet:
+                                        x = MLP.highway(inputs = x, Activator = leaky_relu,
+                                                        weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                    else:
+                                        x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu)
 
-                    return x
-                
-                with tf.name_scope("inference") as scope:
-                    inputs = Input(shape = (input_vector_dim,))
-                    
-                    x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
-                    
+                        return x
+
+                    with tf.name_scope("inference") as scope:
+                        inputs = Input(shape = (input_vector_dim,))
+
+                        x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
+
+                        """
+                        x = Dense(units = dense_net_list[0])(inputs)
+                        # x = Activation(LeakyReLU())(x)
+                        x = LeakyReLU()(x)
+                        """
+                        """
+                        for i in range(1, len(dense_net_list)):
+                            dense_block =
+                            x = Dense(units = dense_list[0])(x)
+                            leaky_relu = LeakyReLU()
+                            # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                            x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                        """
+
+                        # output layer
+                        predictions = Dense(units = 2, activation = None)(x)
+
+                    model = Model(inputs = inputs, outputs = predictions)
+
+                    save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
+                    # es_cb = EarlyStopping(monitor='val_loss', patience=0, verbose=0, mode='auto')
+                    tb_cb = TensorBoard(log_dir=source + log_name, histogram_freq=0, write_grads=True)
+
+                    model.compile(loss="mean_squared_error",
+                                  optimizer='Adam')
+
+                    batch_size = y_train.shape[0]
+                    threshold = 30000
+                    if batch_size > threshold:
+                        split = floor(float(batch_size) / threshold)
+                        batch_size = floor(float(batch_size) / split)
+
+                    train_steps, train_batches = batch_iter(X_train, y_train, batch_size)
+                    if validate:
+                        valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
+                    #"""
+                    model.fit(x=X_train, y=y_train,
+                              batch_size=batch_size, nb_epoch=1000,
+                              validation_split=0.1, callbacks=[tb_cb])
+                    #"""
                     """
-                    x = Dense(units = dense_net_list[0])(inputs)
-                    # x = Activation(LeakyReLU())(x)
-                    x = LeakyReLU()(x)
+                    model.fit_generator(train_batches, train_steps,
+                                        epochs=1000,
+                                        validation_data=valid_batches,
+                                        validation_steps=valid_steps,
+                                        callbacks=[tb_cb])
                     """
+                    # X_train: [number, angle, shape001, shape002, ..., shapeMAX]
+                    # y_train: [number, lift]
+                    # 適当に中央付近の翼を抜き出しての-40-38degreeをプロットさせてみる
                     """
-                    for i in range(1, len(dense_net_list)):
-                        dense_block =
-                        x = Dense(units = dense_list[0])(x)
-                        leaky_relu = LeakyReLU()
-                        # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                        x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                    """
+                    tekito = 1306 * 40  # NACA2613 or NACA2615
+                    plt.figure()
+                    plt.plot(X_train[tekito:tekito+40, 0], y_train[tekito:tekito+40])
+                    plt.plot(X_train[tekito:tekito+40, 0], model.predict(X_train)[tekito:tekito+40])
+                    plt.savefig(source + case_num + "_train.png")
+    
+                    y_predict = model.predict(x_test)
+                    tekito = (99 + 13) * 40 # 22012
+                    plt.figure()
+                    plt.plot(x_test[tekito:tekito+40, 0], y_test[tekito:tekito+40])
+                    plt.plot(x_test[tekito:tekito+40, 0], y_predict[tekito:tekito+40])
+                    plt.savefig(source + case_num + "_test.png")
                     
-                    # output layer
-                    predictions = Dense(units = 2, activation = None)(x)
-                
-                model = Model(inputs = inputs, outputs = predictions)
+                    make_scatter_plot(y_test, y_predict, "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Incompressible_Invicid\\fig\\", fname=case_num)
+                    """
 
-                save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
-                # es_cb = EarlyStopping(monitor='val_loss', patience=0, verbose=0, mode='auto')
-                tb_cb = TensorBoard(log_dir=source + log_name, histogram_freq=0, write_grads=True)
-
-                model.compile(loss="mean_squared_error",
-                              optimizer='Adam')
-
-                batch_size = y_train.shape[0]
-                threshold = 30000
-                if batch_size > threshold:
-                    split = floor(float(batch_size) / threshold)
-                    batch_size = floor(float(batch_size) / split)
-                    
-                train_steps, train_batches = batch_iter(X_train, y_train, batch_size)
-                if validate:
-                    valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
-                #"""
-                model.fit(x=X_train, y=y_train,
-                          batch_size=batch_size, nb_epoch=1000,
-                          validation_split=0.1, callbacks=[tb_cb])
-                #"""
-                """
-                model.fit_generator(train_batches, train_steps,
-                                    epochs=1000,
-                                    validation_data=valid_batches,
-                                    validation_steps=valid_steps,
-                                    callbacks=[tb_cb])
-                """
-                # X_train: [number, angle, shape001, shape002, ..., shapeMAX]
-                # y_train: [number, lift]
-                # 適当に中央付近の翼を抜き出しての-40-38degreeをプロットさせてみる
-                """
-                tekito = 1306 * 40  # NACA2613 or NACA2615
-                plt.figure()
-                plt.plot(X_train[tekito:tekito+40, 0], y_train[tekito:tekito+40])
-                plt.plot(X_train[tekito:tekito+40, 0], model.predict(X_train)[tekito:tekito+40])
-                plt.savefig(source + case_num + "_train.png")
-
-                y_predict = model.predict(x_test)
-                tekito = (99 + 13) * 40 # 22012
-                plt.figure()
-                plt.plot(x_test[tekito:tekito+40, 0], y_test[tekito:tekito+40])
-                plt.plot(x_test[tekito:tekito+40, 0], y_predict[tekito:tekito+40])
-                plt.savefig(source + case_num + "_test.png")
-                
-                make_scatter_plot(y_test, y_predict, "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Incompressible_Invicid\\fig\\", fname=case_num)
-                """
-
-            json_string = model.to_json()
-            open(source + json_name, 'w').write(json_string)
-            model.save_weights(source + weight_name)
-            KTF.set_session(old_session)
+                json_string = model.to_json()
+                open(source + json_name, 'w').write(json_string)
+                model.save_weights(source + weight_name)
+                KTF.set_session(old_session)
 
 
 if __name__ == '__main__':
