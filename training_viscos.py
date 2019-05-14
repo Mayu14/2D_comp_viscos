@@ -133,7 +133,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # dr = [[12, 24, 48, 96, 192, 384]]
     for i in range(10):
         block_total = 10 * (i + 1)
-        dr = [[32]*block_total]
+        dr = [[128]*block_total]
         weight_layer_list = [3]*block_total
         bottle_neck = True
         """
