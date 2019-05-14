@@ -6,6 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.mixture import GaussianMixture as GMM
 # import hdbscan
 from math import floor
+from copy import deepcopy
 import matplotlib.pyplot as plt
 
 # X_data:[n_samples, m_features]
@@ -201,8 +202,8 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     footer = str(reduction_target).zfill(5) + ".csv"
     
     # if ((update_xy == False) or (preprocess != "None")):
-    X_origin = X_data
-    y_origin = y_data
+    X_origin = deepcopy(X_data)
+    y_origin = deepcopy(y_data)
 
     mid = get_fname(preprocess, criteria_method, main_process, cv_types)
     print(mid + footer)
@@ -280,9 +281,9 @@ if __name__ == '__main__':
     for preproc in preprocesses:
         for mainproc in main_processes:
             for postproc in postprocesses:
-                for i in range(1):
+                for i in range(40):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = True, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = False, force_overwrite=False)
                 
     
     
