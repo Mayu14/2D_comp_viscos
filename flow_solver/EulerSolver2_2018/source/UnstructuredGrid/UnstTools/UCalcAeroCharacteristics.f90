@@ -51,13 +51,19 @@ subroutine UCalcAeroCharacteristics(UConf, UCC, UG, iPlotStep, UAC)
 
         lift = lift + WallPressure * (-UG%GM%Normal(iEdge, 1) * sinA + UG%GM%Normal(iEdge, 2) * cosA) * (-1.0d0) * UG%GM%Area(iEdge)
 
-        UAC%pressure_coefficient(iWall, iPlotStep) = (WallPressure - static_pressure) / kinetic_pressure
+        !UAC%pressure_coefficient(iWall, iPlotStep) = (WallPressure - static_pressure) / kinetic_pressure
+        UAC%pressure_coefficient(iWall, 1) = (WallPressure - static_pressure) / kinetic_pressure
     end do
 
     scaling_factor = kinetic_pressure * ObjLength
 
     UAC%coefficient(1, iPlotStep) = drag / scaling_factor
     UAC%coefficient(2, iPlotStep) = lift / scaling_factor
+
+    if(iPlotStep > 1) then
+        UAC%residual = sqrt(max((UAC%coefficient(1, iPlotStep) - UAC%coefficient(1, iPlotStep-1))**2, &
+                         & (UAC%coefficient(2, iPlotStep) - UAC%coefficient(2, iPlotStep-1))**2))
+    end if
 
     return
 end subroutine UCalcAeroCharacteristics
