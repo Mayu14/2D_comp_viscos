@@ -21,10 +21,10 @@ implicit none
 !Calculate Default
     double precision :: FixedTimeStep
     double precision :: DefaultTimeStep
-    integer :: OutputInterval !結果の出力間隔
+    integer :: OutputInterval !結果の出力間隔  ! switch=5,6においては内部反復の回数
     integer :: CheckNaNInterval = 50 !NaNになってないか確認する間隔
     integer :: CheckNaNInterval_default = 50 !NaNになってないか確認する間隔
-    integer :: IterationNumber !計算の反復回数
+    integer :: IterationNumber !計算の反復回数 ! switch=5,6においては外部反復の最大値
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
     integer :: RetryFlag = 0 !音速が負になる等の問題が発生するとこのフラグが点灯し，再計算を実施する．フラグが点灯した状態で再度フラグ点灯しようとすると強制終了させる
