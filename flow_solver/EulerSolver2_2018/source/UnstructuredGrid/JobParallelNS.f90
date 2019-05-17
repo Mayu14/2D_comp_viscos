@@ -47,73 +47,61 @@ subroutine JobParallelNS(UConf)
     call RelativeCoordinateTransform(UG, UCC, obj_velocity)
 
     call CheckNaN(UConf, UCC)   !
-
-    do iTry = 1, 100
+    allocate(UAC%coefficient(2, IterationNumber))
+    do iTry = 1, IterationNumber
         !$ time_elapsed = omp_get_wtime()
-        !call JPUOutput(UConf,UG,UCC,0)  ! debug
         iStartStep = 1
         ! 時間積分
-        do iStep = (iTry-1)*IterationNumber + iStartStep, iTry*IterationNumber
-        !do iStep = iStartStep, IterationNumber
+        do iStep = (iTry-1)*OutputInterval + iStartStep, iTry*OutputInterval
             if(DetailedReport > 2) then
-                if(mod(IterationNumber, 10) == 0) then
-                    write(6,*) iStep, "/", IterationNumber, " th iteration"
+                if(mod(iStep, 100) == 0) then
+                    write(6,*) iStep, "/", OutputInterval*IterationNumber, " th iteration"
                 end if
             end if
 
             call UnstNS(iStep,UConf,UG,UCC,UCE)
-        ! 中間vtk出力
-            if(mod(iStep,OutputInterval) == 0) then
-                iStep4Plot = iStep / OutputInterval
-                call JPUOutput(UConf,UG,UCC,iStep4Plot)
-                if(UConf%UseSteadyCalc == 1) call UOutput_Residuals(UConf, UCC%RH, iStep4Plot)
-            end if
+
         ! 画面出力＆NaN発生確認（発生時はデータをロールバックする）
             if(mod(iStep, CheckNaNInterval) == 0)then
                 if(DetailedReport > 2) write(6,*) "NaN Checking..."
                 call CheckNaN(UConf, UCC)
             end if
-
-            !if(UCC%iEndFlag > 1) exit
         end do
-    !end do
-
-        UCC%iEndFlag = 3
 
         if(UConf%SwitchProgram /= 7) then
-            call JPUOutput(UConf,UG,UCC,0)
-            call UOutput_Residuals(UConf, UCC%RH, -1)
+            call JPUOutput(UConf,UG,UCC,iTry)
+            !call UOutput_Residuals(UConf, UCC%RH, -1)
         end if
 
-        if (UCC%iEndFlag == 2) then
-            iCalcStep = 100
-        else if(UCC%iEndFlag == 3) then
-            iCalcStep = 1
-        end if
+        allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, 1))
 
-        allocate(UAC%coefficient(2, iCalcStep))
-        allocate(UAC%pressure_coefficient(UG%GM%BC%iWallTotal, iCalcStep))
-
-        !UConf%UseLocalTimeStep = 0
-        !UConf%UseSteadyCalc = 0
         if(UCC%iEndFlag == 2) then
-            do iStep4Plot = 1, iCalcStep
-                call UnstNS(iStep4Plot, UConf, UG, UCC, UCE)
-                call UCalcAeroCharacteristics(UConf, UCC, UG, iStep4Plot, UAC)
-            end do
-
-        else if(UCC%iEndFlag == 3) then
-            call UCalcAeroCharacteristics(UConf, UCC, UG, iCalcStep, UAC)  ! debug
+            call UnstNS(iTry, UConf, UG, UCC, UCE)
         end if
+
+        call UCalcAeroCharacteristics(UConf, UCC, UG, iTry, UAC)  ! debug
 
         !call JPUOutput(UConf,UG,UCC,iCalcStep)
         call UOutput_Characteristics(UConf, UG, UAC, iTry)   ! debug
-        deallocate(UAC%coefficient, UAC%pressure_coefficient)   ! debug
+
+        if (iTry > 1) then
+            write(6,*) UAC%residual, Converge_tolerance
+        end if
+
+        if(UAC%residual < Converge_tolerance) then
+            if(UConf%UseMUSCL == 0) then
+                UConf%UseMUSCL = 1
+            else
+                UCC%iEndFlag = 3
+            end if
+        end if
+        deallocate(UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
         !UConf%UseSteadyCalc = 1
         !$ time_step = omp_get_wtime()
         !$ time_elapsed = time_step - time_start
         !$ write(6,*) time_elapsed, time_specified
+        if(UCC%iEndFlag == 3) exit
     end do
 
     return
