@@ -87,7 +87,7 @@
             UCC%PreviousQuantity = 0.0d0
         end if
 
-        if(UConf%UseMUSCL == 1) then
+        !if(UConf%UseMUSCL == 1) then   ! MUSCL利用によらず確保するように変更
             allocate(UCC%GradientOfVariable(iDim+2,UG%GI%RealCells,1,1,3)) !保存変数の勾配ベクトルは(変数の種類，実要素番号,1,1,3方向)で確保
             allocate(UCC%VariationOfVariable(2,iDim+2,UG%GI%RealCells,1,1)) !保存変数の勾配最大値・最小値は(1最大値,2最小値，変数の種類，実要素番号,1,1)で確保
             allocate(UCC%LimiterFunction(iDim+2,UG%GI%RealCells,1,1)) !変数・セル毎の勾配制限関数
@@ -101,7 +101,7 @@
             UCE%NormalGradient = 0.0d0
             UCE%RebuildQunatity = 0.0d0
             UCE%TmpLimiterFunction = 0.0d0
-        end if
+        !end if
 
         if(UConf%UseOverSet == 1) then
             allocate(UCC%InterpolatedQuantity(iDim+2,UG%GI%AllCells,1,1)) !n+1段階の自格子から内挿する際に全セルの処理が終わるまで上書きしないためのデータ退避場所
