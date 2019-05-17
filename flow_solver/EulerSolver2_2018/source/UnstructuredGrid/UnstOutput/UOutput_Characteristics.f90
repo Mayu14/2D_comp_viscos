@@ -25,7 +25,11 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
     iMaxTime = ubound(UAC%coefficient, 2)
 
     open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
-        do iTime = 1, iMaxTime
+        if(iStep > 1) then
+            write(UConf%my_rank+100, "(2(1x,f22.17))") 0.5d0 * (UAC%coefficient(1,iStep) + UAC%coefficient(1,iStep-1)), &
+                                                     & 0.5d0 * (UAC%coefficient(2,iStep) + UAC%coefficient(2,iStep-1))
+        end if
+        do iTime = 1, iStep
             write(UConf%my_rank+100, "(2(1x,f22.17))") UAC%coefficient(1,iTime), UAC%coefficient(2, iTime)
         end do
     close(UConf%my_rank+100)
@@ -38,7 +42,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
 
     open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
         !do iTime = 1, iMaxTime
-        iTime = iMaxTime
+        iTime = 1
             do iWall = 1, UG%GM%BC%iWallTotal
                 write(UConf%my_rank+100, "(2(1x,f22.17))") UG%CD%Edge(UG%GM%BC%VW(iWall)%iGlobalEdge, 1), UAC%pressure_coefficient(iWall,iTime)
             end do
