@@ -499,6 +499,7 @@ implicit none
     type AeroCharacteristics
         double precision, allocatable :: coefficient(:, :)  !1:lift or drag(1or2), 2:timestep
         double precision, allocatable :: pressure_coefficient(:, :)    ! 1:Wall Number, 2:timestep
+        double precision :: residual = 1000000
     end type
 
     type NumericalExperiment
