@@ -1,0 +1,898 @@
+LFLAGS = -qopenmp
+LIBS = 
+
+VPATH = $(SRC_DIR_f90d1):$(OBJS_DIR):$(SRC_DIR_f90d2):$(OBJS_DIR):$(SRC_DIR_f90d3):$(OBJS_DIR):$(SRC_DIR_f90d4):$(OBJS_DIR):$(SRC_DIR_f90d5):$(OBJS_DIR):$(SRC_DIR_f90d6):$(OBJS_DIR):$(SRC_DIR_f90d7):$(OBJS_DIR):$(SRC_DIR_f90d8):$(OBJS_DIR):$(SRC_DIR_f90d9):$(OBJS_DIR):$(SRC_DIR_f90d10):$(OBJS_DIR):$(SRC_DIR_f90d11):$(OBJS_DIR):$(SRC_DIR_f90d12):$(OBJS_DIR):$(SRC_DIR_f90d13):$(OBJS_DIR):$(SRC_DIR_f90d14):$(OBJS_DIR):$(SRC_DIR_f90d15):$(OBJS_DIR):$(SRC_DIR_f90d16):$(OBJS_DIR):$(SRC_DIR_f90d17):$(OBJS_DIR):$(SRC_DIR_f90d18):$(OBJS_DIR):$(SRC_DIR_f90d19):$(OBJS_DIR):$(SRC_DIR_f90d20):$(OBJS_DIR):$(SRC_DIR_f90d21):$(OBJS_DIR):$(SRC_DIR_f90d22):$(OBJS_DIR):$(SRC_DIR_f90d23):$(OBJS_DIR):$(SRC_DIR_f90d24):$(OBJS_DIR):$(SRC_DIR_f90d25):$(OBJS_DIR):$(SRC_DIR_f90d26):$(OBJS_DIR):$(SRC_DIR_f90d27):$(OBJS_DIR):$(SRC_DIR_f90d28):$(OBJS_DIR):$(SRC_DIR_f90d29):$(OBJS_DIR):$(SRC_DIR_f90d30):$(OBJS_DIR):$(SRC_DIR_f90d31):$(OBJS_DIR):$(SRC_DIR_f90d32):$(OBJS_DIR):$(SRC_DIR_f90d33):$(OBJS_DIR):$(SRC_DIR_f90d34):$(OBJS_DIR):$(SRC_DIR_f90d35):$(OBJS_DIR):$(SRC_DIR_f90d36):$(OBJS_DIR):$(SRC_DIR_f90d37):$(OBJS_DIR):$(SRC_DIR_f90d38):$(OBJS_DIR):$(SRC_DIR_f90d39):$(OBJS_DIR):$(SRC_DIR_f90d40):$(OBJS_DIR):$(SRC_DIR_f90d41):$(OBJS_DIR):$(SRC_DIR_f90d42):$(OBJS_DIR):$(SRC_DIR_f90d43):$(OBJS_DIR):$(SRC_DIR_f90d44):$(OBJS_DIR):$(SRC_DIR_f90d45):$(OBJS_DIR)
+OBJS = $(addprefix $(OBJS_DIR), $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39) $(OBJS_f90d40) $(OBJS_f90d41) $(OBJS_f90d42) $(OBJS_f90d43) $(OBJS_f90d44) $(OBJS_f90d45))
+
+all : $(EXE)
+
+$(EXE) : $(OBJS_f90d1) $(OBJS_f90d2) $(OBJS_f90d3) $(OBJS_f90d4) $(OBJS_f90d5) $(OBJS_f90d6) $(OBJS_f90d7) $(OBJS_f90d8) $(OBJS_f90d9) $(OBJS_f90d10) $(OBJS_f90d11) $(OBJS_f90d12) $(OBJS_f90d13) $(OBJS_f90d14) $(OBJS_f90d15) $(OBJS_f90d16) $(OBJS_f90d17) $(OBJS_f90d18) $(OBJS_f90d19) $(OBJS_f90d20) $(OBJS_f90d21) $(OBJS_f90d22) $(OBJS_f90d23) $(OBJS_f90d24) $(OBJS_f90d25) $(OBJS_f90d26) $(OBJS_f90d27) $(OBJS_f90d28) $(OBJS_f90d29) $(OBJS_f90d30) $(OBJS_f90d31) $(OBJS_f90d32) $(OBJS_f90d33) $(OBJS_f90d34) $(OBJS_f90d35) $(OBJS_f90d36) $(OBJS_f90d37) $(OBJS_f90d38) $(OBJS_f90d39) $(OBJS_f90d40) $(OBJS_f90d41) $(OBJS_f90d42) $(OBJS_f90d43) $(OBJS_f90d44) $(OBJS_f90d45)
+	@mkdir -p $(EXE_DIR)
+	$(LD) -o $(EXE_DIR)$(EXE) $(OBJS) $(LFLAGS) $(LIBS)
+
+$(OBJS_f90d1):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d1)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d2):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d2)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d3):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d3)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d4):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d4)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d5):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d5)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d6):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d6)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d7):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d7)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d8):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d8)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d9):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d9)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d10):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d10)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d11):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d11)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d12):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d12)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d13):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d13)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d14):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d14)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d15):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d15)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d16):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d16)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d17):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d17)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d18):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d18)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d19):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d19)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d20):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d20)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d21):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d21)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d22):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d22)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d23):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d23)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d24):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d24)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d25):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d25)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d26):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d26)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d27):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d27)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d28):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d28)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d29):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d29)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d30):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d30)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d31):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d31)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d32):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d32)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d33):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d33)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d34):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d34)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d35):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d35)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d36):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d36)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d37):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d37)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d38):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d38)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d39):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d39)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d40):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d40)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d41):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d41)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d42):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d42)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d43):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d43)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d44):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d44)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+$(OBJS_f90d45):
+	@mkdir -p $(OBJS_DIR)
+	$(FC) $(CFLAGS) -c $(SRC_DIR_f90d45)$(@:.o=.f90) -o $(OBJS_DIR)$@
+
+clean :
+	rm -f $(OBJS_DIR)*.*
+	rm -f $(EXE_DIR)$(EXE)
+
+# Dependencies of files
+UGetStrainRateTensor_mk2.o: \
+    UGetStrainRateTensor_mk2.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ReadConfigulation.o: \
+    ReadConfigulation.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+OCalculateMotionWait.o: \
+    OCalculateMotionWait.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+CalcEdgeArea.o: \
+    CalcEdgeArea.f90 \
+    StructVar_Mod.o
+MatchingWithDonorInAuxiliaryGrid.o: \
+    MatchingWithDonorInAuxiliaryGrid.f90 \
+    FrequentOperation.o \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+UOutput_Characteristics.o: \
+    UOutput_Characteristics.f90 \
+    StructVar_Mod.o
+Conserve2Primitive.o: \
+    Conserve2Primitive.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+OMakeTransformationMatrix.o: \
+    OMakeTransformationMatrix.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+AllocTest.o: \
+    AllocTest.f90 \
+    StructVar_Mod.o
+RoughSearchDonorInLocalGrid.o: \
+    RoughSearchDonorInLocalGrid.f90 \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+UGetLimiter.o: \
+    UGetLimiter.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+ErrorMessage.o: \
+    ErrorMessage.f90
+InterpolationOfGlobalGrid.o: \
+    InterpolationOfGlobalGrid.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+CalcWidth.o: \
+    CalcWidth.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UTestAlloc.o: \
+    UTestAlloc.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+SortVertexByAngle.o: \
+    SortVertexByAngle.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+UAllocVariables.o: \
+    UAllocVariables.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+CalcFlux.o: \
+    CalcFlux.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ExcludeImperfectOverlapped.o: \
+    ExcludeImperfectOverlapped.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+UNonReflectBoundary.o: \
+    UNonReflectBoundary.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UCalcFlux.o: \
+    UCalcFlux.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OUnstEuler.o: \
+    OUnstEuler.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UOutput_Residuals.o: \
+    UOutput_Residuals.f90 \
+    StructVar_Mod.o
+MShockTubeIC.o: \
+    MShockTubeIC.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+RegistVar_Mod4OMP.o: \
+    RegistVar_Mod4OMP.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+GetNormalGradient.o: \
+    GetNormalGradient.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetEigenMatrix.o: \
+    UGetEigenMatrix.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+MemoryReleaseOfDE.o: \
+    MemoryReleaseOfDE.f90 \
+    StructVar_Mod.o
+UReadUnStrGrid.o: \
+    UReadUnStrGrid.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUGetNormalGradient.o: \
+    JPUGetNormalGradient.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+ResisterGlobal2Local.o: \
+    ResisterGlobal2Local.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+ShockTubeIC.o: \
+    ShockTubeIC.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetRoeAverage.o: \
+    UGetRoeAverage.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+ApploximateCircleMethod.o: \
+    ApploximateCircleMethod.f90 \
+    StructVar_Mod.o
+URegistCellType.o: \
+    URegistCellType.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPCalcCaseAutoFill.o: \
+    JPCalcCaseAutoFill.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+CellTransformationIntoDonor.o: \
+    CellTransformationIntoDonor.f90 \
+    StructVar_Mod.o
+OutputGnuPlot.o: \
+    OutputGnuPlot.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+USlau2.o: \
+    USlau2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+BoundaryBoxMethod.o: \
+    BoundaryBoxMethod.f90 \
+    StructVar_Mod.o
+UTimeIntegral.o: \
+    UTimeIntegral.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUFindVariation.o: \
+    JPUFindVariation.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+SimpleSearchDonorInLocalGrid.o: \
+    SimpleSearchDonorInLocalGrid.f90 \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+JobParallelNS.o: \
+    JobParallelNS.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UVenkatakrishnanVarMod4OMP.o: \
+    UVenkatakrishnanVarMod4OMP.f90 \
+    StructVar_Mod.o
+GJKAlgorithm.o: \
+    GJKAlgorithm.f90 \
+    StructVar_Mod.o
+UCentralDifferencePrepareAroundEdge.o: \
+    UCentralDifferencePrepareAroundEdge.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+JPUMUSCL.o: \
+    JPUMUSCL.f90 \
+    StructVar_Mod.o
+AllocCC4MB.o: \
+    AllocCC4MB.f90 \
+    StructVar_Mod.o
+UConserve2Primitive.o: \
+    UConserve2Primitive.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UBaldwinLomax_main.o: \
+    UBaldwinLomax_main.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUOutput.o: \
+    JPUOutput.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+GetGlobalNumber2D.o: \
+    GetGlobalNumber2D.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+UCalcTimeWidth.o: \
+    UCalcTimeWidth.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUVenkatakrishnan.o: \
+    JPUVenkatakrishnan.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+ControlLocalInterpolation.o: \
+    ControlLocalInterpolation.f90 \
+    StructVar_Mod.o
+CalcVolume.o: \
+    CalcVolume.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UReadInflowOutflowCondition.o: \
+    UReadInflowOutflowCondition.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+PreNumericalEx.o: \
+    PreNumericalEx.f90 \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+FreeMemory.o: \
+    FreeMemory.f90 \
+    StructVar_Mod.o
+UExplicitEulerMethod.o: \
+    UExplicitEulerMethod.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+NumericalExperimentation.o: \
+    NumericalExperimentation.f90 \
+    ConstantVar_Mod.o \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+InterpolationOfLocalGrid.o: \
+    InterpolationOfLocalGrid.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    StructVar_Mod.o
+Venkatakrishnan.o: \
+    Venkatakrishnan.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+UGetNormalGradient.o: \
+    UGetNormalGradient.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+JPUUpwindFlux_Dim2.o: \
+    JPUUpwindFlux_Dim2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ContactDetermination.o: \
+    ContactDetermination.f90 \
+    StructVar_Mod.o
+UCalcAeroCharacteristics.o: \
+    UCalcAeroCharacteristics.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ExactSol_mod.o: \
+    ExactSol_mod.f90
+VelocityCorrection.o: \
+    VelocityCorrection.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+CalcTimeWidth.o: \
+    CalcTimeWidth.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UGetLaminarViscosity_mk2.o: \
+    UGetLaminarViscosity_mk2.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UCalcResidual.o: \
+    UCalcResidual.f90 \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UnstTestVTK.o: \
+    UnstTestVTK.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+NumericalEx_mod.o: \
+    NumericalEx_mod.f90 \
+    StructVar_Mod.o
+OTransferOutflowMomentum.o: \
+    OTransferOutflowMomentum.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UPrepareBoundary.o: \
+    UPrepareBoundary.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetGeneralFlux.o: \
+    UGetGeneralFlux.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+JPUGetLimiter.o: \
+    JPUGetLimiter.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+main.o: \
+    main.f90 \
+    ConstantVar_Mod.o \
+    NumericalEx_mod.o \
+    StructVar_Mod.o
+DataFabrication4FirstStep.o: \
+    DataFabrication4FirstStep.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+InfluenceSeparationMain.o: \
+    InfluenceSeparationMain.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UpwindFlux_Dim1.o: \
+    UpwindFlux_Dim1.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UUpwindFlux_Dim2.o: \
+    UUpwindFlux_Dim2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUCheckCFL4FixedTime.o: \
+    JPUCheckCFL4FixedTime.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UCheckCFL4FixedTime.o: \
+    UCheckCFL4FixedTime.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+Register4InterpolationMain.o: \
+    Register4InterpolationMain.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+ShockConvergeLocalInterpolateMain.o: \
+    ShockConvergeLocalInterpolateMain.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+ReadInitialCondition.o: \
+    ReadInitialCondition.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetWallVariable.o: \
+    UGetWallVariable.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+StructVar_Mod.o: \
+    StructVar_Mod.f90
+UPrimitive2Conserve.o: \
+    UPrimitive2Conserve.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MOutputForObject.o: \
+    MOutputForObject.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OComputeNextCoords.o: \
+    OComputeNextCoords.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UpwindFlux_Dim2.o: \
+    UpwindFlux_Dim2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UVenkatakrishnan.o: \
+    UVenkatakrishnan.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+OMakeAuxiliaryStructuredGrid.o: \
+    OMakeAuxiliaryStructuredGrid.f90 \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+SetRegion.o: \
+    SetRegion.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MOutput.o: \
+    MOutput.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OGetDisplacement.o: \
+    OGetDisplacement.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+Output4Resume.o: \
+    Output4Resume.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetStrainRateTensor_edge.o: \
+    UGetStrainRateTensor_edge.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UOutputExact.o: \
+    UOutputExact.f90 \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OutputResultWithVC.o: \
+    OutputResultWithVC.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MOutputForInfluenceArea.o: \
+    MOutputForInfluenceArea.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OMoveCheckOfInfluence.o: \
+    OMoveCheckOfInfluence.f90 \
+    StructVar_Mod.o
+TestRegionData.o: \
+    TestRegionData.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UGetGradient.o: \
+    UGetGradient.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+TComputeReidualNorm.o: \
+    TComputeReidualNorm.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+Primitive2Conserve.o: \
+    Primitive2Conserve.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MOutputSTRUCT.o: \
+    MOutputSTRUCT.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ComputeInfluenceArea.o: \
+    ComputeInfluenceArea.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+RationalRungeKutta2.o: \
+    RationalRungeKutta2.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+URansCommon.o: \
+    URansCommon.f90 \
+    ConstantVar_Mod.o \
+    FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+TestBoundary.o: \
+    TestBoundary.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+CheckCFL4FixedTime.o: \
+    CheckCFL4FixedTime.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+AllocVariables4MultipleOverset.o: \
+    AllocVariables4MultipleOverset.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ORefreshStoreDisplacement.o: \
+    ORefreshStoreDisplacement.f90 \
+    StructVar_Mod.o
+MUSCL.o: \
+    MUSCL.f90 \
+    StructVar_Mod.o
+UMUSCL.o: \
+    UMUSCL.f90 \
+    StructVar_Mod.o
+JPUCalcTimeWidth.o: \
+    JPUCalcTimeWidth.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+SetRegionData.o: \
+    SetRegionData.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OStructEuler.o: \
+    OStructEuler.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MInitialize.o: \
+    MInitialize.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+InitializeInfluenceSeparation.o: \
+    InitializeInfluenceSeparation.f90 \
+    StructVar_Mod.o
+GetLimiter.o: \
+    GetLimiter.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UReadInitialCondition.o: \
+    UReadInitialCondition.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OutputExact.o: \
+    OutputExact.f90 \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ExplicitEulerMethod.o: \
+    ExplicitEulerMethod.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OTransferInflowMomentum.o: \
+    OTransferInflowMomentum.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+GetGeneralFlux.o: \
+    GetGeneralFlux.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UGetQuantityOnSurface.o: \
+    UGetQuantityOnSurface.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JPUConserve2Primitive.o: \
+    JPUConserve2Primitive.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+TimeIntegral.o: \
+    TimeIntegral.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+FrequentOperation.o: \
+    FrequentOperation.f90 \
+    StructVar_Mod.o
+OMoveCheck.o: \
+    OMoveCheck.f90 \
+    StructVar_Mod.o
+GetRoeAverage.o: \
+    GetRoeAverage.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UShockTubeIC.o: \
+    UShockTubeIC.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OMakeRelativeCoordinate.o: \
+    OMakeRelativeCoordinate.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ReadRegionData.o: \
+    ReadRegionData.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ReRegistBoundaryCell.o: \
+    ReRegistBoundaryCell.f90 \
+    FrequentOperation.o \
+    StructVar_Mod.o
+GetGradient.o: \
+    GetGradient.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UFindVariation.o: \
+    UFindVariation.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o \
+    UVenkatakrishnanVarMod4OMP.o
+JPUGetQuantityOnSurface.o: \
+    JPUGetQuantityOnSurface.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+MergeGnuPlot.o: \
+    MergeGnuPlot.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OStoreDisplacement.o: \
+    OStoreDisplacement.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+FindVariation.o: \
+    FindVariation.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UnstInitialize.o: \
+    UnstInitialize.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+JobParallelControler.o: \
+    JobParallelControler.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+AllocVariables.o: \
+    AllocVariables.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+RegisterIntoGlobal.o: \
+    RegisterIntoGlobal.f90 \
+    FrequentOperation.o \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+GetEigenMatrix.o: \
+    GetEigenMatrix.f90 \
+    ConstantVar_Mod.o \
+    StructVar_Mod.o
+UOutput.o: \
+    UOutput.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+SetBoundary.o: \
+    SetBoundary.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+OutputResult.o: \
+    OutputResult.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+LoopVar_Mod.o: \
+    LoopVar_Mod.f90
+AddSharedDonorCellNumber.o: \
+    AddSharedDonorCellNumber.f90 \
+    RegistVar_Mod4OMP.o \
+    StructVar_Mod.o
+GetQuantityOnSurface.o: \
+    GetQuantityOnSurface.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+USetBoundary.o: \
+    USetBoundary.f90 \
+    ConstantVar_Mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+CalcResidual.o: \
+    CalcResidual.f90 \
+    ExactSol_mod.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ModifyQuantity.o: \
+    ModifyQuantity.f90 \
+    StructVar_Mod.o
+Initialize.o: \
+    Initialize.f90 \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+ConstantVar_Mod.o: \
+    ConstantVar_Mod.f90
+InputCUV.o: \
+    InputCUV.f90 \
+    StructVar_Mod.o
+
