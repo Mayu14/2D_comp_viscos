@@ -132,6 +132,7 @@ implicit none
         integer :: my_rank  ! for MPI
         integer :: my_thread    ! for OpenMP
         integer :: CalcEnv = 0  ! 0:lab, 1:supercomputer
+        integer :: OutputStatus = 0 ! 0:Normal, 1:FinalStep, 2:ResumeStep
     end type
 
     type RoeAverage !Roe平均
