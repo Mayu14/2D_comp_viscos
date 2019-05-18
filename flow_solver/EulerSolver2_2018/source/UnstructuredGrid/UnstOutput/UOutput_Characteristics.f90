@@ -15,12 +15,18 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
         cUFileName = UConf%cFileName
     end if
 
-    cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
-    write(cStep, *) iStep
+    if(UConf%OutputStatus == 1) then    ! final step
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("Complete/dat/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
+        write(cStep, *) "Final"
+    else
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
+        write(cStep, *) iStep
+        cStep = trim(adjustl(cStep))//"th"
+    end if
     if(iStep == 0) then
         cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//"_AC.dat"
     else
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th_AC.dat"
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"_AC.dat"
     end if
     iMaxTime = ubound(UAC%coefficient, 2)
 
