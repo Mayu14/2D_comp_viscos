@@ -4,6 +4,8 @@ import os
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.mixture import GaussianMixture as GMM
+from sklearn.metrics import explained_variance_score
+from sklearn.decomposition import KernelPCA
 # import hdbscan
 from math import floor
 from copy import deepcopy
@@ -60,7 +62,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             if cv == "all":
                 cv_types = ['spherical', 'tied', 'diag', 'full']
             else:
-                cv_types = cv
+                cv_types = [cv]
             for cv_type in cv_types:
                 gmm = GMM(n_components = k_cluster, covariance_type = cv_type)
                 gmm.fit(X_data)
@@ -76,12 +78,12 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             y_cluster, centroids = main_kmeans(k_cluster, X_data)
         
         elif main_process == "gmm":
-            y_cluster, centroids = main_gmm(k_cluster, X_data)
+            y_cluster, centroids = main_gmm(k_cluster, X_data, cv_types)
         
         else:
             print("process name error!, please check variable 'main process'")
             exit()
-            
+        print("main processing is finished.")
         
         # post_process
         def nearest_centroid(X_data, centroids, metric="minkowski"):
@@ -141,14 +143,43 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     def preprocessing(X_data, preprocess):
         def pre_pca(X_data):
             from sklearn.decomposition import PCA
-            pca = PCA(n_components = X_data.shape[1])   # 全成分残す
+            original_dimension = X_data.shape[1]
+            pca = PCA(n_components = original_dimension)   # 全成分残す
             pca.fit(X_data)
+            cumulative_contribution_ratio = 0.0
+            new_dimension = 1
+            for i in range(original_dimension):
+                cumulative_contribution_ratio += pca.explained_variance_ratio_[i]
+                if cumulative_contribution_ratio > 0.99:
+                    new_dimension = i + 1
+                    break
+            pca = PCA(n_components = new_dimension)
+            """
+            pca.fit(X_data)
+            print(pca.explained_variance_ratio_)
+            X_pca = pca.transform(X_data)
+            print(np.sum(pca.explained_variance_ratio_))
+            print(explained_variance_score(X_data, pca.inverse_transform(X_pca)))
+            exit()
+            """
             return pca.fit_transform(X_data)
+            
         
         def pre_kpca(X_data, kernel="rbf", gamma = 20.0):
-            from sklearn.decomposition import KernelPCA
-            kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma)
-            kpca.fit(X_data)
+            # for i in range(2, X_data.shape[1], 3):
+            if kernel=="rbf":
+                gamma = 2.0 ** (-6)
+            
+            for i in range(9, -1, -1):
+                gamma = 1.0 / X_data.shape[0] * (i + 1)
+                # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
+                kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
+                kpca.fit(X_data)
+                X_kpca = kpca.transform(X_data)
+                print(i, gamma, explained_variance_score(X_data, kpca.inverse_transform(X_kpca)))
+            exit()
+            
+            # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma)
             return kpca.fit_transform(X_data)
 
         if preprocess == "None":
@@ -157,7 +188,8 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             X_data = pre_pca(X_data)
         elif (preprocess == "rbf") or (preprocess == "poly") or (preprocess == "linear") or (
                 preprocess == "sigmoid") or (preprocess == "cosine"):
-            X_data = pre_kpca(X_data, preprocess)
+            gamma = 1.0 / X_data.shape[0]
+            X_data = pre_kpca(X_data, preprocess, gamma)
         else:
             print("Error! input priprocess")
             exit()
@@ -216,7 +248,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         
     if type(nearest_indices) == type(None):
         X_data = preprocessing(X_data, preprocess)
-    
+        print("preprocessing is finished.")
     X_data, y_data, nearest_indices = reduction2k_datas(X_data = X_data, y_data = y_data, k_cluster = reduction_target, criteria_method = criteria_method, indices=nearest_indices, main_process=main_process)
 
     if output_csv:
@@ -272,18 +304,18 @@ if __name__ == '__main__':
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                               total_data = 0, return_scalar = True)
 
-    main_processes = ["kmeans++"]#, "kmeans++"]
+    main_processes = ["kmeans++"]#kmeans++"]#, "kmeans++"]
     # main_process = "kmeans++"
-    preprocesses = ["None"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
+    preprocesses = ["sigmoid"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
     postprocesses = ["nearest_centroid"]#, "farthest_from_center"]
     
     for preproc in preprocesses:
         for mainproc in main_processes:
             for postproc in postprocesses:
-                for i in range(40):
+                for i in range(40, 0, -1):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = False, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "diag", check_plot = False, force_overwrite=False)
                 
     
     
