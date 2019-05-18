@@ -125,7 +125,7 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                             # qsub書き換え・ジョブ投入
                             program_name = auto_rename(program_name = "ES2_start")
                             jobname = "sN" + naca
-                            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name)
+                            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name, first = True)
 
     else:
         import shutil
