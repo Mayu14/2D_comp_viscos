@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 import subprocess
+import os
 from auto_throwing_job import auto_throwing_job
 
 def run_unix(cmd):
@@ -28,7 +29,6 @@ def run_unix(cmd):
 
     return out.strip().decode("utf8")
 
-
 def get_fnamelist(path="", sortby_size=True):
     """
     フォルダ内のファイル名のリストを返す
@@ -49,6 +49,17 @@ def get_fnamelist(path="", sortby_size=True):
 
     return fnamelist
 
+def auto_rename(program_name = "ES2"):
+    i = 1
+    while i > 0:
+        if os.path.exists(program_name + str(i).zfill(6)):
+            i += 1
+        else:
+            program_name += str(i).zfill(6)
+            i = 0
+    return program_name
+    
+    
 def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/mayu_grid/",
                    first=False, case = "Case5",
                    aoa_min=0.0, aoa_max=39.0, aoa_pattern=14, ma_min=0.15, ma_max=1.80, ma_pattern=12,
@@ -109,23 +120,12 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                         case_list.append(get_case_name(naca, mach, reynolds, angle, case, gridpath, workingpath))
                         length += 1
                         if length == parallel:
-                            pass    # ここでジョブを投げる
                             # f90ファイル書き換え
                             # makefile書き換え&make
                             # qsub書き換え・ジョブ投入
-                            """
-                            break
-                    else:
-                        continue
-                    break
-                else:
-                    continue
-                break
-            else:
-                continue
-            break
-            """
-
+                            program_name = auto_rename(program_name = "ES2_start")
+                            jobname = "sN" + naca
+                            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name)
 
     else:
         import shutil
@@ -162,15 +162,15 @@ def count_fnumber(path=""):
 
 
 
-def main(parallel = 40, first=False):
-    """
+def main(parallel = 280, first=False):
+    #"""
     workingpath = "/work/A/FMa/FMa037/Case5/"
     resumepath = "/work/A/FMa/FMa037/Case5/Resume/"
     gridpath = "/work/A/FMa/FMa037/mayu_grid/"
-    """
-    workingpath = "/mnt/d/Toyota/github/2D_comp_viscos/"
-    resumepath = workingpath + "flow_solver/EulerSolver2_2018"
-    gridpath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
+    #"""
+    # workingpath = "/mnt/d/Toyota/github/2D_comp_viscos/"
+    # resumepath = workingpath + "flow_solver/EulerSolver2_2018"
+    # gridpath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
     if first:
         aoa_min = 0.0
         aoa_max = 39.0
@@ -192,10 +192,9 @@ def main(parallel = 40, first=False):
             # f90ファイル書き換え
             # makefile書き換え&make
             # qsub書き換え・ジョブ投入
-            print(case_list)
-    
-    
-    
+            jobname = "re_" + str(fnumber)
+            program_name = auto_rename()
+            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name)
 
 if __name__ == '__main__':
-    main(parallel = 2)
+    main()
