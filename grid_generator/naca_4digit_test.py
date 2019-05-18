@@ -146,7 +146,7 @@ class Naca_4_digit(object):
 class Naca_5_digit(Naca_4_digit):
     def __init__(self, int_5, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False, from5digit = True):
         self.cl = float(int_5[0])*(3.0/2.0) / 10  # designed lift_coefficient
-        self.p = float(int_5[1]) / 2.0 / 100  # position of the maximum camber
+        self.p = float(int_5[1]) / 2.0 / 10  # position of the maximum camber
         self.ref = int_5[2]             # enable / disable reflect
         self.t = float(int_5[3:5]) / 100.0  # maximum thickness
 
@@ -192,42 +192,53 @@ class Naca_5_digit(Naca_4_digit):
             self.dyc_dx = np.where(x < m, x_lt_m_rf(m, k1, k2_k1, x), x_gt_m_rf(m, k1, k2_k1, x))
 
 
-    def camberline_plofile_table(self):
-        if self.camberline_plofile == 210:
-            self.m = 0.058
-            self.k1 = 361.4
-        elif self.camberline_plofile == 220:
-            self.m = 0.126
-            self.k1 = 51.64
-        elif self.camberline_plofile == 230:
-            self.m = 0.2025
-            self.k1 = 15.957
-        elif self.camberline_plofile == 240:
-            self.m = 0.29
-            self.k1 = 6.643
-        elif self.camberline_plofile == 250:
-            self.m = 0.391
-            self.k1 = 3.230
+    def camberline_plofile_table(self, fromfunc=True):
+        if fromfunc:
+            from scipy.optimize import newton
+            xf = self.p
+            mfunc = lambda m: m * (1 - np.sqrt(m / 3.0)) - xf
+            self.m = m = newton(mfunc, 0.058)
 
-        elif self.camberline_plofile == 221:
-            self.m = 0.130
-            self.k1 = 51.990
-            self.k2byk1 = 0.000764
-        elif self.camberline_plofile == 231:
-            self.m = 0.217
-            self.k1 = 15.793
-            self.k2byk1 = 0.00677
-        elif self.camberline_plofile == 241:
-            self.m = 0.318
-            self.k1 = 6.520
-            self.k2byk1 = 0.0303
-        elif self.camberline_plofile == 251:
-            self.m = 0.441
-            self.k1 = 3.191
-            self.k2byk1 = 0.1355
+            Qfunc = lambda m: (3*m - 7*m**2 + 8*m**3 - 4*m**4) / np.sqrt(m * (1 - m)) - 1.5 * (1 - 2 * m) * (np.pi / 2.0 - np.arcsin(1 - 2 * m))
+            self.k1 = 6.0 * self.cl / Qfunc(self.m)
+            k2byk1 = lambda m, xf: (3 * (m - xf) ** 2 - m ** 3) / (1 - m) ** 3
+            self.k2byk1 = k2byk1(self.m, xf)
         else:
-            print("this type wing is not defined")
-            exit()
+            if self.camberline_plofile == 210:
+                self.m = 0.058
+                self.k1 = 361.4
+            elif self.camberline_plofile == 220:
+                self.m = 0.126
+                self.k1 = 51.64
+            elif self.camberline_plofile == 230:
+                self.m = 0.2025
+                self.k1 = 15.957
+            elif self.camberline_plofile == 240:
+                self.m = 0.29
+                self.k1 = 6.643
+            elif self.camberline_plofile == 250:
+                self.m = 0.391
+                self.k1 = 3.230
+
+            elif self.camberline_plofile == 221:
+                self.m = 0.130
+                self.k1 = 51.990
+                self.k2byk1 = 0.000764
+            elif self.camberline_plofile == 231:
+                self.m = 0.217
+                self.k1 = 15.793
+                self.k2byk1 = 0.00677
+            elif self.camberline_plofile == 241:
+                self.m = 0.318
+                self.k1 = 6.520
+                self.k2byk1 = 0.0303
+            elif self.camberline_plofile == 251:
+                self.m = 0.441
+                self.k1 = 3.191
+                self.k2byk1 = 0.1355
+            else:
+                print("this type wing is not defined")
+                exit()
 
 
 def main():
@@ -235,7 +246,7 @@ def main():
     naca = Naca_4_digit(int_4="0012", attack_angle_deg=deg, resolution=100, quasi_equidistant=True, length_adjust=True)
     naca.plot()
     naca.plot_quasi_equidistant_shape()
-    naca = Naca_5_digit(int_5="23012", attack_angle_deg=deg, resolution=100, quasi_equidistant=True, length_adjust=True)
+    naca = Naca_5_digit(int_5="62112", attack_angle_deg=deg, resolution=100, quasi_equidistant=True, length_adjust=True)
 
     naca.plot()
     naca.plot_quasi_equidistant_shape()
