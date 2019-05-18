@@ -9,7 +9,7 @@ def prepare_directory(workingpath):
             os.makedirs(workingpath + dir)
 
 
-def update_JPCalcCaseAutoFill_f90(case_list,
+def update_JPCalcCaseAutoFill_f90(case_list, first=False,
                                   path = "/home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSolver2_2018/source/Routine4JobParallel/"):
     """
     fortranプログラムを書き換える(JPCalcCaseAutoFill_originというファイルを作っておく)
@@ -27,11 +27,16 @@ def update_JPCalcCaseAutoFill_f90(case_list,
     s2 = s1 + s1
     s3 = s1 + s2
     s4 = s2 + s2
+    
     with open(fname + ".f90", "w") as f:
         f.write(main_program)
         f.write(
             s1 + "subroutine grid_change(UConf)\n" + s2 + "implicit none\n" + s2 + "type(Configulation), intent(inout) :: UConf\n")
+        f.write(s3 + 'UConf%UseResume = 1\n' + s3 + 'UConf%UseMUSCL = 1\n')
+        f.write(s3 + 'allocate(UConf%ResumeInFlowVars(5), UConf%ResumeOutFlowVars(5))\n')
+        f.write(s3 + 'UConf%ResumeInFlowVars = 0.0d0\n' + s3 + 'UConf%ResumeInFlowVars(1) = 1.0d0\n')
         for i in range(len(case_list)):
+            mach = case_list[i][1].split("__")[2][2:]
             f.write(s3)
             if i != 0:
                 f.write("else ")
@@ -39,10 +44,14 @@ def update_JPCalcCaseAutoFill_f90(case_list,
             f.write(s4 + 'Uconf%cGridName = trim(adjustl("' + case_list[i][0] + '"))\n')
             f.write(s4 + 'Uconf%cFileName = trim(adjustl("' + case_list[i][1] + '"))\n')
             f.write(s4 + 'UConf%cCaseName = trim(adjustl("' + case_list[i][2] + '"))\n')
-            f.write(s4 + 'UConf%dAttackAngle = ' + case_list[i][3] + '\n')
-            f.write(s4 + 'UConf%ResumeFileName = trim(adjustl("' + case_list[i][4] + '"))\n')
-        f.write(
-            s3 + "end if\n" + s2 + "return\n" + s1 + "end subroutine grid_change\nend subroutine JPCalcCaseAutoFill\n")
+            f.write(s4 + 'UConf%dAttackAngle = dPi / 180.0d0 * ' + case_list[i][3] + '\n')
+            if first:
+                f.write(s4 + 'UConf%UseResume = 0\n')
+            else:
+                f.write(s4 + 'UConf%ResumeFileName = trim(adjustl("' + case_list[i][4] + '"))\n')
+            f.write(s4 + 'UConf%ResumeInFlowVars(2) = ' + mach + 'd0\n')
+        f.write(s3 + "end if\n" + s3 + 'UConf%ResumeOutFlowVars = UConf%ResumeOutFlowVars\n')
+        f.write(s2 + "return\n" + s1 + "end subroutine grid_change\nend subroutine JPCalcCaseAutoFill\n")
 
 def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSolver2_2018/",
                     debug = False, compiler = "mpiifort"):
@@ -131,9 +140,20 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
         f.write(last)
 
 
-def auto_throwing_job(qsubname, jobname, parallel, case_list, program_name = "EulerSolver2", make_script="make.sh"):
+def auto_throwing_job(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen_job", program_name = "EulerSolver2", make_script="make.sh", first=False):
+    """
+    ジョブを自動で投げるためのプログラム
+    :param parallel: (int) スパコン上のジョブ並列数
+    :param case_list: (list) [grid's full path, filename (without extension), casename, AoA [deg], ResumeFile's full path]
+    :param qsubname: job script's name
+    :param jobname: job's name
+    :param program_name: program's name
+    :param make_script: filename that run make
+    :return: None
+    """
     # f90ファイル書き換え
-    update_JPCalcCaseAutoFill_f90(case_list)
+    update_JPCalcCaseAutoFill_f90(case_list, first)
+    
     # makefile書き換え&make
     update_makefile(program_name, makefile_path = "", debug = False)
     
@@ -152,4 +172,4 @@ if __name__ == '__main__':
          '30.0d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA0012__AoA30.0__Ma0.80__Re50000__case5__Resume.vtk'],
         ['/mnt/g/Toyota/Data/grid_vtk/valid/mayu/NACA21092.mayu', 'NACA21092__AoA23.5__Ma0.30__Re4000__case5', 'case5',
          '23.5d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA21092__AoA23.5__Ma0.30__Re4000__case5__Resume.vtk']]
-    auto_throwing_job(qsubname, jobname, parallel, case_list, program_name = "ES2")
+    auto_throwing_job(parallel, case_list, qsubname, jobname, program_name = "ES2", first = True)

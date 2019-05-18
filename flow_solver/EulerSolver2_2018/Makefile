@@ -602,12 +602,11 @@ SRC_DIR_f90d45 = source/UnstructuredGrid/UnstInitialize/
 OBJS_DIR = obj/Debug/
 EXE_DIR = bin/Debug/
 
-EXE = EulerSolver2
+
+EXE = ES2
 FC = mpiifort
-LD = mpiifort
-IDIR = 
-# CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full
-# LFLAGS = -qopenmp
+LD =  mpiifort
+IDIR =
 CFLAGS = -qopenmp -O4
 LFLAGS = -qopenmp
 LIBS = 
