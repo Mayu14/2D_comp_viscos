@@ -7,18 +7,29 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     integer, intent(in) :: iStep
-    character(len=256) :: cDirectory,cFileName, cCaseName
+    character(len=256) :: cDirectory,cFileName, cCaseName, ctmpDir
     character(len=256) :: cStep
+    integer :: access
 
     integer :: iCheck, iUnit_num
     integer :: debug = 1
     call JPUConserve2Primitive(UG,UCC)
 
-    write(cStep,*) iStep
-    cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/")) !UConf%SaveDirectiry
-    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//trim(adjustl("_"))//trim(adjustl(UConf%cCaseName))//"_"//trim(adjustl(cStep))//"th.vtk"
+    if(UConf%OutputStatus == 1) then
+        write(cStep,'("Final")')
+        write(ctmpDir,'("Complete/vtk/")')
+    else if(UConf%OutputStatus == 2) then
+        write(cStep,'("Resume")')
+        write(ctmpDir,'("Resume/")')
+    else
+        write(cStep,*) iStep
+        cStep = trim(adjustl(cStep))//"th"
+        write(ctmpDir,'("ResultU")')
+    end if
+    cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl(ctmpDir)) !UConf%SaveDirectiry
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"__"//trim(adjustl(cStep))//".vtk"
 
-    cCaseName = "UnstructuredShockTube" !UConf%CaseName
+    cCaseName = UConf%cCaseName
     iUnit_num = UConf%my_rank + 100
 
     open(unit = iUnit_num, file =trim(adjustl(cFileName)), status = 'unknown')
@@ -221,6 +232,16 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         !RetryFlag = 0
         ! write(6,*) CourantFriedrichsLewyCondition
     !end if
+
+    if (UConf%OutputStatus /= 0) then  ! Final & Resume出力時にdummyデータが
+        write(cStep,'("Resume")')
+        write(ctmpDir,'("Running/")')
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl(ctmpDir)) !UConf%SaveDirectiry
+        cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"__"//trim(adjustl(cStep))//".vtk"
+        if(access(cFileName, " ") == 0) then    ! 存在していれば
+            call system("rm "//trim(adjustl(cFileName)))    ! dummyデータを削除する
+        end if
+    end if
 
     return
 end subroutine JPUOutput
