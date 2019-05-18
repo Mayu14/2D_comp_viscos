@@ -66,7 +66,23 @@ subroutine JobParallelNS(UConf)
                 if(DetailedReport > 2) write(6,*) "NaN Checking..."
                 call CheckNaN(UConf, UCC)
             end if
+            !$ time_step = omp_get_wtime()
+            !$ time_elapsed = time_step - time_start
+            if(time_elapsed > time_specified) then
+                UCC%iEndFlag = 4    ! resume
+                UConf%OutputStatus = 2
+                exit
+            end if
         end do
+
+        if(UAC%residual < Converge_tolerance) then
+            if(UConf%UseMUSCL == 0) then
+                UConf%UseMUSCL = 1
+            else
+                UCC%iEndFlag = 3    ! finish
+                UConf%OutputStatus = 1
+            end if
+        end if
 
         if(UConf%SwitchProgram /= 7) then
             call JPUOutput(UConf,UG,UCC,iTry)
@@ -88,21 +104,19 @@ subroutine JobParallelNS(UConf)
             write(6,*) UAC%residual, Converge_tolerance
         end if
 
-        if(UAC%residual < Converge_tolerance) then
-            if(UConf%UseMUSCL == 0) then
-                UConf%UseMUSCL = 1
-            else
-                UCC%iEndFlag = 3
-            end if
-        end if
         deallocate(UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
         !UConf%UseSteadyCalc = 1
         !$ time_step = omp_get_wtime()
         !$ time_elapsed = time_step - time_start
         !$ write(6,*) time_elapsed, time_specified
+        if(time_elapsed > time_specified) then
+            UCC%iEndFlag = 3
+        end if
         if(UCC%iEndFlag == 3) exit
     end do
+
+
 
     return
 contains
