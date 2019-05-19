@@ -24,7 +24,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     else
         write(cStep,*) iStep
         cStep = trim(adjustl(cStep))//"th"
-        write(ctmpDir,'("ResultU")')
+        write(ctmpDir,'("ResultU/")')
     end if
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl(ctmpDir)) !UConf%SaveDirectiry
     cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"__"//trim(adjustl(cStep))//".vtk"

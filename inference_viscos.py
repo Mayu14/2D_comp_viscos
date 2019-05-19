@@ -15,7 +15,7 @@ import glob
 import datetime
 import shutil
 
-def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False, model2png = True, gpu_mem_usage=0.25):
+def inference(source, x_test, y_test, case_name, scatter=True, anglerplot=False, return_r2rms=False, check_error=False, model2png = True, gpu_mem_usage=0.97):
     json_name = "learned\\" + case_name + "_mlp_model_.json"
     weight_name = "learned\\" + case_name + "_mlp_weight.h5"
 
@@ -218,7 +218,7 @@ def some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, 
         # wordlist = ["DR", "None", "rbf", "poly", "linear", "cosine", "sigmoid", "PCA", ""]
         wordlist = ["DR"]
 
-        x_day = datetime.datetime(data_after_x_years, data_after_x_months, data_after_x_days)
+        x_day = datetime.datetime(data_after_x_years, data_after_x_months, data_after_x_days, hour=1, minute=30)
         x_day = x_day.timestamp()
         for search in wordlist:
             some_case = []
@@ -317,7 +317,7 @@ if __name__ == '__main__':
         fname_shape_test = "NACA5\\shape_crowd_0.1_0.15_30_50_20_560_new.csv"
     
     some_case_test(source, fname_lift_test, fname_shape_test, fname_lift_train, fname_shape_train, oldstyle=False,
-                   data_after_x_years=2019, data_after_x_months=5, data_after_x_days=10)
+                   data_after_x_years=2019, data_after_x_months=5, data_after_x_days=14)
     # case_name_list_generator(source, fname_lift_test)
     
     

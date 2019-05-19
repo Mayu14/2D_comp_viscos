@@ -130,10 +130,11 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     # r_rate = [64, 160]
     sr = 1
     rr = 1
+    gr = 16
     # dr = [[12, 24, 48, 96, 192, 384]]
     for i in range(10):
-        block_total = 10 * (i + 1)
-        dr = [[128]*block_total]
+        block_total = 10 + (2 * i + 1)
+        dr = [[96]*block_total]
         weight_layer_list = [3]*block_total
         bottle_neck = True
         """
@@ -306,7 +307,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                     #"""
                     model.fit(x=X_train, y=y_train,
-                              batch_size=batch_size, nb_epoch=1000,
+                              batch_size=batch_size, epochs=1000,
                               validation_split=0.1, callbacks=[tb_cb])
                     #"""
                     """

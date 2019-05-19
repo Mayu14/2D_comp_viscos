@@ -169,14 +169,17 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             # for i in range(2, X_data.shape[1], 3):
             if kernel=="rbf":
                 gamma = 2.0 ** (-6)
+            elif kernel=="sigmoid":
+                gamma = 0.013
             
-            for i in range(9, -1, -1):
-                gamma = 1.0 / X_data.shape[0] * (i + 1)
+            for i in range(3):
+                gamma = 1.0 / X_data.shape[0] * (10 ** (i-1))
+                degree = 6
                 # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
-                kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
+                kpca = KernelPCA(n_components = X_data.shape[1], degree = degree, kernel = kernel, gamma = gamma, fit_inverse_transform = True)
                 kpca.fit(X_data)
                 X_kpca = kpca.transform(X_data)
-                print(i, gamma, explained_variance_score(X_data, kpca.inverse_transform(X_kpca)))
+                print(i, degree, gamma, explained_variance_score(X_data, kpca.inverse_transform(X_kpca)))
             exit()
             
             # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma)
@@ -304,9 +307,9 @@ if __name__ == '__main__':
     X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = 0, read_rate = 1,
                                               total_data = 0, return_scalar = True)
 
-    main_processes = ["kmeans++"]#kmeans++"]#, "kmeans++"]
+    main_processes = ["gmm"]#kmeans++"]#, "kmeans++"]
     # main_process = "kmeans++"
-    preprocesses = ["sigmoid"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
+    preprocesses = ["poly"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
     postprocesses = ["nearest_centroid"]#, "farthest_from_center"]
     
