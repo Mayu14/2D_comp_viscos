@@ -64,7 +64,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             else:
                 cv_types = [cv]
             for cv_type in cv_types:
-                gmm = GMM(n_components = k_cluster, covariance_type = cv_type)
+                gmm = GMM(n_components = k_cluster, covariance_type = cv_type, warm_start=True)
                 gmm.fit(X_data)
                 bic.append(gmm.bic(X_data))
                 if bic[-1] < lowest_bic:
@@ -140,7 +140,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         else:
             return None
 
-    def preprocessing(X_data, preprocess):
+    def preprocessing(X_data, preprocess, force_overwrite=False):
         def pre_pca(X_data):
             from sklearn.decomposition import PCA
             original_dimension = X_data.shape[1]
@@ -171,31 +171,35 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
                 gamma = 2.0 ** (-6)
             elif kernel=="sigmoid":
                 gamma = 0.013
-            
-            for i in range(3):
-                gamma = 1.0 / X_data.shape[0] * (10 ** (i-1))
-                degree = 6
+            elif kernel=="poly":
+                gamma = 0.053
+                # degree = 3    # default
+                
                 # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
-                kpca = KernelPCA(n_components = X_data.shape[1], degree = degree, kernel = kernel, gamma = gamma, fit_inverse_transform = True)
-                kpca.fit(X_data)
-                X_kpca = kpca.transform(X_data)
-                print(i, degree, gamma, explained_variance_score(X_data, kpca.inverse_transform(X_kpca)))
-            exit()
-            
+                # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True, n_jobs = -1)
+            kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, n_jobs = -1)
+                # kpca.fit(X_data)
+                # X_kpca = kpca.transform(X_data)
             # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma)
             return kpca.fit_transform(X_data)
 
-        if preprocess == "None":
-            pass
-        elif preprocess == "PCA":
-            X_data = pre_pca(X_data)
-        elif (preprocess == "rbf") or (preprocess == "poly") or (preprocess == "linear") or (
-                preprocess == "sigmoid") or (preprocess == "cosine"):
-            gamma = 1.0 / X_data.shape[0]
-            X_data = pre_kpca(X_data, preprocess, gamma)
+        save_path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\NACA4\\reduct_csv\\"
+        csvname = save_path + preprocess + ".csv"
+        if os.path.exists(csvname) and (force_overwrite == False):
+            X_data = np.loadtxt(csvname, delimiter = ",", dtype = "float")
         else:
-            print("Error! input priprocess")
-            exit()
+            if preprocess == "None":
+                pass
+            elif preprocess == "PCA":
+                X_data = pre_pca(X_data)
+            elif (preprocess == "rbf") or (preprocess == "poly") or (preprocess == "linear") or (
+                    preprocess == "sigmoid") or (preprocess == "cosine"):
+                gamma = 1.0 / X_data.shape[0]
+                X_data = pre_kpca(X_data, preprocess, gamma)
+            else:
+                print("Error! input priprocess")
+                exit()
+            np.savetxt(csvname, X_data, delimiter = ",")
         return X_data
     
     def get_fname(preprocess, criteria_method, main_process, cv_types):
@@ -309,7 +313,7 @@ if __name__ == '__main__':
 
     main_processes = ["gmm"]#kmeans++"]#, "kmeans++"]
     # main_process = "kmeans++"
-    preprocesses = ["poly"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
+    preprocesses = ["rbf"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
     postprocesses = ["nearest_centroid"]#, "farthest_from_center"]
     
@@ -318,7 +322,7 @@ if __name__ == '__main__':
             for postproc in postprocesses:
                 for i in range(40, 0, -1):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "diag", check_plot = False, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "spherical", check_plot = False, force_overwrite=False)
                 
     
     
