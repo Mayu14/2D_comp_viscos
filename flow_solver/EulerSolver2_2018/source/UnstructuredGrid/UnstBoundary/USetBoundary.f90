@@ -146,7 +146,7 @@ contains
         UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)
         !write(6,*) UCC%ConservedQuantity(1,iCell,1,1),iCell,UG%GI%RealCells
         UCC%ConservedQuantity(2:iDim+1,iCell,1,1) = UCC%ConservedQuantity(2:iDim+1,iAdjacentCell,1,1) &
-        & - 1.0d0 * UG%GM%Normal(iAdjacentEdge,1:iDim) &
+        & - 2.0d0 * UG%GM%Normal(iAdjacentEdge,1:iDim) &
         & * sum(UCC%ConservedQuantity(2:iDim+1,iAdjacentCell,1,1)*UG%GM%Normal(iAdjacentEdge,1:iDim)) !Normal Direction Velocity is 0
 
     return
