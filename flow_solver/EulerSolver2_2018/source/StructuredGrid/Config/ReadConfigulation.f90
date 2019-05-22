@@ -59,6 +59,7 @@ subroutine ReadConfigulation(Conf, my_rank)
     if(Conf%TurbulenceModel /= 0) invicid = .false.
     if(Conf%UseRRK2 == 1) IterationNumber = 2*IterationNumber
     DefaultTimeStep = FixedTimeStep
+    CFL_default = CourantFriedrichsLewyCondition
 
     if(Conf%UseJobParallel == 0) then
         Conf%my_rank = 0
