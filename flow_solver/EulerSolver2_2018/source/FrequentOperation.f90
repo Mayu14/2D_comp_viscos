@@ -334,5 +334,36 @@ contains
 
         return
     end subroutine SaveLog
+
+    function get_2d_determinant(A) result(det)
+        implicit none
+        double precision, intent(in) :: A(:,:)
+        double precision :: det
+        det = A(1,1) * A(2,2) - A(1,2) * A(2,1)
+        return
+    end function get_2d_determinant
+
+    subroutine set_2d_inverse_matrix(A, singular)
+        implicit none
+        double precision, intent(inout) :: A(:,:)
+        double precision, dimension(2,2) :: tmpA
+        double precision :: det, machine_eps = 0.0000000000001
+        logical :: singular
+
+        det = get_2d_determinant(A)
+        if(abs(det) > machine_eps) then
+            singular = .false.
+            tmpA = A
+            A(1,1) = tmpA(2,2) / det
+            A(1,2) = - tmpA(1,2) / det
+            A(2,1) = - tmpA(2,1) / det
+            A(2,2) = tmpA(1,1) / det
+        else
+            singular = .true.
+        end if
+
+        return
+    end subroutine set_2d_inverse_matrix
+
 end module FrequentOperation
 
