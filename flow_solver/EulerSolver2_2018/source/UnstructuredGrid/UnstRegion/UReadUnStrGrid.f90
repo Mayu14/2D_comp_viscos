@@ -224,6 +224,12 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                         read(iUnit,*) UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
                     end do
                 end do
+
+
+                read(iUnit,*) cAnnotate, cAnnotate ! "Wall_Curvature ", UG%GM%BC%iWallTotal
+                do iLoop = 1, UG%GM%BC%iWallTotal
+                    read(iUnit,*) UG%GM%BC%VW(iLoop)%curvature
+                end do
             !end if
         end if
 
