@@ -197,6 +197,12 @@ subroutine UOutputUnStrGrid(UG, cPath, cFileName, ExistBound)
                     write(1,"(1x,i7)") UG%GM%BC%VW(iLoop)%iMemberEdge(iEdge)
                 end do
             end do
+            write(1,*) ""
+
+            write(1,*) "Wall_Curvature ", UG%GM%BC%iWallTotal
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                write(1,"((2x,f22.14))") UG%GM%BC%VW(iLoop)%curvature
+            end do
         end if
 
     close(1)
