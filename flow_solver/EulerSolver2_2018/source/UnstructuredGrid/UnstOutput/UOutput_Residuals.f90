@@ -16,7 +16,7 @@ subroutine UOutput_Residuals(UConf, RH, iStep)
     write(cStep, *) iStep
     cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultR/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
 
-    cFileName = trim(adjustl(cDirectory))//"RES_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th.csv"
+    cFileName = trim(adjustl(cDirectory))//"RES__"//trim(adjustl(cUFileName))//"__"//trim(adjustl(cStep))//"th.csv"
 
     if(RH%iLastOutput /= 1) then
         open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown', position ="append")
