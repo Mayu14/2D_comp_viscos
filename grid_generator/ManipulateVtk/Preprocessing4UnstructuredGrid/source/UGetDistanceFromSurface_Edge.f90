@@ -28,6 +28,7 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
     integer, allocatable :: iSurfaceEdge(:), iCount(:)   ! 各壁ごとの入力済みカウント用配列
     integer :: iFlag = 0    ! 並び替え終了フラグ
     type(DummySE), allocatable :: DSE
+    integer :: iLeftEdge, iRightEdge, iGLEdge, iGCEdge, iGREdge
 
     iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells  ! 物体表面界面数の特定
     UG%GM%BC%iWallTotal = iSurfaceCell
@@ -55,16 +56,28 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
         ! この時点で物体表面の辺を順不同に全格納完了
         call sort_edge_ccw(DSE, iSurfaceCell)
         ! すべての辺を反時計周りに格納
-        call get_curvature
 
+        iLeftEdge = iSurfaceCell
+        iRightEdge = 2
         do iLocalEdge = 1, iSurfaceCell    ! すべての仮想セルについて巡回
-            !if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
-                !iSurfaceEdge(iLocalEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
-                iSurfaceEdge(iLocalEdge) = DSE%SE(iLocalEdge)%iGEdgeNum ! 大域辺番号をiSurfaceEdgeに格納
-                !UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
-                UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = DSE%SE(iLocalEdge)%iGEdgeNum  ! 1行上のiSurfaceEdgeと同じやつ
-                !iLocalEdge = iLocalEdge + 1
-            !end if
+            iSurfaceEdge(iLocalEdge) = DSE%SE(iLocalEdge)%iGEdgeNum ! 大域辺番号をiSurfaceEdgeに格納
+            UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = DSE%SE(iLocalEdge)%iGEdgeNum  ! 1行上のiSurfaceEdgeと同じやつ
+            iGLEdge = DSE%SE(iLeftEdge)%iGEdgeNum
+            iGCEdge = DSE%SE(iLocalEdge)%iGEdgeNum
+            iGREdge = DSE%SE(iRightEdge)%iGEdgeNum
+
+            UG%GM%BC%VW(iLocalEdge)%curvature = get_curvature_of_edge(UG%CD%Edge(iGCEdge,1:2), &
+                                            & UG%CD%Edge(iGLEdge,1:2), UG%CD%Edge(iGREdge,1:2), &
+                                            & UG%GM%Normal(iGLEdge,1:2), UG%GM%Normal(iGREdge,1:2))
+
+            iLeftEdge = iLeftEdge + 1
+            iRightEdge = iRightEdge + 1
+            if(iLeftEdge == iSurfaceCell + 1) then
+                iLeftEdge = 1
+            end if
+            if(iRightEdge == iSurfaceCell + 1) then
+                iRightEdge = 1
+            end if
         end do
         ! この時点で物体表面の辺を順不同に全格納完了
 
@@ -250,6 +263,40 @@ contains
         return
     end subroutine swap_edge_SE
 
+    function get_curvature_of_edge(edge_center, center_i, center_j, normal_i, normal_j) result(curvature)
+        use FrequentOperation
+        implicit none
+        double precision, intent(in) :: edge_center(:), center_i(:), center_j(:)
+        double precision, intent(in) :: normal_i(:), normal_j(:)
+        double precision :: curvature_radius, curvature
+        double precision, allocatable :: coef(:,:), const(:), intersect(:)
+        integer :: eps_exp = 13
+        logical :: parallel
 
+        allocate(coef(2,2), const(2), intersect(2))
+        ! 係数行列
+        coef(1,1) = normal_i(2)
+        coef(1,2) = - normal_i(1)
+        coef(2,1) = normal_j(2)
+        coef(2,2) = - normal_j(1)
+        ! 定数ベクトル
+        const(1) = normal_i(1) * center_i(2) - normal_i(2) * center_i(1)
+        const(2) = normal_j(1) * center_j(2) - normal_j(2) * center_j(1)
+        ! 逆行列を作成する(反転不可能なときはparallel==.true.となる)
+        call set_2d_inverse_matrix(coef, parallel)
+
+        if (parallel == .false.) then
+            intersect = matmul(coef, const) ! 交点
+            curvature_radius = sqrt((intersect(1)**2 - edge_center(1)**2) + (intersect(2)**2 - edge_center(2)**2))  ! 曲率半径
+        else
+            curvature_radius = 10.0d0**eps_exp + 1
+        end if
+        if (curvature_radius > 10.0d0**eps_exp) then
+            curvature = 0.0d0
+        else
+            curvature = 1.0d0 / curvature_radius
+        end if
+        return
+    end function get_curvature_of_edge
 
 end subroutine UGetDistanceFromSurface_Edge
