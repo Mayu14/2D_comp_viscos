@@ -42,27 +42,31 @@ subroutine UGetRoeAverage(RA,P4O)
             RA%RoeAverage(5) = RoeLoadAverage(P4O%GRA%Enthalpy(1),P4O%GRA%Enthalpy(2))
 
             if(Gmin1*RA%RoeAverage(5)-0.5d0*(sum(RA%RoeAverage(2:4)**2)) < 0) then
-                write(6,*) "UGetRoeAverage Line42"
-                write(6,*) "RightSide"
-                write(6,*) "Vel",P4O%GRA%Velocity(1,1), P4O%GRA%Velocity(2,1),P4O%GRA%Velocity(3,1)
-                write(6,*) "Ent",P4O%GRA%Enthalpy(1)
-                write(6,*) "SqD",P4O%GRA%SqrtDensity(1)
-                write(6,*) "LeftSide"
-                write(6,*) "Vel",P4O%GRA%Velocity(1,2), P4O%GRA%Velocity(2,2),P4O%GRA%Velocity(3,2)
-                write(6,*) "Ent",P4O%GRA%Enthalpy(2)
-                write(6,*) "SqD",P4O%GRA%SqrtDensity(2)
-                write(6,*) "RoeAverage"
-                write(6,*) "DRL",RA%SideQuantity(1,1),RA%SideQuantity(1,2)
-                write(6,*) "a^2",Gmin1*RA%RoeAverage(5)-0.5d0*(sum(RA%RoeAverage(2:4)**2))
-                write(6,*) "Rh",RA%RoeAverage(5)
-                write(6,*) "RVx",RA%RoeAverage(2)
-                write(6,*) "RVy",RA%RoeAverage(3)
-                write(6,*) "RVz",RA%RoeAverage(4)
+                if(DetailedReport > 4) then
+                    write(6,*) "UGetRoeAverage Line42"
+                    write(6,*) "RightSide"
+                    write(6,*) "Vel",P4O%GRA%Velocity(1,1), P4O%GRA%Velocity(2,1),P4O%GRA%Velocity(3,1)
+                    write(6,*) "Ent",P4O%GRA%Enthalpy(1)
+                    write(6,*) "SqD",P4O%GRA%SqrtDensity(1)
+                    write(6,*) "LeftSide"
+                    write(6,*) "Vel",P4O%GRA%Velocity(1,2), P4O%GRA%Velocity(2,2),P4O%GRA%Velocity(3,2)
+                    write(6,*) "Ent",P4O%GRA%Enthalpy(2)
+                    write(6,*) "SqD",P4O%GRA%SqrtDensity(2)
+                    write(6,*) "RoeAverage"
+                    write(6,*) "DRL",RA%SideQuantity(1,1),RA%SideQuantity(1,2)
+                    write(6,*) "a^2",Gmin1*RA%RoeAverage(5)-0.5d0*(sum(RA%RoeAverage(2:4)**2))
+                    write(6,*) "Rh",RA%RoeAverage(5)
+                    write(6,*) "RVx",RA%RoeAverage(2)
+                    write(6,*) "RVy",RA%RoeAverage(3)
+                    write(6,*) "RVz",RA%RoeAverage(4)
+                end if
                 RetryFlag = 1
-             end if
-
-
+                RA%RoeAverage(1) = 1.0d0
+            else
                 RA%RoeAverage(1) = dsqrt(Gmin1*RA%RoeAverage(5)-0.5d0*(sum(RA%RoeAverage(2:4)**2)))
+            end if
+
+
 
 
     return
