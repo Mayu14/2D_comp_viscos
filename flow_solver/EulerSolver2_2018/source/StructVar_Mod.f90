@@ -75,6 +75,7 @@ implicit none
         integer :: iNumberOfMemberEdge ! その壁に所属する界面の総数
         !integer, allocatable :: iMemberCell(:)  ! その壁に所属する要素のセル番号を壁から近い順に格納(距離情報はセル側が保有)
         integer, allocatable :: iMemberEdge(:)  ! その壁に所属する界面の界面番号を壁から近い順に格納(距離情報は界面側が保有)
+        double precision, allocatable :: curvature(:)   ! 物体表面の曲率
     end type
 
     type BoundaryCondition
