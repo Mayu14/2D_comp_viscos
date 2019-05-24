@@ -27,6 +27,7 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
     integer :: iTmpWall, iMember, iMem1, iMem2, iTermination ! 仮置き壁番号, メンバセル用ループ変数, メンバセル1, メンバセル2, バブルソートの終端
     integer, allocatable :: iSurfaceEdge(:), iCount(:)   ! 各壁ごとの入力済みカウント用配列
     integer :: iFlag = 0    ! 並び替え終了フラグ
+    type(DummySE), allocatable :: DSE
 
     iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells  ! 物体表面界面数の特定
     UG%GM%BC%iWallTotal = iSurfaceCell
@@ -36,16 +37,34 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
         ExistInnerBoundary = .false.
     else
         ExistInnerBoundary = .true.
+        allocate(DSE%SE(iSurfaceCell))
         allocate(iSurfaceEdge(iSurfaceCell))    ! 物体表面の局所界面番号→大域界面番号
         allocate(UG%GM%BC%VW(iSurfaceCell))     ! 粘性壁登録変数の動的確保
 
+        ! 物体表面界面を反時計周りに並べ替え
         iLocalEdge = 1   ! 物体表面(=壁)上の局所界面番号の初期化
         do iCell = UG%GI%RealCells+1, UG%GI%AllCells    ! すべての仮想セルについて巡回
             if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
-                iSurfaceEdge(iLocalEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
-                UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
+                DSE%SE(iLocalEdge)%iGEdgeNum = UG%VC%Edge(iCell) ! 大域界面番号をiSurfaceEdgeに格納
+                DSE%SE(iLocalEdge)%iLEdgeNum = iLocalEdge   ! 物体表面のみの局所界面番号
+                DSE%SE(iLocalEdge)%iyNormalSign = int(sign(1.0d0, UG%GM%Normal(UG%VC%Edge(iCell), 2)))  !法線ベクトルy成分の符号
+                DSE%SE(iLocalEdge)%dxCoord = UG%CD%Edge(iCell, 1)   ! 界面中心x座標
                 iLocalEdge = iLocalEdge + 1
             end if
+        end do
+        ! この時点で物体表面の辺を順不同に全格納完了
+        call sort_edge_ccw(DSE, iSurfaceCell)
+        ! すべての辺を反時計周りに格納
+        call get_curvature
+
+        do iLocalEdge = 1, iSurfaceCell    ! すべての仮想セルについて巡回
+            !if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
+                !iSurfaceEdge(iLocalEdge) = UG%VC%Edge(iCell) ! 大域辺番号をiSurfaceEdgeに格納
+                iSurfaceEdge(iLocalEdge) = DSE%SE(iLocalEdge)%iGEdgeNum ! 大域辺番号をiSurfaceEdgeに格納
+                !UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = UG%VC%Edge(iCell)  ! 1行上のiSurfaceEdgeと同じやつ
+                UG%GM%BC%VW(iLocalEdge)%iGlobalEdge = DSE%SE(iLocalEdge)%iGEdgeNum  ! 1行上のiSurfaceEdgeと同じやつ
+                !iLocalEdge = iLocalEdge + 1
+            !end if
         end do
         ! この時点で物体表面の辺を順不同に全格納完了
 
@@ -183,5 +202,54 @@ contains
         end do
     return
     end subroutine check_sort
+
+    subroutine sort_edge_ccw(DSE, iEdgeTotal)
+        implicit none
+        type(DummySE), intent(inout) :: DSE
+        type(DummySE) :: tmpDSE
+        integer :: inner, outer, iEdgeTotal
+        integer :: iTop, iBottom
+
+        ! バブルソートにて辺のx座標規準で並べ替え
+        do outer = 1, iEdgeTotal - 1
+            do inner = 2, iEdgeTotal
+                call swap_edge_SE(DSE, inner, inner + 1)
+            end do
+        end do
+
+        ! 界面法線ベクトルのy方向成分が，正：上から，負：下から配列に登録することでccwにならべる
+        allocate(tmpDSE%SE(iEdgeTotal))
+        iTop = 1
+        iBottom = iEdgeTotal
+        do iLocalEdge = 1, iEdgeTotal
+            if(DSE%SE(iLocalEdge)%iyNormalSign < 0) then
+                tmpDSE%SE(iBottom) = DSE%SE(iLocalEdge)
+                iBottom = iBottom - 1
+            else
+                tmpDSE%SE(iTop) = DSE%SE(iLocalEdge)
+                iTop = iTop + 1
+            end if
+        end do
+        DSE = tmpDSE
+        deallocate(tmpDSE%SE)
+        return
+    end subroutine sort_edge_ccw
+
+    subroutine swap_edge_SE(DSE,iNum1, iNum2)
+        implicit none
+        type(DummySE), intent(inout) :: DSE
+        integer, intent(in) :: iNum1, iNum2
+        type(SurfaceEdge) :: SE
+
+            if DSE%SE(iNum1)%dxCoord > DSE%SE(iNum2)%dxCoord then
+                SE = DSE%SE(iNum1)
+                DSE%SE(iNum1) = DSE%SE(iNum2)
+                DSE%SE(iNum2) = SE
+            end if
+
+        return
+    end subroutine swap_edge_SE
+
+
 
 end subroutine UGetDistanceFromSurface_Edge
