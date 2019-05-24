@@ -111,6 +111,8 @@ implicit none
             character(len=256) :: ResumeFileName !初期条件を読み出す際のファイル名
             integer :: ResumeFileFormat = 2 !初期条件ファイルの形式(1:vtk,2:gnuplot用txt)
             integer :: ResumeNumber !計算を再開する際の計算ステップ
+            double precision, allocatable :: ResumeInFlowVars(:) !流入する物理量のデータ(基礎変数形式)
+            double precision, allocatable :: ResumeOutFlowVars(:) !流入する物理量のデータ(基礎変数形式)
         integer :: UseReadBoundaryCond = 0  !1でデータから境界条件読み出し
         integer :: UseVariableTime !1で各時間ごとの時間刻み幅が可変になる
         integer :: UseLocalTimeStep = 0 !1で局所時間刻みを使用
@@ -167,6 +169,8 @@ implicit none
         integer, allocatable :: Cell(:,:,:) !辺要素の隣接要素番号は(要素数,2,2) !最後の引数はセル番号と，相手セルから見た界面自身の局所界面番号の切替
         integer, allocatable :: Belongs2Wall(:)   !(大域界面番号)で最も近い壁境界の辺番号を返す
         double precision, allocatable :: Distance(:)    !(大域界面番号)で最も近い壁境界からの距離を返す
+        double precision, allocatable :: Angle(:)   ! 辺中心から表裏のセルまでのベクトル同士がなす角
+        integer, allocatable :: NextCell(:,:)    ! (辺要素番号，裏表)辺両側のセルをi, i+1としたとき，i-1, i+2に相当するセルのセル番号)
     end type
 
     type Triangle !三角形要素データ格納用
@@ -509,6 +513,16 @@ implicit none
         !type(AeroCharacteristics) :: AC
     end type
 
+    type SurfaceEdge
+        integer :: iGEdgeNum !大域辺番号
+        integer :: iLEdgeNum !局所辺番号
+        integer :: iyNormalSign !法線ベクトルy方向成分の符号
+        double precision :: dxCoord ! 辺中心のx座標
+    end type
+
+    type DummySE
+        type(SurfaceEdge), allocatable :: SE(:)
+    end type
 
 end module StructVar_Mod
 
