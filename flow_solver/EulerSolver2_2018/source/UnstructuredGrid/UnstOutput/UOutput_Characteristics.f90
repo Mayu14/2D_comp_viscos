@@ -16,21 +16,19 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
     end if
 
     if(UConf%OutputStatus == 1) then    ! final step
-        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("Complete/dat/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("Complete/dat/")) !UConf%SaveDirectiry    ! Å’Â¤â€¹â€ Å½ÂºPCâ€”p
         write(cStep, *) "Final"
-    else
-        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Œ¤‹†ŽºPC—p
+    else    ! Resumeã®å ´åˆåˆ†ã‘ã¯ä¸è¦
+        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultC/")) !UConf%SaveDirectiry    ! Å’Â¤â€¹â€ Å½ÂºPCâ€”p
         write(cStep, *) iStep
         cStep = trim(adjustl(cStep))//"th"
     end if
-    if(iStep == 0) then
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//"_AC.dat"
-    else
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"_AC.dat"
-    end if
+
+    cFileName = trim(adjustl(cDirectory))//trim(adjustl(cUFileName))//"__"//trim(adjustl(cStep))//"_AC.dat"
+
     iMaxTime = ubound(UAC%coefficient, 2)
 
-    open(unit = UConf%my_rank+100, file =trim(adjustl(cFileName)), status = 'unknown')
+    open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
         if(iStep > 1) then
             write(UConf%my_rank+100, "(2(1x,f22.17))") 0.5d0 * (UAC%coefficient(1,iStep) + UAC%coefficient(1,iStep-1)), &
                                                      & 0.5d0 * (UAC%coefficient(2,iStep) + UAC%coefficient(2,iStep-1))
@@ -40,11 +38,7 @@ subroutine UOutput_Characteristics(UConf, UG, UAC, iStep)
         end do
     close(UConf%my_rank+100)
 
-    if(iStep == 0) then
-        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//".dat"
-    else
-        cFileName = trim(adjustl(cDirectory))//"CP_"//trim(adjustl(cUFileName))//"_"//trim(adjustl(UConf%cCaseName))//trim(adjustl(cStep))//"th.dat"
-    end if
+    cFileName = trim(adjustl(cDirectory))//"CP__"//trim(adjustl(cUFileName))//"__"//trim(adjustl(cStep))//".dat"
 
     open(unit = UConf%my_rank+100, file = trim(adjustl(cFileName)), status = 'unknown')
         !do iTime = 1, iMaxTime
