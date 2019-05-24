@@ -55,6 +55,11 @@ implicit none
 
     end do
 
+    if(UG%GM%BC%iWallTotal /= 0) then
+        do iEdge = 1, UG%GM%BC%iWallTotal
+            call WallBoundary_with_CentrifugalForce
+        end do
+    end if
 !write(6,*)
 return
 contains
@@ -136,21 +141,52 @@ contains
     return
     end subroutine InOutFlowBoundary
 
-
-    subroutine WallBoundary !速度の法線方向成分を0にする
-    implicit none
-
+    subroutine WallBoundary
+        implicit none
         iAdjacentCell = UG%VC%Cell(iCell,1)
         iAdjacentEdge = UG%VC%Edge(iCell)
+
         UCC%ConservedQuantity(1,iCell,1,1) = UCC%ConservedQuantity(1,iAdjacentCell,1,1) !Grad 0
-        UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)
-        !write(6,*) UCC%ConservedQuantity(1,iCell,1,1),iCell,UG%GI%RealCells
+
         UCC%ConservedQuantity(2:iDim+1,iCell,1,1) = UCC%ConservedQuantity(2:iDim+1,iAdjacentCell,1,1) &
         & - 2.0d0 * UG%GM%Normal(iAdjacentEdge,1:iDim) &
         & * sum(UCC%ConservedQuantity(2:iDim+1,iAdjacentCell,1,1)*UG%GM%Normal(iAdjacentEdge,1:iDim)) !Normal Direction Velocity is 0
 
-    return
+        UCC%ConservedQuantity(iDim+2,iCell,1,1) = UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1)
+
+        return
     end subroutine WallBoundary
+
+
+    subroutine WallBoundary_with_CentrifugalForce !速度の法線方向成分を0にする
+        use FrequentOperation
+        implicit none
+        double precision :: tangential_velocity_2, pressure, kinetic_energy
+        integer :: iGEdge
+        integer:: iFrontCell, iBackCell
+        double precision :: FrontLength, BackLength
+
+        iGEdge = UG%GM%BC%VW(iEdge)%iGlobalEdge
+        call GetLengthBetweenEdge(UG, iGEdge, iFrontCell, iBackCell,FrontLength, BackLength)
+
+        UCC%ConservedQuantity(1,iBackCell,1,1) = UCC%ConservedQuantity(1,iFrontCell,1,1) !Grad 0
+
+        UCC%ConservedQuantity(2:iDim+1,iBackCell,1,1) = UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1) &
+        & - 2.0d0 * UG%GM%Normal(iGEdge,1:iDim) &
+        & * sum(UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1)*UG%GM%Normal(iGEdge,1:iDim)) !Normal Direction Velocity is 0
+
+        tangential_velocity_2 = ((UCC%ConservedQuantity(2,iBackCell,1,1) * UG%GM%Normal(iGEdge,2) &
+        & - UCC%ConservedQuantity(3,iBackCell,1,1) * UG%GM%Normal(iGEdge,1)) / UCC%ConservedQuantity(1,iBackCell,1,1))**2
+
+        kinetic_energy = 0.5d0 * sum(UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1)**2) / UCC%ConservedQuantity(1,iFrontCell,1,1)
+        pressure = Gmin1 * (UCC%ConservedQuantity(iDim+2,iFrontCell,1,1) - kinetic_energy)
+
+        pressure = pressure - (FrontLength + BackLength) * UCC%ConservedQuantity(1,iBackCell,1,1) &
+        & * tangential_velocity_2 * UG%GM%BC%VW(iEdge)%curvature
+
+        UCC%ConservedQuantity(iDim+2,iBackCell,1,1) = InverseGmin1 * pressure + kinetic_energy
+    return
+    end subroutine WallBoundary_with_CentrifugalForce
 
     subroutine NonSlipBoundary ! すべての速度を0にする
     implicit none
