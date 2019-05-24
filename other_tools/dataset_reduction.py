@@ -167,6 +167,7 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
         
         def pre_kpca(X_data, kernel="rbf", gamma = 20.0):
             # for i in range(2, X_data.shape[1], 3):
+            components = X_data.shape[1]
             if kernel=="rbf":
                 gamma = 2.0 ** (-6)
             elif kernel=="sigmoid":
@@ -174,10 +175,11 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
             elif kernel=="poly":
                 gamma = 0.053
                 # degree = 3    # default
-                
+            elif kernel == "linear":
+                components -= 1
                 # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True)
                 # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, fit_inverse_transform = True, n_jobs = -1)
-            kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma, n_jobs = -1)
+            kpca = KernelPCA(n_components = components, kernel = kernel, gamma = gamma, n_jobs = -1)
                 # kpca.fit(X_data)
                 # X_kpca = kpca.transform(X_data)
             # kpca = KernelPCA(n_components = X_data.shape[1], kernel = kernel, gamma = gamma)
@@ -256,11 +258,28 @@ def data_reduction(X_data, y_data, reduction_target = 10000, output_csv = False,
     if type(nearest_indices) == type(None):
         X_data = preprocessing(X_data, preprocess)
         print("preprocessing is finished.")
+        print(X_data)
     X_data, y_data, nearest_indices = reduction2k_datas(X_data = X_data, y_data = y_data, k_cluster = reduction_target, criteria_method = criteria_method, indices=nearest_indices, main_process=main_process)
+
 
     if output_csv:
         indices2csv(csvname, nearest_indices)
-       
+
+    def eval_of_variance(X):
+        """
+        :param X: ndarray(n_components, n_features)
+        :return: trace of covariance matrix
+        """
+        return np.trace(np.cov(X.T))
+
+    #print(X_data)
+    #print(X_data.shape)
+    #print(X_origin.shape)
+
+    new_var = eval_of_variance(X_data)
+    org_var = eval_of_variance(X_origin)
+    print(reduction_target, new_var, org_var, new_var / org_var)
+
     def make_plot(nearest_indices, X_origin, y_origin, preprocess, criteria_method, main_process, fname):
         from sklearn.decomposition import PCA
         import matplotlib.pyplot as plt
@@ -313,7 +332,7 @@ if __name__ == '__main__':
 
     main_processes = ["gmm"]#kmeans++"]#, "kmeans++"]
     # main_process = "kmeans++"
-    preprocesses = ["rbf"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
+    preprocesses = ["linear"]#, "PCA", "rbf", "poly", "linear", "cosine", "sigmoid"]
     # preprocesses = ["None"]
     postprocesses = ["nearest_centroid"]#, "farthest_from_center"]
     
@@ -322,7 +341,7 @@ if __name__ == '__main__':
             for postproc in postprocesses:
                 for i in range(40, 0, -1):
                     cluster = 500 * (i + 1)
-                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "spherical", check_plot = False, force_overwrite=False)
+                    data_reduction(X_train, y_train, preprocess = preproc ,reduction_target = cluster, output_csv = True, main_process = mainproc, criteria_method = postproc, cv_types = "tied", check_plot = False, force_overwrite=False)
                 
     
     
