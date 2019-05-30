@@ -10,9 +10,10 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     character(len=256) :: cDirectory,cFileName, cCaseName, ctmpDir
     character(len=256) :: cStep
     integer :: access
-
+    integer, allocatable :: iSurfaceEdge(:, :)
     integer :: iCheck, iUnit_num
-    integer :: debug = 1
+    integer :: debug = 0
+    double precision, allocatable :: curvature(:), normal(:,:), vData(:,:), vcoords(:,:)
     call JPUConserve2Primitive(UG,UCC)
 
     if(UConf%OutputStatus == 1) then
@@ -78,6 +79,56 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num,"((2x,f22.14))") UCC%PrimitiveVariable(5,iCell,1,1)
         end do
 
+        if(invicid == .False.) then
+            write(iUnit_num,"('SCALARS AbsVortisity float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") UCC%AbsoluteVortisity(iCell,1,1)
+            end do
+
+            write(iUnit_num,"('VECTORS StrainRateTensorUxyz float')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(1,1,iCell,1,1),UCC%StrainRateTensor(1,2,iCell,1,1),0.0d0
+            end do
+
+            write(iUnit_num,"('VECTORS StrainRateTensorVxyz float')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(2,1,iCell,1,1),UCC%StrainRateTensor(2,2,iCell,1,1),0.0d0
+            end do
+
+            write(iUnit_num,"('SCALARS Temparature float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") UCC%Temparature(iCell,1,1)
+            end do
+
+            write(iUnit_num,"('SCALARS LaminarViscosity float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
+            end do
+
+            write(iUnit_num,"('SCALARS EddyViscosity float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") UCC%EddyViscosity(iCell,1,1)
+            end do
+
+        end if
+
+        write(iUnit_num,"('SCALARS MachNumber float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+
+        do iCell=1, UG%GI%RealCells
+            write(iUnit_num, "(f22.14)") sqrt(UCC%PrimitiveVariable(1,iCell,1,1) / (gamma*UCC%PrimitiveVariable(5,iCell,1,1)) &
+                                        &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
+        end do
+
+    if(debug == 1) then
         if(iStep > 0) then
             write(iUnit_num,"('SCALARS BoundaryCondition float')")
             write(iUnit_num,"('LOOKUP_TABLE default')")
@@ -159,56 +210,6 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num, "(f22.14)") dble(UG%Line%Distance(UG%Tri%Edge(iCell, 1))+UG%Line%Distance(UG%Tri%Edge(iCell, 2))+UG%Line%Distance(UG%Tri%Edge(iCell, 3))) / 3.0d0
         end do
 
-        if(invicid == .False.) then
-            write(iUnit_num,"('SCALARS AbsVortisity float')")
-            write(iUnit_num,"('LOOKUP_TABLE default')")
-
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num, "(f22.14)") UCC%AbsoluteVortisity(iCell,1,1)
-            end do
-
-            write(iUnit_num,"('VECTORS StrainRateTensorUxyz float')")
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(1,1,iCell,1,1),UCC%StrainRateTensor(1,2,iCell,1,1),0.0d0
-            end do
-
-            write(iUnit_num,"('VECTORS StrainRateTensorVxyz float')")
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num,"((2x,f22.14))") UCC%StrainRateTensor(2,1,iCell,1,1),UCC%StrainRateTensor(2,2,iCell,1,1),0.0d0
-            end do
-
-            write(iUnit_num,"('SCALARS Temparature float')")
-            write(iUnit_num,"('LOOKUP_TABLE default')")
-
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num, "(f22.14)") UCC%Temparature(iCell,1,1)
-            end do
-
-            write(iUnit_num,"('SCALARS LaminarViscosity float')")
-            write(iUnit_num,"('LOOKUP_TABLE default')")
-
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num, "(f22.14)") UCC%LaminarViscosity(iCell,1,1)
-            end do
-
-            write(iUnit_num,"('SCALARS EddyViscosity float')")
-            write(iUnit_num,"('LOOKUP_TABLE default')")
-
-            do iCell=1, UG%GI%RealCells
-                write(iUnit_num, "(f22.14)") UCC%EddyViscosity(iCell,1,1)
-            end do
-
-        end if
-
-        write(iUnit_num,"('SCALARS MachNumber float')")
-        write(iUnit_num,"('LOOKUP_TABLE default')")
-
-        do iCell=1, UG%GI%RealCells
-            write(iUnit_num, "(f22.14)") sqrt(UCC%PrimitiveVariable(1,iCell,1,1) / (gamma*UCC%PrimitiveVariable(5,iCell,1,1)) &
-                                        &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
-        end do
-
-    if(debug == 1) then
         write(iUnit_num,"('SCALARS TimeStep float')")
         write(iUnit_num,"('LOOKUP_TABLE default')")
         do iCell=1, UG%GI%RealCells
@@ -222,6 +223,62 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
                             & - 0.5d0 * dot_product(UCC%ConservedQuantity(2:4,iCell,1,1),UCC%ConservedQuantity(2:4,iCell,1,1))/(UCC%ConservedQuantity(1,iCell,1,1)**2))
         end do
 
+        write(iUnit_num,"('SCALARS curvature float')")
+        write(iUnit_num,"('LOOKUP_TABLE default')")
+        allocate(curvature(UG%GI%RealCells))
+        allocate(iSurfaceEdge(UG%GI%RealCells, 3))
+        curvature = 0.0d0
+        iSurfaceEdge = 0
+        do iEdge=1, UG%GM%BC%iWallTotal
+            iCell = UG%Line%Cell(UG%GM%BC%VW(iEdge)%iGlobalEdge, 1, 1)
+            !write(6,*) iCell, UG%GI%RealCells
+            curvature(iCell) = UG%GM%BC%VW(iEdge)%curvature
+            iSurfaceEdge(iCell, 1) = iEdge  ! 局所界面番号
+            iSurfaceEdge(iCell, 2) = UG%GM%BC%VW(iEdge)%iGlobalEdge ! 大域界面番号
+            iSurfaceEdge(iCell, 3) = UG%Line%Cell(UG%GM%BC%VW(iEdge)%iGlobalEdge, 1, 1) ! 隣接実セル大域番号
+        end do
+
+        do iCell = 1, UG%GI%RealCells
+            write(iUnit_num,"((2x,f22.14))") curvature(iCell)
+        end do
+
+        write(iUnit_num,"('VECTORS iSurfE float')")
+        do iCell = 1, UG%GI%RealCells
+            write(iUnit_num,"(3(2x,f22.14))") float(iSurfaceEdge(iCell,1)),float(iSurfaceEdge(iCell,2)),float(iSurfaceEdge(iCell,3))
+        end do
+
+        write(iUnit_num,"('VECTORS Normal float')")
+        allocate(normal(UG%GI%RealCells,3))
+        normal = 0.0d0
+        do iLocalEdge=1, UG%GM%BC%iWallTotal
+            iEdge = UG%GM%BC%VW(iLocalEdge)%iGlobalEdge
+            iCell = UG%Line%Cell(iEdge,1,1)
+            normal(iCell, :) = UG%GM%Normal(iEdge,:)
+        end do
+        do iCell = 1, UG%GI%RealCells
+            write(iUnit_num,"(3(2x,f22.14))") normal(iCell,1),normal(iCell,2),normal(iCell,3)
+        end do
+
+        write(iUnit_num,"('VECTORS vData float')")
+        allocate(vData(UG%GI%RealCells, 3))
+        allocate(vcoords(UG%GI%RealCells,3))
+        vData = 0.0d0
+        do iLocalEdge=1,UG%GM%BC%iWallTotal
+            iEdge = UG%GM%BC%VW(iLocalEdge)%iGlobalEdge
+            iCell = UG%Line%Cell(iEdge,1,1)
+            iAdjacentCell = UG%Line%Cell(iEdge,2,1)
+            vData(iCell, 1) = float(iAdjacentCell)
+            vData(iCell, 2) = sqrt(dot_product((UG%GM%Width(iCell, UG%Line%Cell(iEdge,1,2), :)), (UG%GM%Width(iCell, UG%Line%Cell(iEdge,1,2), :))))
+            vData(iCell, 3) = sqrt(dot_product(UG%GM%Width(iAdjacentCell, UG%Line%Cell(iEdge,2,2), :), UG%GM%Width(iAdjacentCell, UG%Line%Cell(iEdge,2,2), :)))
+            vcoords(iCell,1:3) = UG%CD%Cell(iAdjacentCell,1:3)
+        end do
+        do iCell = 1, UG%GI%RealCells
+            write(iUnit_num,"(3(2x,f22.14))") vData(iCell,1),vData(iCell,2),vData(iCell,3)
+        end do
+        write(iUnit_num,"('VECTORS vCoords float')")
+        do iCell = 1, UG%GI%RealCells
+            write(iUnit_num,"(3(2x,f22.14))") vcoords(iCell,1),vcoords(iCell,2),vcoords(iCell,3)
+        end do
     end if
     close(iUnit_num)
     !if(RetryFlag == 0) then
@@ -232,7 +289,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         !RetryFlag = 0
         ! write(6,*) CourantFriedrichsLewyCondition
     !end if
-
+!stop
     if (UConf%OutputStatus /= 0) then  ! Final & Resume出力時にdummyデータが
         write(cStep,'("Resume")')
         write(ctmpDir,'("Running/")')
