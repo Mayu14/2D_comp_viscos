@@ -19,7 +19,7 @@ implicit none
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     integer :: iFlag
-
+    integer :: iStart, iStop
     iDim = UG%GM%Dimension
 
     do iCell = UG%GI%RealCells+1, UG%GI%AllCells
@@ -56,10 +56,13 @@ implicit none
     end do
 
     if(UG%GM%BC%iWallTotal /= 0) then
-        do iEdge = 1, UG%GM%BC%iWallTotal
+        iStart = int(dble(UG%GM%BC%iWallTotal) / 10.0d0)
+        iStop = 9 * iStart
+        do iEdge = iStart, iStop
             call WallBoundary_with_CentrifugalForce
         end do
     end if
+
 !write(6,*)
 return
 contains
@@ -165,26 +168,47 @@ contains
         integer :: iGEdge
         integer:: iFrontCell, iBackCell
         double precision :: FrontLength, BackLength
-
+        double precision :: delta_p
+        ! get back(virtual) & front(real) cell information
         iGEdge = UG%GM%BC%VW(iEdge)%iGlobalEdge
-        call GetLengthBetweenEdge(UG, iGEdge, iFrontCell, iBackCell,FrontLength, BackLength)
-
+        call GetLengthBetweenEdge(UG, iGEdge, iFrontCell, iBackCell, FrontLength, BackLength)
+        !write(6,*) iGEdge, iFrontCell, iBackCell, FrontLength, BackLength
+        ! density gradient is 0
         UCC%ConservedQuantity(1,iBackCell,1,1) = UCC%ConservedQuantity(1,iFrontCell,1,1) !Grad 0
-
+        ! normal velocity summation is 0
         UCC%ConservedQuantity(2:iDim+1,iBackCell,1,1) = UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1) &
         & - 2.0d0 * UG%GM%Normal(iGEdge,1:iDim) &
         & * sum(UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1)*UG%GM%Normal(iGEdge,1:iDim)) !Normal Direction Velocity is 0
-
-        tangential_velocity_2 = ((UCC%ConservedQuantity(2,iBackCell,1,1) * UG%GM%Normal(iGEdge,2) &
-        & - UCC%ConservedQuantity(3,iBackCell,1,1) * UG%GM%Normal(iGEdge,1)) / UCC%ConservedQuantity(1,iBackCell,1,1))**2
-
+        !square tangenial velocity of front cell
+        tangential_velocity_2 = ((UCC%ConservedQuantity(2,iFrontCell,1,1) * UG%GM%Normal(iGEdge,2) &
+        & - UCC%ConservedQuantity(3,iFrontCell,1,1) * UG%GM%Normal(iGEdge,1)) / UCC%ConservedQuantity(1,iFrontCell,1,1))**2
+        !kinetic energy of front cell
         kinetic_energy = 0.5d0 * sum(UCC%ConservedQuantity(2:iDim+1,iFrontCell,1,1)**2) / UCC%ConservedQuantity(1,iFrontCell,1,1)
+        !pressure of front cell
         pressure = Gmin1 * (UCC%ConservedQuantity(iDim+2,iFrontCell,1,1) - kinetic_energy)
+        ! pressure of back(virtual) cell
+        delta_p = (FrontLength + BackLength) * UCC%ConservedQuantity(1,iFrontCell,1,1) &
+            & * tangential_velocity_2 * UG%GM%BC%VW(iEdge)%curvature
+        !write(6,*) delta_p, tangential_velocity_2, UG%GM%BC%VW(iEdge)%curvature
+        !if((iEdge == 192) .or. (iEdge == 193)) then
+            !write(6,*) FrontLength, BackLength, tangential_velocity_2, delta_p
+        !end if
 
-        pressure = pressure - (FrontLength + BackLength) * UCC%ConservedQuantity(1,iBackCell,1,1) &
-        & * tangential_velocity_2 * UG%GM%BC%VW(iEdge)%curvature
+        !do while(delta_p > pressure)
+            !delta_p = 0.9d0 * delta_p
+            !iLoop = iLoop + 1
+        !end do
+        !if(iLoop /= 0) then
+            !write(6,*) iLoop, delta_p*(1.0d0/0.9d0)**(iLoop), pressure
+        !end if
+
+        pressure = pressure + delta_p
+
+        ! kinetic energy of back(virtual) cell
+        kinetic_energy = 0.5d0 * sum(UCC%ConservedQuantity(2:iDim+1,iBackCell,1,1)**2) / UCC%ConservedQuantity(1,iBackCell,1,1)
 
         UCC%ConservedQuantity(iDim+2,iBackCell,1,1) = InverseGmin1 * pressure + kinetic_energy
+
     return
     end subroutine WallBoundary_with_CentrifugalForce
 
