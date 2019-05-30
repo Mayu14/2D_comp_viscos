@@ -230,6 +230,8 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
                 do iLoop = 1, UG%GM%BC%iWallTotal
                     read(iUnit,*) UG%GM%BC%VW(iLoop)%curvature
                 end do
+                call fixed_curvature(UG)
+                call fixed_curvature_naca0012(UG)
             !end if
         end if
 
@@ -248,5 +250,65 @@ subroutine UReadUnStrGrid(UConf,UCC,UCE,UG)
             UG%InternalBoundary = 0
         end if
 
+        !call output_curvature(UG)
+
+
     return
+contains
+    subroutine output_curvature(UG)
+        implicit none
+        type(UnstructuredGrid), intent(in) :: UG
+
+            iUnit = 1
+            open(unit=iUnit,file="curvature.txt",status='unknown')
+            write(iUnit,*) UG%GM%BC%iWallTotal
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                write(iUnit,"(3(2x,f22.14))") UG%CD%Edge(UG%GM%BC%VW(iLoop)%iGlobalEdge, 1), UG%CD%Edge(UG%GM%BC%VW(iLoop)%iGlobalEdge, 2), UG%GM%BC%VW(iLoop)%curvature
+            end do
+            close(iUnit)
+
+            stop
+        return
+    end subroutine output_curvature
+
+    subroutine fixed_curvature(UG)
+        implicit none
+        type(UnstructuredGrid), intent(inout) :: UG
+        double precision :: x, a,b,c,d,e
+            a = -1.06849984d0
+            b = 0.36722201d0
+            c = 0.00980996d0
+            d = 1.30289925d0
+            e = 0.08158373d0
+
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                x = UG%GM%BC%VW(iLoop)%curvature
+                UG%GM%BC%VW(iLoop)%curvature =  a + b * x + c * x ** 2 + d*exp(e*x)
+            end do
+        return
+    end subroutine fixed_curvature
+
+    subroutine fixed_curvature_naca0012(UG)
+        implicit none
+        type(UnstructuredGrid), intent(inout) :: UG
+        double precision :: x, t = 0.12d0
+        double precision :: c_radius, y_t_prime, y_t_doubleprime
+            do iLoop = 1, UG%GM%BC%iWallTotal
+                x = UG%CD%Edge(UG%GM%BC%VW(iLoop)%iGlobalEdge, 1)
+                if (x /= 0.0d0) then
+                    y_t_prime = t / 0.2d0 * (0.2969d0 * (0.5d0 / sqrt(x)) - 0.1260d0 - 0.3516d0 * (2.0d0 * x) + 0.2843d0 * (3.0d0 * x ** 2) - 0.1015d0 * (4.0d0 * x ** 3))
+                    y_t_doubleprime = t / 0.2d0 * (0.2969d0 * (-0.25d0 / sqrt(x)**3) - 0.3516d0 * (2.0d0) + 0.2843d0 * (6.0d0 * x) - 0.1015d0 * (12.0d0 * x ** 2))
+                    if (y_t_doubleprime /= 0.0d0) then
+                        c_radius = (1.0d0 + y_t_prime)**(1.5d0) / (y_t_doubleprime)
+                        UG%GM%BC%VW(iLoop)%curvature = 1.0d0 / abs(c_radius)
+                    else
+                        UG%GM%BC%VW(iLoop)%curvature = 0.0d0
+                    end if
+                else
+                    UG%GM%BC%VW(iLoop)%curvature = 0.0d0
+                end if
+            end do
+
+        return
+    end subroutine fixed_curvature_naca0012
 end subroutine UReadUnStrGrid
