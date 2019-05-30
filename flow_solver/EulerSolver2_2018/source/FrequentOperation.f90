@@ -307,7 +307,7 @@ contains
         return
     end subroutine CheckBackOrFront
 
-    subroutine GetLengthBetweenEdge(UG, iEdge, iFrontCell, iBackCell,FrontLength, BackLength)
+    subroutine GetLengthBetweenEdge(UG, iEdge, iFrontCell, iBackCell, FrontLength, BackLength)
         use StructVar_Mod
         implicit none
         type(UnstructuredGrid), intent(in) :: UG
@@ -315,10 +315,14 @@ contains
         integer, intent(out) :: iFrontCell, iBackCell
         double precision, intent(out) :: FrontLength, BackLength
             iFrontCell = UG%Line%Cell(iEdge,1,1)
-            iBackCell =  UG%Line%Cell(iEdge,2,1)
+            iBackCell =  UG%Line%Cell(iEdge,2,1)    !iBackCell >  iFrontCell
 
             FrontLength = AbsVector(UG%GM%Width(iFrontCell, UG%Line%Cell(iEdge,1,2), :))
-            BackLength = AbsVector(UG%GM%Width(iBackCell, UG%Line%Cell(iEdge,2,2), :))
+            if(iBackCell > UG%GI%RealCells) then
+                BackLength = FrontLength
+            else
+                BackLength = AbsVector(UG%GM%Width(iBackCell, UG%Line%Cell(iEdge,2,2), :))
+            end if
         return
     end subroutine GetLengthBetweenEdge
 
@@ -351,6 +355,7 @@ contains
         logical :: singular
 
         det = get_2d_determinant(A)
+        write(6,*) det
         if(abs(det) > machine_eps) then
             singular = .false.
             tmpA = A
@@ -358,6 +363,8 @@ contains
             A(1,2) = - tmpA(1,2) / det
             A(2,1) = - tmpA(2,1) / det
             A(2,2) = tmpA(1,1) / det
+            write(6,*) tmpA
+            write(6,*) A
         else
             singular = .true.
         end if
