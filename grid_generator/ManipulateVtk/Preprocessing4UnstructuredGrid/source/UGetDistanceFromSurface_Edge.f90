@@ -27,7 +27,7 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
     integer :: iTmpWall, iMember, iMem1, iMem2, iTermination ! 仮置き壁番号, メンバセル用ループ変数, メンバセル1, メンバセル2, バブルソートの終端
     integer, allocatable :: iSurfaceEdge(:), iCount(:)   ! 各壁ごとの入力済みカウント用配列
     integer :: iFlag = 0    ! 並び替え終了フラグ
-    type(DummySE), allocatable :: DSE
+    type(DummySE) :: DSE
     integer :: iLeftEdge, iRightEdge, iGLEdge, iGCEdge, iGREdge
 
     iSurfaceCell = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells  ! 物体表面界面数の特定
@@ -42,14 +42,15 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
         allocate(iSurfaceEdge(iSurfaceCell))    ! 物体表面の局所界面番号→大域界面番号
         allocate(UG%GM%BC%VW(iSurfaceCell))     ! 粘性壁登録変数の動的確保
 
-        ! 物体表面界面を反時計周りに並べ替え
+        ! 物体表面界面を右端から反時計周りに並べ替え
         iLocalEdge = 1   ! 物体表面(=壁)上の局所界面番号の初期化
         do iCell = UG%GI%RealCells+1, UG%GI%AllCells    ! すべての仮想セルについて巡回
             if (UG%VC%Type(iCell) == 2) then    ! 物体表面の仮想セルについて
-                DSE%SE(iLocalEdge)%iGEdgeNum = UG%VC%Edge(iCell) ! 大域界面番号をiSurfaceEdgeに格納
+                iEdge = UG%VC%Edge(iCell)
+                DSE%SE(iLocalEdge)%iGEdgeNum = iEdge ! 大域界面番号をiSurfaceEdgeに格納
                 DSE%SE(iLocalEdge)%iLEdgeNum = iLocalEdge   ! 物体表面のみの局所界面番号
-                DSE%SE(iLocalEdge)%iyNormalSign = int(sign(1.0d0, UG%GM%Normal(UG%VC%Edge(iCell), 2)))  !法線ベクトルy成分の符号
-                DSE%SE(iLocalEdge)%dxCoord = UG%CD%Edge(iCell, 1)   ! 界面中心x座標
+                DSE%SE(iLocalEdge)%iyNormalSign = int(sign(1.0d0, UG%GM%Normal(iEdge, 2)))  !法線ベクトルy成分の符号
+                DSE%SE(iLocalEdge)%dxCoord = UG%CD%Edge(iEdge, 1)   ! 界面中心x座標
                 iLocalEdge = iLocalEdge + 1
             end if
         end do
@@ -224,8 +225,8 @@ contains
         integer :: iTop, iBottom
 
         ! バブルソートにて辺のx座標規準で並べ替え
-        do outer = 1, iEdgeTotal - 1
-            do inner = 2, iEdgeTotal
+        do outer = iEdgeTotal - 1, 1, -1
+            do inner = 1, outer
                 call swap_edge_SE(DSE, inner, inner + 1)
             end do
         end do
@@ -253,13 +254,11 @@ contains
         type(DummySE), intent(inout) :: DSE
         integer, intent(in) :: iNum1, iNum2
         type(SurfaceEdge) :: SE
-
-            if DSE%SE(iNum1)%dxCoord > DSE%SE(iNum2)%dxCoord then
+            if (DSE%SE(iNum1)%dxCoord < DSE%SE(iNum2)%dxCoord) then ! 座標大きい順
                 SE = DSE%SE(iNum1)
                 DSE%SE(iNum1) = DSE%SE(iNum2)
                 DSE%SE(iNum2) = SE
             end if
-
         return
     end subroutine swap_edge_SE
 
@@ -280,14 +279,14 @@ contains
         coef(2,1) = normal_j(2)
         coef(2,2) = - normal_j(1)
         ! 定数ベクトル
-        const(1) = normal_i(1) * center_i(2) - normal_i(2) * center_i(1)
-        const(2) = normal_j(1) * center_j(2) - normal_j(2) * center_j(1)
+        const(1) = normal_i(2) * center_i(1) - normal_i(1) * center_i(2)
+        const(2) = normal_j(2) * center_j(1) - normal_j(1) * center_j(2)
         ! 逆行列を作成する(反転不可能なときはparallel==.true.となる)
         call set_2d_inverse_matrix(coef, parallel)
 
         if (parallel == .false.) then
             intersect = matmul(coef, const) ! 交点
-            curvature_radius = sqrt((intersect(1)**2 - edge_center(1)**2) + (intersect(2)**2 - edge_center(2)**2))  ! 曲率半径
+            curvature_radius = sqrt((intersect(1) - edge_center(1))**2 + (intersect(2) - edge_center(2))**2)  ! 曲率半径
         else
             curvature_radius = 10.0d0**eps_exp + 1
         end if
@@ -296,6 +295,7 @@ contains
         else
             curvature = 1.0d0 / curvature_radius
         end if
+
         return
     end function get_curvature_of_edge
 
