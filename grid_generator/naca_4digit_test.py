@@ -3,12 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Naca_4_digit(object):
-    def __init__(self, int_4, attack_angle_deg, resolution, quasi_equidistant=True, length_adjust=False, from5digit=False):
+    def __init__(self, int_4, attack_angle_deg, resolution, quasi_equidistant=True, length_adjust=False, from5digit=False, closed_te=True):
         if from5digit == False:
             self.m = float(int_4[0]) / 100  # maximum camber
             self.p = float(int_4[1]) / 10  # position of the maximum camber
             self.t = float(int_4[2:4]) / 100    # maximum thickness
             self.load_setting(attack_angle_deg, resolution, quasi_equidistant, length_adjust)
+            self.closed = closed_te
             self.__y_c()
             self.__dyc_dx()
         self.__y_t()
@@ -46,7 +47,15 @@ class Naca_4_digit(object):
     def __y_t(self):
         t = self.t
         x = self.x
-        self.y_t = t / 0.2 * (0.2969 * np.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1015 * x**4)
+        a0 = 0.2969
+        a1 = -0.1260
+        a2 = -0.3516
+        a3 = 0.2843
+        if self.closed:
+            a4 = -0.1036
+        else:
+            a4 = -0.1015
+        self.y_t = t / 0.2 * (a0 * np.sqrt(x) + a1 * x + a2 * x**2 + a3 * x**3 + a4 * x**4)
     
     def __dyc_dx(self):
         x_lt_p = lambda m, p, x: 2.0 * m / (p ** 2) * (p - x)
@@ -144,7 +153,7 @@ class Naca_4_digit(object):
 
 
 class Naca_5_digit(Naca_4_digit):
-    def __init__(self, int_5, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False, from5digit = True):
+    def __init__(self, int_5, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False, from5digit = True, closed_te=True):
         self.cl = float(int_5[0])*(3.0/2.0) / 10  # designed lift_coefficient
         self.p = float(int_5[1]) / 2.0 / 10  # position of the maximum camber
         self.ref = int_5[2]             # enable / disable reflect
@@ -155,6 +164,7 @@ class Naca_5_digit(Naca_4_digit):
         self.load_setting(attack_angle_deg, resolution, quasi_equidistant, length_adjust)
         self.__y_c()
         self.__dyc_dx()
+        self.closed = closed_te
         super(Naca_5_digit, self).__init__(int_5, attack_angle_deg, resolution, quasi_equidistant = quasi_equidistant, length_adjust = length_adjust, from5digit = True)
 
     def __y_c(self):
