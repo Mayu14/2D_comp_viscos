@@ -15,10 +15,12 @@ subroutine UGetGradient(UG,UCC)
     use StructVar_Mod
     use LoopVar_Mod
     use ConstantVar_Mod, only:CoreNumberOfCPU
+    use FrequentOperation
     implicit none
     type(UnstructuredGrid), intent(in) :: UG
     type(CellCenter), intent(inout) :: UCC
     double precision, allocatable :: EdgeNormal(:)
+    double precision :: MyLength, AdjLength
     allocate(EdgeNormal(3))
 
 !面ごとに保存量と法線×面積...の定義式を計算
@@ -37,14 +39,20 @@ subroutine UGetGradient(UG,UCC)
 
             if(iAdjacentCell > iCell) then !自セル位置の表裏を判定して法線ベクトルの向きを変え
                 EdgeNormal(:) = UG%GM%Normal(iEdge,:)
+                call GetLengthBetweenEdge(UG, iEdge, iCell, iAdjacentCell, MyLength, AdjLength)
             else
                 EdgeNormal(:) = - UG%GM%Normal(iEdge,:)
+                call GetLengthBetweenEdge(UG, iEdge,iAdjacentCell, iCell, AdjLength, MyLength)
             end if
 
             do iVariable = 1, 5 !全変数について勾配ベクトルを計算する
+                !UCC%GradientOfVariable(iVariable,iCell,1,1,:) = UCC%GradientOfVariable(iVariable,iCell,1,1,:) &
+                !& + 0.5d0 * (UCC%PrimitiveVariable(iVariable,iCell,1,1) + UCC%PrimitiveVariable(iVariable,iAdjacentCell,1,1)) &
+                !& * UG%GM%Area(iEdge) * EdgeNormal(:)
+                ! 界面上では距離に応じた荷重平均値を与える
                 UCC%GradientOfVariable(iVariable,iCell,1,1,:) = UCC%GradientOfVariable(iVariable,iCell,1,1,:) &
-                & + 0.5d0 * (UCC%PrimitiveVariable(iVariable,iCell,1,1) + UCC%PrimitiveVariable(iVariable,iAdjacentCell,1,1)) &
-                & * UG%GM%Area(iEdge) * EdgeNormal(:)
+                & + (MyLength * UCC%PrimitiveVariable(iVariable,iCell,1,1) + AdjLength * UCC%PrimitiveVariable(iVariable,iAdjacentCell,1,1)) &
+                & / (MyLength + AdjLength) * UG%GM%Area(iEdge) * EdgeNormal(:)
 
             end do
 
