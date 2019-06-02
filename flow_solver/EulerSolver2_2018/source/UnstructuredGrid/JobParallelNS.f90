@@ -48,6 +48,11 @@ subroutine JobParallelNS(UConf)
 
     call CheckNaN(UConf, UCC)   !
     allocate(UAC%coefficient(2, IterationNumber))
+
+    if(DetailedReport > 0) then
+        call show_setting(UConf)
+    end if
+
     do iTry = 1, IterationNumber
         !$ time_elapsed = omp_get_wtime()
         iStartStep = 1
@@ -78,6 +83,8 @@ subroutine JobParallelNS(UConf)
         if(UAC%residual < Converge_tolerance) then
             if(UConf%UseMUSCL == 0) then
                 UConf%UseMUSCL = 1
+                UCC%iEndFlag = 3    ! finish    !debug
+                UConf%OutputStatus = 1  !debug
             else
                 UCC%iEndFlag = 3    ! finish
                 UConf%OutputStatus = 1
@@ -215,5 +222,30 @@ contains
         return
     end subroutine CheckNaN
 
+    subroutine show_setting(UConf)
+        use StructVar_Mod
+        use ConstantVar_Mod
+        implicit none
+            type(Configulation), intent(in) :: UConf
+            write(6,*) "--Setting--"
+            if(UConf%UseFluxMethod == 0) then
+                write(6,*) "Inviscid Flux: Roe"
+            else if(UConf%UseFluxMethod == 1) then
+                write(6,*) "Inviscid Flux: SLAU2"
+            end if
+            if(UConf%UseMUSCL == 0) then
+                write(6,*) "Accuracy : space:1st, time:1st"
+            else
+                write(6,*) "Accuracy : space:2nd(Venkatakrishnan), time:1st"
+            end if
+            if(UConf%UseVariableTime == 0) then
+                write(6,*) "Uniform time step :", DefaultTimeStep
+            else
+                write(6,*) "variable time step"
+            end if
+            write(6,*) "OutputInterval :", OutputInterval
+            write(6,*) "CheckNaNInterval :", CheckNaNInterval
+        return
+    end subroutine show_setting
 end subroutine JobParallelNS
 
