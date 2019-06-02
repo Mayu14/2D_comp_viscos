@@ -202,7 +202,7 @@ contains
             !write(6,*) iLoop, delta_p*(1.0d0/0.9d0)**(iLoop), pressure
         !end if
 
-        pressure = pressure + delta_p
+        pressure = pressure - delta_p
 
         ! kinetic energy of back(virtual) cell
         kinetic_energy = 0.5d0 * sum(UCC%ConservedQuantity(2:iDim+1,iBackCell,1,1)**2) / UCC%ConservedQuantity(1,iBackCell,1,1)
