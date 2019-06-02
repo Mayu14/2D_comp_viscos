@@ -59,7 +59,7 @@ class MLPLayer():
             fx = BatchNormalization()(fx)
 
         if self.activate_before_fc:
-            fx = Activator(fx)
+            fx = Activator()(fx)
 
         if self.dropout:
             fx = Dropout(rate=self.dropout_rate)(fx)
@@ -69,7 +69,7 @@ class MLPLayer():
                    activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
         if self.activate_before_fc == False:
-            fx = Activator(fx)
+            fx = Activator()(fx)
 
         return fx
 
@@ -92,14 +92,14 @@ class MLPLayer():
         fx = Lambda(lambda x: x, output_shape=(units_list[0],))(inputs)
         for i in range(weight_layer_number):
             self.dropout_switch(i+1, weight_layer_number)
-            fx = self.fully_connected(units=units_list[i], inputs=fx, Activator=Activator)
+            fx = self.fully_connected(units=units_list[i], inputs=fx, Activator=Activator())
 
         # Addレイヤーの直前ではデータのサイズが一致していなければならない
         if units_list[-1] != input_units:
             fx = Dense(input_units)(fx)
 
         fx = Add()([fx, inputs])
-        return Activator(fx)    # F(x) + x
+        return Activator()(fx)    # F(x) + x
 
 
     def highway(self, inputs, Activator, weight_layer_number=1, units_list=None):
@@ -126,7 +126,7 @@ class MLPLayer():
         fx = Lambda(lambda x: x, output_shape=(units_list[0],))(inputs)
         for i in range(weight_layer_number):
             self.dropout_switch(i + 1, weight_layer_number)
-            fx = self.fully_connected(units=units_list[i], inputs=fx, Activator=Activator)
+            fx = self.fully_connected(units=units_list[i], inputs=fx, Activator=Activator())
 
         if units_list[-1] != input_units:
             fx = Dense(input_units)(fx)
@@ -135,7 +135,7 @@ class MLPLayer():
         identity_gated = Multiply()([negated_gate, inputs]) # (1-s)x
 
         fx = Add()([fx_gated, identity_gated])   # sF(x) + (1-s)x
-        return Activator(fx)
+        return Activator()(fx)
 
     # refered by https://github.com/flyyufelix/DenseNet-Keras/blob/master/densenet121.py
     def denseblock(self, inputs, Activator, weight_layer_number=1):
@@ -150,10 +150,10 @@ class MLPLayer():
         concat_feat = Lambda(lambda x: x, output_shape=(input_units,))(inputs)   # concat_feat = x
 
         for i in range(weight_layer_number):
-            fx = self.fully_connected(units=self.growth_rate, inputs=concat_feat, Activator=Activator)
+            fx = self.fully_connected(units=self.growth_rate, inputs=concat_feat, Activator=Activator())
             concat_feat = Concatenate()([concat_feat, fx])
 
-        return Activator(concat_feat)    # F(x) + x
+        return Activator()(concat_feat)    # F(x) + x
 
 
 def rec23(x):
