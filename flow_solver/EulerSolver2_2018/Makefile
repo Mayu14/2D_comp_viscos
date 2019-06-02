@@ -607,7 +607,8 @@ EXE = ES2
 FC = mpiifort
 LD =  mpiifort
 IDIR =
-CFLAGS = -qopenmp -O4
+CFLAGS = -xhost -qopenmp -O3
+# CFLAGS = -check uninit -check pointers -check bounds -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full
 LFLAGS = -qopenmp
 LIBS = 
 
