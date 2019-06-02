@@ -355,7 +355,7 @@ contains
         logical :: singular
 
         det = get_2d_determinant(A)
-        write(6,*) det
+        !write(6,*) det
         if(abs(det) > machine_eps) then
             singular = .false.
             tmpA = A
@@ -363,8 +363,8 @@ contains
             A(1,2) = - tmpA(1,2) / det
             A(2,1) = - tmpA(2,1) / det
             A(2,2) = tmpA(1,1) / det
-            write(6,*) tmpA
-            write(6,*) A
+            !write(6,*) tmpA
+            !write(6,*) A
         else
             singular = .true.
         end if
