@@ -67,9 +67,11 @@ subroutine UGetDistanceFromSurface_Edge(UG, ExistInnerBoundary)
             iGCEdge = DSE%SE(iLocalEdge)%iGEdgeNum
             iGREdge = DSE%SE(iRightEdge)%iGEdgeNum
 
-            UG%GM%BC%VW(iLocalEdge)%curvature = get_curvature_of_edge(UG%CD%Edge(iGCEdge,1:2), &
-                                            & UG%CD%Edge(iGLEdge,1:2), UG%CD%Edge(iGREdge,1:2), &
-                                            & UG%GM%Normal(iGLEdge,1:2), UG%GM%Normal(iGREdge,1:2))
+            !UG%GM%BC%VW(iLocalEdge)%curvature = get_curvature_of_edge(UG%CD%Edge(iGCEdge,1:2), &
+                                            !& UG%CD%Edge(iGLEdge,1:2), UG%CD%Edge(iGREdge,1:2), &
+                                            !& UG%GM%Normal(iGLEdge,1:2), UG%GM%Normal(iGREdge,1:2))
+            UG%GM%BC%VW(iLocalEdge)%curvature = get_curvature_of_edge_mk2(UG%CD%Edge(iGCEdge,1:2), &
+                                            & UG%CD%Edge(iGLEdge,1:2), UG%CD%Edge(iGREdge,1:2))
 
             iLeftEdge = iLeftEdge + 1
             iRightEdge = iRightEdge + 1
@@ -263,6 +265,12 @@ contains
     end subroutine swap_edge_SE
 
     function get_curvature_of_edge(edge_center, center_i, center_j, normal_i, normal_j) result(curvature)
+        ! edge_center : array (x,y) ; coordinates of center edge
+        ! center_i : array (x,y) ; coordinates of right side adjacent edge
+        ! center_j : array (x,y) ; coordinates of left side adjacent edge
+        ! normal_i : array (x,y) ; normal vector of right side adjacent edge
+        ! normal_j : array (x,y) ; normal vector of left side adjacent edge
+        ! curvature : double precision ; curvature of center edge
         use FrequentOperation
         implicit none
         double precision, intent(in) :: edge_center(:), center_i(:), center_j(:)
@@ -298,5 +306,28 @@ contains
 
         return
     end function get_curvature_of_edge
+
+    function get_curvature_of_edge_mk2(edge_center, center_i, center_j) result(curvature)
+        use StructVar_Mod
+        implicit none
+        double precision, intent(in) :: edge_center(:), center_i(:), center_j(:)
+        double precision, allocatable :: normal_i(:), normal_j(:), new_center_i(:), new_center_j(:)
+        double precision :: curvature
+
+        allocate(normal_i(2), normal_j(2), new_center_i(2), new_center_j(2))
+
+        normal_i(1) = center_i(2) - edge_center(2)
+        normal_i(2) = -center_i(1) + edge_center(1)
+
+        normal_j(1) = edge_center(2) - center_j(2)
+        normal_j(2) = -edge_center(1) + center_j(1)
+
+        new_center_i = 0.5d0 * (edge_center + center_i) ! 中点に移動
+        new_center_j = 0.5d0 * (edge_center + center_j) ! 中点に移動
+
+        curvature = get_curvature_of_edge(edge_center, new_center_i, new_center_j, normal_i, normal_j)
+
+        return
+    end function get_curvature_of_edge_mk2
 
 end subroutine UGetDistanceFromSurface_Edge
