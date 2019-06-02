@@ -231,7 +231,7 @@ contains
         call UGetDistanceFromSurface_Edge(UG, ExistBound)
         !end if
     !テスト出力
-        !call UCheckGrid(UG)
+        call UCheckGrid(UG)
 
     !中間ファイルの出力
         call UOutputUnStrGrid(UG, cOutPath, cFileName, ExistBound)

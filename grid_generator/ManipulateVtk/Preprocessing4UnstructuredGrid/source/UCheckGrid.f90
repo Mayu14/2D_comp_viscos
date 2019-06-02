@@ -19,6 +19,7 @@ subroutine UCheckGrid(UG)
     type(UnstructuredGrid), intent(inout) :: UG
     character(len=256) :: cDirectory,cFileName, cCaseName
     integer :: iCheck
+    double precision, allocatable :: curvature(:)
 
     cDirectory = ""
     cFileName = "chkgrid.vtk"
@@ -67,13 +68,40 @@ subroutine UCheckGrid(UG)
                 write(1,"((2x,f22.14))") float(UG%VC%Type(iAdjacentCell))
             end if
         end do
-        write(1,*) ""
+        !write(1,*) ""
+
+        write(1,"('SCALARS curvature float')")
+        write(1,"('LOOKUP_TABLE default')")
+        allocate(curvature(UG%GI%RealCells))
+        curvature = 0.0d0
+        do iEdge=1, UG%GM%BC%iWallTotal
+            iCell = UG%Line%Cell(UG%GM%BC%VW(iEdge)%iGlobalEdge, 1, 1)
+            !write(6,*) iCell, UG%GI%RealCells
+            curvature(iCell) = UG%GM%BC%VW(iEdge)%curvature
+        end do
+        do iCell = 1, UG%GI%RealCells
+            write(1,"((2x,f22.14))") curvature(iCell)
+        end do
+        !write(1,*) ""
+        write(1,"('SCALARS local_edge_id float')")
+        write(1,"('LOOKUP_TABLE default')")
+        curvature =0.0d0
+        do iEdge=1, UG%GM%BC%iWallTotal
+            iCell = UG%Line%Cell(UG%GM%BC%VW(iEdge)%iGlobalEdge, 1, 1)
+            curvature(iCell) = dble(iEdge)
+        end do
+        do iCell = 1, UG%GI%RealCells
+            write(1,"((2x,f22.14))") curvature(iCell)
+        end do
 
         write(1,"('VECTORS CellDistance float')")
         do iCell=1, UG%GI%RealCells
             write(1, "(3(1x,f22.17))") float(UG%Tri%Belongs2Wall(iCell)), UG%Tri%Distance(iCell), 0.0
         end do
-        write(1,*) ""
+        !write(1,*) ""
+
+
+
     close(1)
 
 return
