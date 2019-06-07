@@ -10,9 +10,10 @@ subroutine UReadInitialCondition(UConf,UG,UCC)
     character :: cAnnotate,cAnnotate1
     integer :: iUnit
 
-    if(UConf%SwitchProgram == 5) then
+    if(UConf%SwitchProgram == 5 .or. UConf%SwitchProgram == 6) then
         !cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//UConf%ResumeFileName
         cFileName = UConf%ResumeFileName
+        write(6,*) cFileName
     else if(UConf%SwitchProgram /= 7) then
         write(6,*) "Please input VTK-File name of Unstructured Grid for RESUME"
         read(5,*) cFileName
