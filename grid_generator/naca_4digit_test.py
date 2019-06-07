@@ -154,6 +154,16 @@ class Naca_4_digit(object):
 
 class Naca_5_digit(Naca_4_digit):
     def __init__(self, int_5, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False, from5digit = True, closed_te=True):
+        """
+
+        :param int_5:   1st: 1~6, 2nd and 3rd [10,20,30,40,50,21,31,41,51], 4th and 5th [01~99]
+        :param attack_angle_deg: recommended 0
+        :param resolution:
+        :param quasi_equidistant:
+        :param length_adjust:
+        :param from5digit:
+        :param closed_te:
+        """
         self.cl = float(int_5[0])*(3.0/2.0) / 10  # designed lift_coefficient
         self.p = float(int_5[1]) / 2.0 / 10  # position of the maximum camber
         self.ref = int_5[2]             # enable / disable reflect
