@@ -6,10 +6,11 @@ import os
 
 def common(cp=False):
     #path = "D:\\Toyota\\github\\2D_comp_viscos\\flow_solver\\EulerSolver2_2018\\\ResultC\\"
-    fname_head = "NACA0012_01_VALIDATE_M080_A01_25"
+    # fname_head = "NACA0012_01_VALIDATE_M080_A01_25"
+    fname_head = "NACA0012_01__"
     # fname_head = "NACA0012_02_VALIDATE_M080_A01_25"
     # fname_head = "NACA0012_02_VALIDATE_M050_A02_00"
-    case = "20_800_0100_0100"
+    case = "exact_plus"
     # path = "D:\\Toyota\\Downloads\\" + case + "\\ResultC\\"
     path = "G:\\Toyota\\validQ\\" + case + "\\ResultC\\"
     # path = "D:\\Toyota\\Data\\validR\\" + case + "\\ResultC\\"
@@ -19,7 +20,9 @@ def common(cp=False):
 
     fname_tail = "th_AC.dat"
     if cp:
-        fname_head = "CP_" + fname_head
+        # fname_head = "CP_" + fname_head
+        fname_head = "CP__" + fname_head
+        # fname_tail = "thth.dat"
         fname_tail = "th.dat"
     return path, fname_head, fname_tail, case
 
@@ -88,8 +91,8 @@ if __name__ == '__main__':
     c = 0.0019
     d = 0.24715
     # test()
-    end = 27
-    dat2csv_cp(end = end, gif = False)
+    end = 301
+    dat2csv_cp(end = end, gif = True)
     dat2csv(end=end)
     
     

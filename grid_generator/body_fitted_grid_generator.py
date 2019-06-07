@@ -898,7 +898,7 @@ def makeGridLoop():
         
 def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", center_x = 0.08, center_y = 0.08):
     if type == 3:
-        path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv_HD\\"
+        path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv_HD_closed\\"
         for i1 in range(10):
             for i2 in range(10):
                 for i34 in range(1,100):
@@ -914,22 +914,24 @@ def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", cent
                     np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
     
     elif type == 4:
-        path = "G:\\Toyota\\Data\\grid_vtk\\NACA5_csv_HD\\"
-        head_int3 = [210, 220, 230, 240, 250, 221, 231, 241, 251]
-        for int3 in head_int3:
-            for i45 in range(1, 100):
-                naca5 = str(int3) + str(i45).zfill(2)
-                z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca5,
-                                              size = size)
-                z_u, z_l = split_surface(deduplication(z1)[::-1])
-                new_z_eq = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
-                z1 = get_equidistant_curve(new_z_eq, high_dens = False)
-                fname = "NACA" + naca5
-            
-                np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter = ",")
-                np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
-                
+        path = "G:\\Toyota\\Data\\grid_vtk\\NACA5_csv_HD_closed\\"
+
+        mid_int2 = [10, 20, 30, 40, 50, 21, 31, 41, 51]
+        for int1 in range(1,6):
+            for int23 in mid_int2:
+                for i45 in range(1, 100):
+                    naca5 = str(int1) + str(int23) + str(i45).zfill(2)
+                    z1, gomi = get_complex_coords(type = type, center_x = center_x, center_y = center_y, naca4 = naca5,
+                                                  size = size)
+                    z_u, z_l = split_surface(deduplication(z1)[::-1])
+                    new_z_eq = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
+                    z1 = get_equidistant_curve(new_z_eq, high_dens = False)
+                    fname = "NACA" + naca5
+
+                    np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter = ",")
+                    np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
+
 if __name__ == '__main__':
     # main()
     # makeGridLoop()
-    output_coords_csv(type = 4)
+    output_coords_csv(type = 3)
