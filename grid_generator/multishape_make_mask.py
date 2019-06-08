@@ -1,8 +1,9 @@
 # coding: utf-8
 import numpy as np
 from other_tools.legacy_vtk_writer import MyStructuredVTKWriter
-from naca_4digit_test import Naca_4_digit as N4d  # use only test
+from grid_generator.naca_4digit_test import Naca_4_digit as N4d  # use only test
 from PIL import Image
+from grid_generator.mask_maker import VPmask as MM
 
 
 # 標準物体形状は[0, 1]×[0, 1]領域に描画されるものとする
@@ -166,12 +167,24 @@ def main():
     """
 
 def make_dataset(type=4, grid_resolution = 2 ** 9):
+    def concat_u_and_l(naca):
+        x = np.concatenate([naca.x_u, naca.x_l[::-1]])
+        y = np.concatenate([naca.y_u, naca.y_l[::-1]])
+        return [x], [y]
+
     def main_process(naca4, path, grid_resolution):
         attack_angle_deg = 0
         naca = N4d(naca4, attack_angle_deg, grid_resolution)
+        x, y = concat_u_and_l(naca)
+        """
         s = Shape(naca.equidistant_y_u, naca.equidistant_y_l, grid_resolution, resize = False,
                   name = "NACA" + naca4, auto_reshape = True, path = path)
         s.mask2pict()
+        """
+        canvas = [grid_resolution, grid_resolution]
+        mask = MM(x, y, canvas, deform="Fit", start_point="rt")
+        fname = path + naca4
+        mask.save_img(fname)
         
     
     path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
