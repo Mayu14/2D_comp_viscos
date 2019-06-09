@@ -6,7 +6,7 @@ import sys
 
 class VPmask(object):
     def __init__(self, x, y, canvas_size, start_point="lb", imglim=None, deform="None", obj_margin=4,
-                 outerframe_margin=3, line_width=0.5):
+                 default_canvas=[1024,1024], outerframe_margin=3, line_width=0.5):
         """
         物体表面のx,yの座標の配列を入力し，rgb配列に変換する(x,yは一筆書きできるように整列済みであるとする)
         :param x:   (list as [ndarray x-coords obj1, ndarray x-coords obj2, ... ])    # object surface points coordinates of x
@@ -25,7 +25,10 @@ class VPmask(object):
         self.object_number = len(x)
         self.__get_min_and_max__()
 
-        self.canvas_size = canvas_size
+
+        self.canvas_size = default_canvas
+        self.__set_canvas__(canvas_size)
+
         self.obj_margin = obj_margin
         self.outerframe_margin = outerframe_margin
 
@@ -45,8 +48,8 @@ class VPmask(object):
 
         # 閉曲線から画像を生成する
         self.img = self.get_curve_img()
-
         self.mask = self.get_mask(self.img)
+        self.resize()
 
     def __get_min_and_max__(self):
         min_x = np.inf  # 初期化
@@ -61,6 +64,13 @@ class VPmask(object):
 
         self.min = [min_x, min_y]
         self.max = [max_x, max_y]
+
+    def __set_canvas__(self, canvas_size):
+        for i in range(2):
+            if self.canvas_size[i] < canvas_size[i]:
+                self.canvas_size[i] = int(1.2 * canvas_size[i])
+        self.final_canvas = canvas_size
+
 
     def deform_curve(self, deform):
         self.deform = False
@@ -169,7 +179,9 @@ class VPmask(object):
         # matplotlibの出力結果をnumpy配列に変換
         fig.canvas.draw()
         img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-        return img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        plt.close(fig)
+        return img
 
     def get_mask(self, img):
         # *** エッジ検出画像をマスク画像として用意 ***
@@ -191,6 +203,12 @@ class VPmask(object):
         x_max = (img.shape[0]) - xy_min
         y_max = (img.shape[1]) - xy_min
         return img[xy_min:x_max, xy_min:y_max, 0]
+
+    def resize(self, interpolate = cv2.INTER_LANCZOS4):
+        width = self.final_canvas[0]
+        height = self.final_canvas[1]
+        self.mask = cv2.resize(self.mask, (width, height), interpolation=interpolate)
+        self.img = cv2.resize(self.img, (width, height), interpolation=interpolate)
 
     def show_mask(self):
         cv2.imshow("mask", self.mask)
@@ -221,9 +239,9 @@ def test_naca():
     from grid_generator.naca_4digit_test import Naca_4_digit
     attack_angle_deg = 0
     grid_resolution = 200
-    naca4 = "7501"
+    naca4 = "12099"
     naca = Naca_4_digit(naca4, attack_angle_deg, grid_resolution, quasi_equidistant=True)
-
+    naca.plot()
     x = np.concatenate([naca.x_u, naca.x_l[::-1]])
     y = np.concatenate([naca.y_u, naca.y_l[::-1]])
 
@@ -284,6 +302,6 @@ if __name__ == '__main__':
     canvas = [size,size]
     #imglim = [[-1.1,1.1],[-1.1,1.1]]
     mask = VPmask(x, y, canvas, deform="Fit", obj_margin=4, start_point="rt")
-
+    mask.show_img()
     # main()
 
