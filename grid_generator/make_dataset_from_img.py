@@ -31,8 +31,8 @@ def main(fname_list, img_path, csv_name):
 
     for i in range(total_data):
         fname = fname_list[i]
-        naca4, aspect_ratio = get_number_and_aspect(fname)
-        img = read_img_and_drop_channel(img_path + fname)
+        naca4, aspect_ratio = get_number_and_aspect(fname.replace(img_path, ""))
+        img = read_img_and_drop_channel(fname)
         shape = img.shape
         # NACA 4or5 digit, x_width, y_height, aspect_ratio, rgb_pixel(only "r" component)
         save_data[i, 0] = naca4
@@ -55,7 +55,7 @@ def auto_job(type=4, size=512):
     img_path = save_path + dir + "cnn\\image\\" + str(size) + "\\"
     flist = glob.glob(img_path + "*.png")
 
-    main(flist, csv_name=csv_name)
+    main(flist, img_path, csv_name=csv_name)
 
 
 def test():
@@ -64,4 +64,4 @@ def test():
     main(fname_list, "", csv_name)
 
 if __name__ == '__main__':
-    auto_job()
+    auto_job(type=5)
