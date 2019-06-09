@@ -12,7 +12,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
     integer :: access
     integer, allocatable :: iSurfaceEdge(:, :)
     integer :: iCheck, iUnit_num
-    integer :: debug = 0
+    integer :: debug = 0, moreplot = 1
     double precision, allocatable :: curvature(:), normal(:,:), vData(:,:), vcoords(:,:)
     call JPUConserve2Primitive(UG,UCC)
 
@@ -35,7 +35,7 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
 
     open(unit = iUnit_num, file =trim(adjustl(cFileName)), status = 'unknown')
         write(iUnit_num,"('# vtk DataFile Version 3.0')")
-        write(iUnit_num,*) cCaseName
+        write(iUnit_num,*) trim(adjustl(cCaseName))
         write(iUnit_num,"('ASCII')")
         write(iUnit_num,"('DATASET UNSTRUCTURED_GRID')")
         write(iUnit_num,"('POINTS ',(1x,i7),' double')") UG%GI%Points
@@ -127,6 +127,46 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
             write(iUnit_num, "(f22.14)") sqrt(UCC%PrimitiveVariable(1,iCell,1,1) / (gamma*UCC%PrimitiveVariable(5,iCell,1,1)) &
                                         &   * dot_product(UCC%PrimitiveVariable(2:3,iCell,1,1),UCC%PrimitiveVariable(2:3,iCell,1,1)))
         end do
+
+        if (moreplot == 1) then
+            !本来は定積比熱Cvをかけるべきだが，ここでは省略している
+            write(iUnit_num,"('SCALARS Entropy float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") log((UCC%PrimitiveVariable(5,iCell,1,1) / UG%GM%BC%InFlowVariable(5)) &
+                                                & / ((UCC%PrimitiveVariable(1,iCell,1,1) / UG%GM%BC%InFlowVariable(1)))**gamma )
+            end do
+
+            write(iUnit_num,"('SCALARS SoundSpeed float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") sqrt(gamma * UCC%PrimitiveVariable(5,iCell,1,1) &
+                                                & / (UCC%PrimitiveVariable(1,iCell,1,1)))
+            end do
+
+            write(iUnit_num,"('SCALARS Enthalpy float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") InverseGmin1 * (gamma * UCC%PrimitiveVariable(5,iCell,1,1) &
+                                                & / (UCC%PrimitiveVariable(1,iCell,1,1)))
+            end do
+
+            write(iUnit_num,"('SCALARS InternalEnergy float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") InverseGmin1 * (UCC%PrimitiveVariable(5,iCell,1,1) &
+                                                & / (UCC%PrimitiveVariable(1,iCell,1,1)))
+            end do
+
+            write(iUnit_num,"('SCALARS TotalEnergy float')")
+            write(iUnit_num,"('LOOKUP_TABLE default')")
+            do iCell=1, UG%GI%RealCells
+                write(iUnit_num, "(f22.14)") InverseGmin1 * (gamma * UCC%PrimitiveVariable(5,iCell,1,1) &
+                                                & / (UCC%PrimitiveVariable(1,iCell,1,1))) &
+                                                & + 0.5d0 * dot_product(UCC%PrimitiveVariable(2:4,iCell,1,1), UCC%PrimitiveVariable(2:4,iCell,1,1))
+            end do
+
+        end if
 
     if(debug == 1) then
         if(iStep > 0) then
