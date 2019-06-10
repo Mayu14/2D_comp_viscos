@@ -73,7 +73,7 @@ def read_csv_type3(source, fpath_lift, fpath_shape, shape_odd = 0, read_rate = 1
     # y_train_d = X_train["drag_coef"].values.reshape(-1, 1)
     # y_train = np.concatenate((y_train_l.T, y_train_d.T)).T
     y_train = np.concatenate((X_train["lift_coef"].values.reshape(-1, 1).T, X_train["drag_coef"].values.reshape(-1, 1).T)).T
-    X_train = X_train.drop("lift_coef", axis=1).drop("naca4", axis=1).values
+    X_train = X_train.drop("lift_coef", axis=1).drop("drag_coef", axis=1).drop("naca4", axis=1).values
 
     if regularize:
         if scalar == "None":
