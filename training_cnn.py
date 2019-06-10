@@ -2,7 +2,8 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential, Model
-from keras.layers.core import Dense, Dropout, Activation
+from keras.layers import Dense, Dropout, Flatten, Input, Activation
+from keras.layers import Conv2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers import LeakyReLU, PReLU, Input
 from keras.callbacks import EarlyStopping, TensorBoard
@@ -30,9 +31,20 @@ def main():
     x_train_img, x_train_param, y_train = load_data(path=npz_path, size=size)
     
     x_train_img, x_valid_img, x_train_param, x_valid_param, y_train, y_valid = train_test_split(x_train_img, x_train_param, y_train, test_size = 0.175)
-    print(x_train_img.shape)
-    print(x_valid_img.shape)
-    
+
+    inputs = Input(shape = (512, 512, 1))
+    x = Conv2D(32, kernel_size = (3, 3), input_shape = (512, 512, 1))(inputs)
+    x = Activation("relu")(x)
+    x = Conv2D(64, (3, 3))(x)
+    x = Activation("relu")(x)
+    x = MaxPooling2D(pool_size = (2, 2))(x)
+    x = Dropout(0.25)(x)
+    x = Flatten()(x)
+    x = Dense(128)(x)
+    x = Activation("relu")(x)
+    x = Dropout(0.5)(x)
+    x = Dense(10)(x)
+    outputs = Activation("linear")(x)
     
 
 if __name__ == '__main__':
