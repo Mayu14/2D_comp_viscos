@@ -61,15 +61,7 @@ def main(fname_list, img_path, size):
             # strstep = str(step).zfill(3)
             dir = "NACA4\\"
             shape = "_" + str(shape0).zfill(3) + "_" + str(shape1).zfill(3)
-            """
-            fnameXimg = "x_train_img"
-            fnameXprm = "x_train_param"
-            fnamey = "y_train"
-            
-            np.save(source + dir + fnameXimg + strstep, x_train_img)
-            np.save(source + dir + fnameXprm + strstep, x_train_param)
-            np.save(source + dir + fnamey + strstep, y_train)
-            """
+
             np.savez_compressed(source + dir + "train" + shape, x_train_img=x_train_img, x_train_param=x_train_param, y_train=y_train)
             
         
