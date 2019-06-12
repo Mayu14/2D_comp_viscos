@@ -72,16 +72,22 @@ contains
     integer :: iInOrOut, iSSOrSub !1:In or 2:Out , 1:SuperSonic or 2:Subsonic
     double precision, allocatable :: LocalVelocity(:)
     double precision :: EdgeNormalVelocity, LocalSoundSpeed, VelocityEpsilon !VE is SEKO variable
-    !1st step : judge of flow
+    double precision :: R_plus, R_minus, v_tangent, enthalpy ! Riemann Invariants + direction and - direction
+    double precision :: v_normal_inf, soundspeed_inf, sound_speed_cell, pressure_cell, v_normal_bndry
+    double precision :: v_x, v_y
+    double precision, allocatable :: tangent(:) ! unit tangent vector
+
+    !1st step : judge of flow direction, and speed
         allocate(LocalVelocity(3))
         iAdjacentCell = UG%VC%Cell(iCell,1) !隣接する実セル
         iAdjacentEdge = UG%VC%Edge(iCell) !共有界面
         LocalVelocity = UCC%ConservedQuantity(2:iDim+1,iAdjacentCell,1,1) / UCC%ConservedQuantity(1,iAdjacentCell,1,1)
-        !EdgeNormalVelocity = dot_product(LocalVelocity,-UG%GM%Normal(iAdjacentEdge,1:iDim))
+        EdgeNormalVelocity = dot_product(LocalVelocity,-UG%GM%Normal(iAdjacentEdge,1:iDim)) ! 内向き法線ベクトルとの内積として定義
         !SEKO procedure
-        EdgeNormalVelocity = dot_product(UG%GM%BC%InFlowVariable(2:4),-UG%GM%Normal(iAdjacentEdge,1:iDim))/(sqrt(dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%BC%InFlowVariable(2:4))))
+        !EdgeNormalVelocity = dot_product(UG%GM%BC%InFlowVariable(2:4),-UG%GM%Normal(iAdjacentEdge,1:iDim))/(sqrt(dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%BC%InFlowVariable(2:4))))
 
-        VelocityEpsilon = 0.02d0
+        VelocityEpsilon = 0.0d0
+        !VelocityEpsilon = 0.02d0
         !VelocityEpsilon = dPi/6.0d0 !SEKO??
         !write(6,*) iAdjacentEdge,EdgeNormalVelocity
         if(EdgeNormalVelocity < - VelocityEpsilon) then
@@ -90,14 +96,14 @@ contains
         else if(EdgeNormalVelocity > VelocityEpsilon) then
 
             iInOrOut = 2 !隣接実セルの保有する速度ベクトルと外向き法線ベクトルの向きが同方向であるとき流出
-        else
+        else    ! abs(EdgeNormalVelocity) < VelocityEpsilon
             iInOrOut = 2
             !iInOrOut = 3 !SEKO
             !call WallBoundary !SEKO
             !call ReflectBoundary !SEKO
         end if
-
-        if(iInOrOut /= 3) then
+        EdgeNormalVelocity = -EdgeNormalVelocity    ! 外向き法線ベクトルとの内積として定義しなおす
+        ! 隣接実セルにおける音速
         LocalSoundSpeed = sqrt(Gamma*Gmin1 * (UCC%ConservedQuantity(iDim+2,iAdjacentCell,1,1) / UCC%ConservedQuantity(1,iAdjacentCell,1,1) &
                             & - 0.5d0 * dot_product(LocalVelocity,LocalVelocity))) !局所音速
 
@@ -108,41 +114,86 @@ contains
         end if
 
         !2nd step : Input Data
-        if(iInOrOut == 1) then !Inflow
-            if(iSSOrSub == 1) then !supersonic inflow
+        if(iSSOrSub == 1) then !supersonic
+            if(iInOrOut == 1) then !Inflow ! all variables determined from Flow Conditions
                 UCC%ConservedQuantity(1,iCell,1,1) = UG%GM%BC%InFlowVariable(1)
                 UCC%ConservedQuantity(2:4,iCell,1,1) = UG%GM%BC%InFlowVariable(1) * UG%GM%BC%InFlowVariable(2:4)
                 UCC%ConservedQuantity(5,iCell,1,1) = InverseGmin1*UG%GM%BC%InFlowVariable(5) + 0.5d0 *  UG%GM%BC%InFlowVariable(1) &
                     &  * dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%BC%InFlowVariable(2:4))
 
-            else !subsonic inflow
-                UCC%PrimitiveVariable(5,iAdjacentCell,1,1) = &
-                &   Gmin1 * (UCC%ConservedQuantity(5,iAdjacentCell,1,1) - 0.5d0 * UCC%ConservedQuantity(1,iAdjacentCell,1,1) &
-                &   * dot_product(UCC%PrimitiveVariable(2:4,iAdjacentCell,1,1),UCC%PrimitiveVariable(2:4,iAdjacentCell,1,1)))
-
-                UCC%ConservedQuantity(1,iCell,1,1) = UG%GM%BC%InFlowVariable(1)
-                UCC%ConservedQuantity(2:4,iCell,1,1) = UG%GM%BC%InFlowVariable(1) * UG%GM%BC%InFlowVariable(2:4)
-                UCC%ConservedQuantity(5,iCell,1,1) = InverseGmin1*UCC%PrimitiveVariable(5,iAdjacentCell,1,1) &
-                    & + 0.5d0 *  UG%GM%BC%InFlowVariable(1) * dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%BC%InFlowVariable(2:4))
-
-            end if
-
-        else !OutFlow
-            if(iSSOrSub == 1) then !supersonic outflow
+            else !OutFlow ! all variables determined from Internal Cell
                 UCC%ConservedQuantity(:,iCell,1,1) = UCC%ConservedQuantity(:,iAdjacentCell,1,1)
 
+            end if
+
+        else !subsonic  ! refered by C.HIRSCH(1988) chapter 19
+            allocate(tangent(2))
+            tangent(1) = UG%GM%Normal(iAdjacentEdge,2)
+            tangent(2) = -UG%GM%Normal(iAdjacentEdge,1)
+            soundspeed_inf = 1.0d0
+
+            ! R_minusはinternalの値から計算
+            pressure_cell = Gmin1 * (UCC%ConservedQuantity(5,iAdjacentCell,1,1) &
+                        & - 0.5d0 * UCC%ConservedQuantity(1,iAdjacentCell,1,1) * dot_product(LocalVelocity, LocalVelocity))
+
+            sound_speed_cell = dsqrt(Gamma * pressure_cell / UCC%ConservedQuantity(1,iAdjacentCell,1,1))
+            R_minus = EdgeNormalVelocity - InverseGmin1 * 2.0d0 *sound_speed_cell
+
+            if(iInOrOut == 1) then ! subsonic Inflow
+                ! R_plusはinfinity(inflow)の値から計算
+                v_normal_inf = dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%Normal(iAdjacentEdge,1:iDim))
+                R_plus = v_normal_inf + InverseGmin1 * 2.0d0 * soundspeed_inf
+
+                ! v_tangentはinfinity(inflow)の値から計算
+                v_tangent = dot_product(UG%GM%BC%InFlowVariable(2:3), tangent)
+
+                ! enthalpyはinfinity(inflow)の値から計算
+                enthalpy = 0.5d0 * dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%BC%InFlowVariable(2:4)) + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5)
+
             else !subsonic outflow
-                UCC%ConservedQuantity(1:4,iCell,1,1) = UCC%ConservedQuantity(1:4,iAdjacentCell,1,1)
-                UCC%ConservedQuantity(iDim+2,iCell,1,1) = InverseGmin1*UG%GM%BC%OutFlowVariable(5) &
-                    & + 0.5d0 * UCC%ConservedQuantity(1,iAdjacentCell,1,1) * dot_product(UCC%ConservedQuantity(2:4,iAdjacentCell,1,1),UCC%ConservedQuantity(2:4,iAdjacentCell,1,1))
+                ! R_plusはinfinity(outflow)の値から計算
+                v_normal_inf = dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%Normal(iAdjacentEdge,1:iDim))
+                R_plus = -dabs(v_normal_inf) + UG%GM%BC%OutFlowVariable(5) / (UG%GM%BC%OutFlowVariable(1) * soundspeed_inf)
+
+                ! v_tangentはinternalの値から計算
+                v_tangent = dot_product(LocalVelocity(1:2), tangent)
+
+                ! enthalpyはinternalの値から計算
+                enthalpy = 0.5d0 * dot_product(LocalVelocity,LocalVelocity) + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5)
 
             end if
-        end if
+
+            ! common part
+            call subsonic(R_plus, R_minus, v_tangent, enthalpy, &
+                    & UCC%ConservedQuantity(1,iCell,1,1), v_normal_bndry, UCC%ConservedQuantity(5,iCell,1,1))
+
+            v_x = v_normal_bndry * UG%GM%Normal(iAdjacentEdge,1) + v_tangent * UG%GM%Normal(iAdjacentEdge,2)    !vn*nx + vl*lx  !def: lx = ny
+            v_y = v_normal_bndry * UG%GM%Normal(iAdjacentEdge,2) - v_tangent * UG%GM%Normal(iAdjacentEdge,1)    !vn*ny + vl*ly  !def: ly = -nx
+
+            UCC%ConservedQuantity(2,iCell,1,1) = UCC%ConservedQuantity(1,iCell,1,1) * v_x
+            UCC%ConservedQuantity(3,iCell,1,1) = UCC%ConservedQuantity(1,iCell,1,1) * v_y
 
         end if
 
     return
     end subroutine InOutFlowBoundary
+
+    subroutine subsonic(R_plus, R_minus, v_tangent, enthalpy, density, v_normal, energy)
+        implicit none
+        double precision, intent(in) :: R_plus, R_minus ! Riemann Invariants + direction and - direction
+        double precision, intent(in) :: v_tangent, enthalpy ! tangential velocity and enthalpy on Boundary
+        double precision, intent(out) :: density, momentum_x, momentum_y, energy
+        double precision :: v_normal, velocity_square, pressure
+
+        v_normal = 0.5d0 * (R_plus + R_minus)
+        velocity_square = v_normal ** 2 + v_tangent ** 2
+
+        density = (2.0d0 * enthalpy - velocity_square) / (enthalpy - velocity_square)
+        pressure = Gmin1 / Gamma * (enthalpy - 0.5d0 * velocity_square)
+        energy = InverseGmin1 * pressure + 0.5d0 * density * velocity_square
+
+        return
+    end subroutine subsonic
 
     subroutine WallBoundary
         implicit none
