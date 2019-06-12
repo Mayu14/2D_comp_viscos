@@ -25,7 +25,7 @@ subroutine JobParallelNS(UConf)
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
     double precision :: time_start, time_step, time_elapsed, time_specified
-    time_specified = 70200.0d0
+    time_specified = 702000.0d0
     !$ time_start = omp_get_wtime()
 ! 初期化
     UCC%ConvergeCondition = Converge_Method
@@ -42,9 +42,11 @@ subroutine JobParallelNS(UConf)
     call UPrepareBoundary(UG, UCC)
     call JPUConserve2Primitive(UG, UCC)
 
-    allocate(obj_velocity(3))
-    obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
-    call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+    if (UConf%UseResume == 0) then
+        allocate(obj_velocity(3))
+        obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
+        call RelativeCoordinateTransform(UG, UCC, obj_velocity)
+    end if
 
     call CheckNaN(UConf, UCC)   !
     allocate(UAC%coefficient(2, IterationNumber))
@@ -78,13 +80,12 @@ subroutine JobParallelNS(UConf)
                 UConf%OutputStatus = 2
                 exit
             end if
+            if(UCC%iEndFlag == 3) exit
         end do
 
         if(UAC%residual < Converge_tolerance) then
             if(UConf%UseMUSCL == 0) then
                 UConf%UseMUSCL = 1
-                UCC%iEndFlag = 3    ! finish    !debug
-                UConf%OutputStatus = 1  !debug
             else
                 UCC%iEndFlag = 3    ! finish
                 UConf%OutputStatus = 1
@@ -243,6 +244,7 @@ contains
             else
                 write(6,*) "variable time step"
             end if
+            write(6,*) "CFL Number :", CourantFriedrichsLewyCondition
             write(6,*) "OutputInterval :", OutputInterval
             write(6,*) "CheckNaNInterval :", CheckNaNInterval
         return
