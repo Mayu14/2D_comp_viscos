@@ -182,8 +182,8 @@ contains
         implicit none
         double precision, intent(in) :: R_plus, R_minus ! Riemann Invariants + direction and - direction
         double precision, intent(in) :: v_tangent, enthalpy ! tangential velocity and enthalpy on Boundary
-        double precision, intent(out) :: density, momentum_x, momentum_y, energy
-        double precision :: v_normal, velocity_square, pressure
+        double precision, intent(out) :: density, v_normal, energy
+        double precision :: velocity_square, pressure
 
         v_normal = 0.5d0 * (R_plus + R_minus)
         velocity_square = v_normal ** 2 + v_tangent ** 2
