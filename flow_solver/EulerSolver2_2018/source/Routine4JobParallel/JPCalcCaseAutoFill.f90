@@ -38,19 +38,21 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
         CourantFriedrichsLewyCondition = CFL_default
         CheckNaNInterval = CheckNaNInterval_default
         call JobParallelNS(Uconf)
-                
+
     else
         !do i1digit = 9, 1, -1
         !do i1digit = 1, 2
             !do i2digit = 9, 1, -1
                 !do i34digit = 88, 12, -4
                 UConf%CalcEnv = 0
+                UConf%my_rank = 0
                 i1digit = 0
                 i2digit = 0
                 i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         !write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
-                        write(UConf%cGridName, '("NACA0012_20_400_0050_0200.mayu")')! valid
+                        write(UConf%cGridName, '("NACA0012_20_400_0010_0200_new.mayu")')! valid
+                        !write(UConf%cGridName, '("NACA0012_20_400_0050_0200.mayu")')! valid
                     else if(UConf%CalcEnv == 1) then
                         !write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA0012_20_800_0010_0200.mayu")')! 東北大スパコン用 valid
@@ -96,6 +98,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                             cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl(UConf%cCaseName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         end if
 
+                        call grid_change(UConf) ! debug
                         if(UConf%SwitchProgram /= 7) then
                             if(access(cFileName, " ") /= 0) then
                                 write(6,*) trim(adjustl(UConf%cFileName))//"_"//trim(adjustl(UConf%cCaseName))
@@ -123,12 +126,15 @@ contains
             UConf%ResumeInFlowVars = 0.0d0
             UConf%ResumeInFlowVars(1) = 1.0d0
             if(Uconf%my_rank == 0) then
-                Uconf%cGridName = trim(adjustl("/mnt/g/Toyota/Data/grid_vtk/valid/mayu/NACA0012.mayu"))
-                Uconf%cFileName = trim(adjustl("NACA0012__AoA30.0__Ma0.80__Re50000__case5"))
+                Uconf%cGridName = trim(adjustl("NACA0012_20_400_0050_0200.mayu"))
+                Uconf%cFileName = trim(adjustl("NACA0012_01"))
                 UConf%cCaseName = trim(adjustl("case5"))
-                UConf%dAttackAngle = 30.0d0
-                UConf%UseResume = 0
+                UConf%dAttackAngle = 1.25d0
+                UConf%ResumeFileName = trim(adjustl("/mnt/d/Toyota/Data/validR/wide_grid_CN2/Resume/NACA0012_01__Resume.vtk"))
+                !UConf%ResumeFileName = trim(adjustl("/mnt/g/Toyota/validQ/wide_grid_NonLTS/Resume/NACA0012_01__Resume.vtk"))
                 UConf%ResumeInFlowVars(2) = 0.80d0
+                write(6,*) "resume_setting load"
+                CheckNaNInterval = 1
             else if(Uconf%my_rank == 1) then
                 Uconf%cGridName = trim(adjustl("/mnt/g/Toyota/Data/grid_vtk/valid/mayu/NACA21092.mayu"))
                 Uconf%cFileName = trim(adjustl("NACA21092__AoA23.5__Ma0.30__Re4000__case5"))
