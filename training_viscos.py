@@ -134,7 +134,7 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
     case_num = head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
     return case_num.replace("fourierSr_200000_less_angle_new_", "f_")
 
-def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.65):
+def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.45):
     # r_rate = [1, 2, 4, 8]
     # s_rate = [1, 2, 4, 8]
     # s_skiptype = [True, False]
@@ -149,11 +149,34 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     rr = 1
     gr = 16
     # dr = [[12, 24, 48, 96, 192, 384]]
-    for j in range(15):
+    dense_lists = []
+    min_layer = 4
+    #max_layer = 4
+    units_pattern = [128, 256, 512, 1024]
+    from itertools import product
+    for i in range(min_layer, min_layer+1):
+        p = product(units_pattern, repeat = i)
+        for v in p:
+            v = list(v)
+            flag = True
+            for j in range(min_layer - 1):
+                if v[0] != 1024:
+                    flag = False
+                if v[min_layer-1] != 128:
+                    flag = False
+                if v[j] < v[j+1]:
+                    flag = False
+                
+            if flag:
+                dense_lists.append(v)
+            
+    j = 3
+    for dense_list in dense_lists:
+    # for j in range(3, 15):
         block_total = (2 * j + 1)
         dr = [[128]*block_total]
         weight_layer_list = [3]*block_total
-        bottle_neck = True
+        bottle_neck = False
         """
         dr = []
         dr.append(202)
@@ -169,23 +192,24 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         # for j in range(6, 20):
             # dr.append([1024]*(j+1))
         criteria_method = "farthest_from_center"
-        useBN_list = [True, False, True, False, True, False, True, False]
-        useDrop = True
+        useBN_list = [False]#[True, False, True, False, True, False, True, False]
+        useDrop = False#True
         before_activate = False
-        dor_list = [0.4, 0.3, 0.2, 0.1, 0.0]
+        dor_list = [0.0]#[0.4, 0.3, 0.2, 0.1, 0.0]
         resnet = False
         high_way = False
         dense_net = False
         # preprocesses = ["None"]
         preprocesses = [""]#, "rbf", "poly", "linear", "cosine", "sigmoid", "PCA"]
-        dense_list = dr[0]
+        #dense_list = dr[0]
+
         # for dense_list in dr:
         # for reduct in range(40):
         for dor in dor_list:
             # cluster = 500 * (reduct + 1)
             cluster = 22680
             # for rr in r_rate:
-            pat = 0
+            pat = 6#0
             for useBN in useBN_list:
                 preprocess = ""
                 i = pat % 8
@@ -282,15 +306,23 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                                         x = MLP.highway(inputs = x, Activator = leaky_relu,
                                                         weight_layer_number=weight_layer_list[i], units_list=units_list)
                                     else:
-                                        x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu)
+                                        x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu())
 
+                        return x
+                    
+                    def simplest_net(inputs, units_list=[2048,1024,256]):
+                        x = Dense(units = units_list[0], kernel_initializer = "he_normal", input_shape = (input_vector_dim, ))(inputs)
+                        x = LeakyReLU()(x)
+                        for i in range(1, len(units_list)):
+                            x = Dense(units = units_list[i], kernel_initializer = "he_normal")(x)
+                            x = LeakyReLU()(x)
                         return x
 
                     with tf.name_scope("inference") as scope:
                         inputs = Input(shape = (input_vector_dim,))
 
                         x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
-
+                        # x = simplest_net(inputs, units_list)
                         """
                         x = Dense(units = dense_net_list[0])(inputs)
                         # x = Activation(LeakyReLU())(x)
@@ -310,13 +342,13 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
                     model = Model(inputs = inputs, outputs = predictions)
 
-                    fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_num + ".png"
-                    plot_model(model, to_file=fname, show_shapes=True)
+                    if j < 8:   #大きなモデルだとエラーが出る？
+                        fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_num + ".png"
+                        plot_model(model, to_file=fname, show_shapes=True)
 
                     save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
                     baseSaveDir = source + "learned\\"
-                    es_cb = EarlyStopping(monitor='val_loss', patience=25, verbose=0, mode='auto')
-                    save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
+                    es_cb = EarlyStopping(monitor='val_loss', patience=5, verbose=0, mode='auto')
                     chkpt = baseSaveDir + 'MLP_.{epoch:02d}-{val_loss:.2f}.hdf5'
                     cp_cb = ModelCheckpoint(filepath=chkpt, monitor="val_loss", verbose=0, save_best_only=True, mode='auto')
                     tb_cb = TensorBoard(log_dir=source + log_name, histogram_freq=0, write_grads=True)
