@@ -24,7 +24,7 @@ subroutine JobParallelNS(UConf)
     integer :: iAccel = 1
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
-    double precision :: time_start, time_step, time_elapsed, time_specified
+    double precision :: time_start, time_step, time_elapsed, time_specified, residual
     time_specified = 702000.0d0
     !$ time_start = omp_get_wtime()
 ! 初期化
@@ -42,11 +42,15 @@ subroutine JobParallelNS(UConf)
     call UPrepareBoundary(UG, UCC)
     call JPUConserve2Primitive(UG, UCC)
 
-    if (UConf%UseResume == 0) then
+    if (UConf%UseResume /= 1) then
+        write(6,*) "Velocity correction"
         allocate(obj_velocity(3))
         obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
         call RelativeCoordinateTransform(UG, UCC, obj_velocity)
     end if
+
+    write(6,*) UG%GM%BC%InFlowVariable
+    write(6,*) UG%GM%BC%OutFlowVariable
 
     call CheckNaN(UConf, UCC)   !
     allocate(UAC%coefficient(2, IterationNumber))
@@ -83,9 +87,13 @@ subroutine JobParallelNS(UConf)
             if(UCC%iEndFlag == 3) exit
         end do
 
-        if(UAC%residual < Converge_tolerance) then
+        call set_residual(UCC, UAC, residual)
+        write(6,*) UCC%ConvergeCondition, residual, Converge_tolerance
+
+        if(residual < Converge_tolerance) then
             if(UConf%UseMUSCL == 0) then
                 UConf%UseMUSCL = 1
+                UCC%iEndFlag = 3    ! debug
             else
                 UCC%iEndFlag = 3    ! finish
                 UConf%OutputStatus = 1
@@ -107,10 +115,6 @@ subroutine JobParallelNS(UConf)
 
         !call JPUOutput(UConf,UG,UCC,iCalcStep)
         call UOutput_Characteristics(UConf, UG, UAC, iTry)   ! debug
-
-        if (iTry > 1) then
-            write(6,*) UAC%residual, Converge_tolerance
-        end if
 
         deallocate(UAC%pressure_coefficient)   ! debug
         !UConf%UseLocalTimeStep = 1
@@ -229,6 +233,7 @@ contains
         implicit none
             type(Configulation), intent(in) :: UConf
             write(6,*) "--Setting--"
+            write(6,*) "Detailed Report :", DetailedReport
             if(UConf%UseFluxMethod == 0) then
                 write(6,*) "Inviscid Flux: Roe"
             else if(UConf%UseFluxMethod == 1) then
@@ -247,7 +252,33 @@ contains
             write(6,*) "CFL Number :", CourantFriedrichsLewyCondition
             write(6,*) "OutputInterval :", OutputInterval
             write(6,*) "CheckNaNInterval :", CheckNaNInterval
+            write(6,*) "ConvergeMethod :", UCC%ConvergeCondition
+            write(6,*) "Resume :", UConf%UseResume
         return
     end subroutine show_setting
+
+    subroutine set_residual(UCC, UAC, residual)
+        use StructVar_Mod
+        implicit none
+        type(CellCenter), intent(in) :: UCC
+        type(AeroCharacteristics), intent(in) :: UAC
+        double precision, intent(out) :: residual
+
+        if(UCC%ConvergeCondition == 0) then
+            residual = UCC%RH%AveResidual(6, UCC%RH%iTime - 1)
+        else if(UCC%ConvergeCondition == 1) then
+            residual = UCC%RH%MaxResidual(6, UCC%RH%iTime - 1)
+        else if(UCC%ConvergeCondition == 2) then
+            residual = UCC%RH%TotalResidual(6, UCC%RH%iTime - 1)
+        else if(UCC%ConvergeCondition == 3) then
+            residual = UAC%residual
+        else if(UCC%ConvergeCondition == 4) then
+            residual = max(UCC%RH%AveResidual(6, UCC%RH%iTime - 1), UCC%RH%MaxResidual(6, UCC%RH%iTime - 1), &
+                        &   UCC%RH%TotalResidual(6, UCC%RH%iTime - 1), UAC%residual)
+        end if
+
+        return
+    end subroutine set_residual
+
 end subroutine JobParallelNS
 
