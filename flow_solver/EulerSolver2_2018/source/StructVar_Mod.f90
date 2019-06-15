@@ -20,6 +20,7 @@ implicit none
         integer :: iLastOutput = 1
         double precision, allocatable :: MaxResidual(:, :) !1~5:variable+6:Mix
         double precision, allocatable :: AveResidual(:, :) !1~5:variable+6:Mix
+        double precision, allocatable :: TotalResidual(:, :)    !1~5:variable+6:Mix
     end type
 
     type CellCenter !セル中心(Center)にて定義される量
