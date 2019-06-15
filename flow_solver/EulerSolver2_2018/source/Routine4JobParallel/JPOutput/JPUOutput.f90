@@ -330,15 +330,15 @@ subroutine JPUOutput(UConf,UG,UCC,iStep)
         ! write(6,*) CourantFriedrichsLewyCondition
     !end if
 !stop
-    if (UConf%OutputStatus /= 0) then  ! Final & Resume出力時にdummyデータが
-        write(cStep,'("Resume")')
-        write(ctmpDir,'("Running/")')
-        cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl(ctmpDir)) !UConf%SaveDirectiry
-        cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"__"//trim(adjustl(cStep))//".vtk"
-        if(access(cFileName, " ") == 0) then    ! 存在していれば
-            call system("rm "//trim(adjustl(cFileName)))    ! dummyデータを削除する
-        end if
-    end if
+    !if (UConf%OutputStatus /= 0) then  ! Final & Resume出力時にdummyデータが
+        !write(cStep,'("Resume")')
+        !write(ctmpDir,'("Running/")')
+        !cDirectory = trim(adjustl(UConf%cDirectory))//trim(adjustl(ctmpDir)) !UConf%SaveDirectiry
+        !cFileName = trim(adjustl(cDirectory))//trim(adjustl(UConf%cFileName))//"__"//trim(adjustl(cStep))//".vtk"
+        !if(access(cFileName, " ") == 0) then    ! 存在していれば
+            !call system("rm "//trim(adjustl(cFileName)))    ! dummyデータを削除する
+        !end if
+    !end if
 
     return
 end subroutine JPUOutput
