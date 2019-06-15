@@ -137,7 +137,7 @@ contains
                         & - 0.5d0 * UCC%ConservedQuantity(1,iAdjacentCell,1,1) * dot_product(LocalVelocity, LocalVelocity))
 
             sound_speed_cell = dsqrt(Gamma * pressure_cell / UCC%ConservedQuantity(1,iAdjacentCell,1,1))
-            R_minus = EdgeNormalVelocity - InverseGmin1 * 2.0d0 *sound_speed_cell
+            R_minus = EdgeNormalVelocity - InverseGmin1 * 2.0d0 * sound_speed_cell
 
             if(iInOrOut == 1) then ! subsonic Inflow
                 ! R_plusはinfinity(inflow)の値から計算
@@ -148,18 +148,21 @@ contains
                 v_tangent = dot_product(UG%GM%BC%InFlowVariable(2:3), tangent)
 
                 ! enthalpyはinfinity(inflow)の値から計算
-                enthalpy = 0.5d0 * dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%BC%InFlowVariable(2:4)) + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5)
+                enthalpy = 0.5d0 * dot_product(UG%GM%BC%InFlowVariable(2:4), UG%GM%BC%InFlowVariable(2:4)) &
+                       & + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5) / UG%GM%BC%InFlowVariable(1)
 
             else !subsonic outflow
                 ! R_plusはinfinity(outflow)の値から計算
-                v_normal_inf = dot_product(UG%GM%BC%InFlowVariable(2:4),UG%GM%Normal(iAdjacentEdge,1:iDim))
-                R_plus = -dabs(v_normal_inf) + UG%GM%BC%OutFlowVariable(5) / (UG%GM%BC%OutFlowVariable(1) * soundspeed_inf)
+                v_normal_inf = dot_product(UG%GM%BC%OutFlowVariable(2:4),UG%GM%Normal(iAdjacentEdge,1:iDim))
+                !R_plus = -dabs(v_normal_inf) + UG%GM%BC%OutFlowVariable(5) / (UG%GM%BC%OutFlowVariable(1) * soundspeed_inf)
+                R_plus = -dabs(v_normal_inf) + InverseGmin1 * 2.0d0 * soundspeed_inf    ! seko?
 
                 ! v_tangentはinternalの値から計算
                 v_tangent = dot_product(LocalVelocity(1:2), tangent)
 
                 ! enthalpyはinternalの値から計算
-                enthalpy = 0.5d0 * dot_product(LocalVelocity,LocalVelocity) + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5)
+                enthalpy = 0.5d0 * dot_product(LocalVelocity,LocalVelocity) &
+                       & + Gamma * InverseGmin1 * UG%GM%BC%InFlowVariable(5) / UG%GM%BC%InFlowVariable(1)
 
             end if
 
@@ -172,6 +175,7 @@ contains
 
             UCC%ConservedQuantity(2,iCell,1,1) = UCC%ConservedQuantity(1,iCell,1,1) * v_x
             UCC%ConservedQuantity(3,iCell,1,1) = UCC%ConservedQuantity(1,iCell,1,1) * v_y
+            !write(6,*) R_plus, R_minus, v_tangent, enthalpy, UCC%ConservedQuantity(1,iCell,1,1), v_normal_bndry, UCC%ConservedQuantity(5,iCell,1,1), v_x, v_y
 
         end if
 
@@ -183,13 +187,18 @@ contains
         double precision, intent(in) :: R_plus, R_minus ! Riemann Invariants + direction and - direction
         double precision, intent(in) :: v_tangent, enthalpy ! tangential velocity and enthalpy on Boundary
         double precision, intent(out) :: density, v_normal, energy
-        double precision :: velocity_square, pressure
+        double precision :: velocity_square, pressure, speedsound2
 
         v_normal = 0.5d0 * (R_plus + R_minus)
         velocity_square = v_normal ** 2 + v_tangent ** 2
 
-        density = (2.0d0 * enthalpy - velocity_square) / (enthalpy - velocity_square)
-        pressure = Gmin1 / Gamma * (enthalpy - 0.5d0 * velocity_square)
+        speedsound2 = Gmin1 * (enthalpy - 0.5d0 * velocity_square)
+
+        density = ((UG%GM%BC%InFlowVariable(1)**Gamma / (Gamma * UG%GM%BC%InFlowVariable(5))) * speedsound2) ** (-Gmin1)
+        pressure = density * speedsound2 / Gamma
+
+        !density = (2.0d0 * enthalpy - velocity_square) / (enthalpy - velocity_square)
+        !pressure = Gmin1 / Gamma * (enthalpy - 0.5d0 * velocity_square)
         energy = InverseGmin1 * pressure + 0.5d0 * density * velocity_square
 
         return
