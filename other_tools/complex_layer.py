@@ -59,7 +59,7 @@ class MLPLayer():
             fx = BatchNormalization()(fx)
 
         if self.activate_before_fc:
-            fx = Activator()(fx)
+            fx = Activator(fx)
 
         if self.dropout:
             fx = Dropout(rate=self.dropout_rate)(fx)
@@ -69,7 +69,7 @@ class MLPLayer():
                    activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
         if self.activate_before_fc == False:
-            fx = Activator()(fx)
+            fx = Activator(fx)
 
         return fx
 
