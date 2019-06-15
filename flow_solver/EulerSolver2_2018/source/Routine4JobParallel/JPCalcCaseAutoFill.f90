@@ -51,14 +51,14 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                 i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         !write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
-                        write(UConf%cGridName, '("NACA0012_20_400_0010_0200_new.mayu")')! valid
+                        write(UConf%cGridName, '("NACA0012_03_2000_0018_0100.mayu")')! valid
                         !write(UConf%cGridName, '("NACA0012_20_400_0050_0200.mayu")')! valid
                     else if(UConf%CalcEnv == 1) then
                         !write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA0012_20_800_0010_0200.mayu")')! 東北大スパコン用 valid
                     end if
                     !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 1.25
+                        iAngleDeg = 1.25d0
                         dAngleDeg = 1.25d0
 
                         !UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
@@ -98,7 +98,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                             cFileName = trim(adjustl(UConf%cDirectory))//trim(adjustl("ResultU/"))//trim(adjustl(UConf%cFileName))//trim(adjustl(UConf%cCaseName))//trim(adjustl("_"))//trim(adjustl(cStep))//"th.vtk"
                         end if
 
-                        call grid_change(UConf) ! debug
+                        !call grid_change(UConf) ! debug
                         if(UConf%SwitchProgram /= 7) then
                             if(access(cFileName, " ") /= 0) then
                                 write(6,*) trim(adjustl(UConf%cFileName))//"_"//trim(adjustl(UConf%cCaseName))
@@ -125,14 +125,16 @@ contains
             allocate(UConf%ResumeInFlowVars(5), UConf%ResumeOutFlowVars(5))
             UConf%ResumeInFlowVars = 0.0d0
             UConf%ResumeInFlowVars(1) = 1.0d0
+            UConf%ResumeInFlowVars(5) = 1.0d0
             if(Uconf%my_rank == 0) then
-                Uconf%cGridName = trim(adjustl("NACA0012_20_400_0050_0200.mayu"))
+                Uconf%cGridName = trim(adjustl("NACA0012_10_1600_0018_0100.mayu"))
                 Uconf%cFileName = trim(adjustl("NACA0012_01"))
                 UConf%cCaseName = trim(adjustl("case5"))
                 UConf%dAttackAngle = 1.25d0
-                UConf%ResumeFileName = trim(adjustl("/mnt/d/Toyota/Data/validR/wide_grid_CN2/Resume/NACA0012_01__Resume.vtk"))
-                !UConf%ResumeFileName = trim(adjustl("/mnt/g/Toyota/validQ/wide_grid_NonLTS/Resume/NACA0012_01__Resume.vtk"))
+                !UConf%ResumeFileName = trim(adjustl("/mnt/d/Toyota/Data/validR/wide_grid_CN2/Resume/NACA0012_01__Resume.vtk"))
+                UConf%ResumeFileName = trim(adjustl("/mnt/g/Toyota/validQ/resume/10_1600_0018_0100/Resume/NACA0012_01__Resume.vtk"))
                 UConf%ResumeInFlowVars(2) = 0.80d0
+                UConf%ResumeOutFlowVars = UConf%ResumeInFlowVars
                 write(6,*) "resume_setting load"
                 CheckNaNInterval = 1
             else if(Uconf%my_rank == 1) then
@@ -144,6 +146,7 @@ contains
                 UConf%ResumeInFlowVars(2) = 0.30d0
             end if
             UConf%ResumeOutFlowVars = UConf%ResumeOutFlowVars
+            UConf%dAttackAngle = dPi * UConf%dAttackAngle / 180.0d0
         return
     end subroutine grid_change
 end subroutine JPCalcCaseAutoFill
