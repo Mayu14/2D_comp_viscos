@@ -78,6 +78,7 @@ implicit none
 
         end do
 
+        UCC%RH%TotalResidual(:, UCC%RH%iTime) = UCC%RH%AveResidual(:, UCC%RH%iTime) ! 平均化する前の値
         UCC%RH%AveResidual(:, UCC%RH%iTime) = UCC%RH%AveResidual(:, UCC%RH%iTime) / dble(UG%GI%RealCells)
         UCC%RH%MaxResidual(6, UCC%RH%iTime) = maxval(UCC%RH%MaxResidual(1:5, UCC%RH%iTime))
 
@@ -85,6 +86,8 @@ implicit none
             Residual = UCC%RH%AveResidual(6, UCC%RH%iTime)
         else if(UCC%ConvergeCondition == 1) then    !MAX
             Residual = UCC%RH%MaxResidual(6, UCC%RH%iTime)
+        else if(UCC%ConvergeCondition == 2) then    ! grid total
+            Residual = UCC%RH%TotalResidual(6, UCC%RH%iTime)
         end if
 
         UCC%RH%iTime = UCC%RH%iTime + 1
@@ -92,20 +95,20 @@ implicit none
         if(UCC%ConvergeCondition == 0) then
             Residual = sqrt(Residual/dble(UG%GI%RealCells))
             write(6,*) "RMS Residual : ", Residual
-            if(Residual <= Converge_tolerance) then
-                write(6,*) Converge_tolerance, sqrt(Residual/dble(UG%GI%RealCells))
-                write(6,*) "converge"
-                UCC%iEndFlag = 2
-            end if
 
         else if(UCC%ConvergeCondition == 1) then
             Residual = sqrt(Residual)
             if(DetailedReport > 3) write(6,*) "MAX Residual : ", Residual
-            if(Residual <= Converge_tolerance) then
-                if(DetailedReport > 3) write(6,*) "converge... ", Converge_tolerance, Residual
-                UCC%iEndFlag = 2
-            end if
+
+        else if(UCC%ConvergeCondition == 2) then
+            if(DetailedReport > 3) write(6,*) "Total Residual : ", Residual
+
         end if
+
+        !if(Residual <= Converge_tolerance) then
+            !if(DetailedReport > 3) write(6,*) "converge... ", Converge_tolerance, Residual
+            !UCC%iEndFlag = 2
+        !end if
 
     end if
 
