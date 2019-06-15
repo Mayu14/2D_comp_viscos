@@ -6,7 +6,8 @@ from keras.models import Sequential, Model
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.layers import LeakyReLU, PReLU, Input
-from keras.callbacks import EarlyStopping, TensorBoard
+from keras.callbacks import EarlyStopping, TensorBoard, ModelCheckpoint
+from keras.utils import plot_model
 import keras.backend.tensorflow_backend as KTF
 import tensorflow as tf
 import numpy as np
@@ -17,8 +18,9 @@ from read_training_data_viscos import read_csv_type3
 from other_tools.dataset_reduction import data_reduction
 from other_tools.complex_layer import MLPLayer
 from math import floor
-
-
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+import csv
 
 def batch_iter(data, labels, batch_size, shuffle=True):
     num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
@@ -65,11 +67,23 @@ def get_case_number(source, env, case_number):
             flag = 1
     return str(case_number).zfill(5)
 
+# get the newest model file within a directory
+def getNewestModel(model, dirname):
+    from glob import glob
+    target = os.path.join(dirname, '*')
+    files = [(f, os.path.getmtime(f)) for f in glob(target)]
+    if len(files) == 0:
+        return model
+    else:
+        newestModel = sorted(files, key=lambda files: files[1])[-1]
+        model.load_weights(newestModel[0])
+        return model
 # case_numberから何のデータだったか思い出せない問題が起きたのでファイル名の命名規則を変更する
 # (形状)_(データ数)とする
 def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess="",
                          criteria_method="nearest_centroid", shape_data=200, total_data=200000, resnet=False,
-                         highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3, bottle_neck=False):
+                         highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3, bottle_neck=False,
+                         before_activate=False):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -114,8 +128,11 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         cm += "_DR" + str(dor)
     if bottle_neck:
         cm += "_BotNec"
+    if before_activate == False:
+        cm += "_AfterAct"
 
-    return head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
+    case_num = head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
+    return case_num.replace("fourierSr_200000_less_angle_new_", "f_")
 
 def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.65):
     # r_rate = [1, 2, 4, 8]
@@ -132,9 +149,9 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     rr = 1
     gr = 16
     # dr = [[12, 24, 48, 96, 192, 384]]
-    for i in range(10):
-        block_total = 10 + (2 * i + 1)
-        dr = [[96]*block_total]
+    for j in range(15):
+        block_total = (2 * j + 1)
+        dr = [[128]*block_total]
         weight_layer_list = [3]*block_total
         bottle_neck = True
         """
@@ -154,7 +171,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
         criteria_method = "farthest_from_center"
         useBN_list = [True, False, True, False, True, False, True, False]
         useDrop = True
-        before_activate = True
+        before_activate = False
         dor_list = [0.4, 0.3, 0.2, 0.1, 0.0]
         resnet = False
         high_way = False
@@ -168,22 +185,24 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             # cluster = 500 * (reduct + 1)
             cluster = 22680
             # for rr in r_rate:
-            i = 0
+            pat = 0
             for useBN in useBN_list:
                 preprocess = ""
-                if i == 0:
+                i = pat % 8
+                pat += 1
+                if i == 0 or i == 1:
                     dense_net = True
                     high_way = False
-                elif i == 2:
+                elif i == 2 or i == 3:
                     resnet = True
                     dense_net = False
-                elif i == 4:
+                elif i == 4 or i == 5:
                     high_way = True
                     resnet = False
                 else:
                     high_way = False
 
-                i += 1
+
 
                 if rr == 1:
                     s_odd = 0   # 全部読みだす
@@ -202,7 +221,9 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     if env == "Lab":
                         source = "G:\\Toyota\\Data\\" + source
                         # case_num = get_case_number(source, env, case_number)
-                        case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method, resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor, bottle_neck=bottle_neck)
+                        case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method,
+                                                        resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor,
+                                                        bottle_neck=bottle_neck, before_activate=before_activate)
                         log_name = "learned\\" + case_num + "_tb_log.hdf5"
                         json_name = "learned\\" + case_num + "_mlp_model_.json"
                         weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -227,10 +248,10 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         if data_reduction_test:
                             X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
 
-                        if validate:
-                            x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test, total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+                        x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
+                                                        total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
 
-
+                        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.05)
 
                     input_vector_dim = X_train.shape[1]
 
@@ -243,7 +264,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         x = Dense(units = dense_list[0])(inputs)
                         # mid layer
                         for i in range(1, len(dense_list)):
-                            leaky_relu = LeakyReLU()
+                            leaky_relu = LeakyReLU
                             if dense_net:
                                 x = MLP.denseblock(inputs=x, Activator=leaky_relu,
                                                    weight_layer_number=weight_layer_list[i])
@@ -289,12 +310,21 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
                     model = Model(inputs = inputs, outputs = predictions)
 
+                    fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_num + ".png"
+                    plot_model(model, to_file=fname, show_shapes=True)
+
                     save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
-                    # es_cb = EarlyStopping(monitor='val_loss', patience=0, verbose=0, mode='auto')
+                    baseSaveDir = source + "learned\\"
+                    es_cb = EarlyStopping(monitor='val_loss', patience=25, verbose=0, mode='auto')
+                    save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
+                    chkpt = baseSaveDir + 'MLP_.{epoch:02d}-{val_loss:.2f}.hdf5'
+                    cp_cb = ModelCheckpoint(filepath=chkpt, monitor="val_loss", verbose=0, save_best_only=True, mode='auto')
                     tb_cb = TensorBoard(log_dir=source + log_name, histogram_freq=0, write_grads=True)
 
                     model.compile(loss="mean_squared_error",
-                                  optimizer='Adam')
+                                  optimizer='Adam',
+                                  metrics=["mae"])
+
 
                     batch_size = y_train.shape[0]
                     threshold = 30000
@@ -306,10 +336,37 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     if validate:
                         valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                     #"""
-                    model.fit(x=X_train, y=y_train,
-                              batch_size=batch_size, epochs=1000,
-                              validation_split=0.1, callbacks=[tb_cb])
-                    #"""
+                    history = model.fit(x=X_train, y=y_train,
+                                        batch_size=batch_size, epochs=500,
+                                        validation_split=0.1,
+                                        callbacks=[tb_cb, es_cb, cp_cb])#"""
+
+                    model = getNewestModel(model, baseSaveDir)
+
+                    fig = plt.figure()
+                    ax = fig.add_subplot(1, 1, 1)
+                    ax.plot(history.history['loss'], marker=".", label = 'loss')
+                    ax.plot(history.history['val_loss'], marker='.', label='val_loss')
+                    ax.set_title('model loss')
+                    ax.grid(True)
+                    ax.set_xlabel('epoch')
+                    ax.set_ylabel('loss')
+                    ax.legend(loc='best')
+
+                    y_valid_pred = model.predict(X_valid)
+                    r2_valid = r2_score(y_valid, y_valid_pred)
+                    y_test_pred = model.predict(x_test)
+                    r2_test = r2_score(y_test, y_test_pred)
+
+                    plt.savefig(baseSaveDir + "\\fig_post" + case_num + ".png")
+                    plt.close()
+                    print(r2_valid, r2_test)
+                    log = [r2_valid, r2_test]
+                    log.extend(case_num.split("_"))
+                    with open(baseSaveDir + "log.csv", "a") as f:
+                        writer = csv.writer(f, lineterminator='\n')
+                        writer.writerow(log)
+
                     """
                     model.fit_generator(train_batches, train_steps,
                                         epochs=1000,
