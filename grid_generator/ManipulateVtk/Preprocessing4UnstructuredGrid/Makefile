@@ -22,7 +22,8 @@ UGetDistanceFromSurface_Edge.f90 \
 UReadRegionVTK.f90 \
 UCalcNormalVector.f90 \
 UMarkingVirtualCell.f90 \
-UMakeConvexHull.f90 
+UMakeConvexHull.f90 \
+UOutputSu2.f90 
 
 SRCS_f90d3 = \
 main.f90 
@@ -47,7 +48,8 @@ UGetDistanceFromSurface_Edge.o \
 UReadRegionVTK.o \
 UCalcNormalVector.o \
 UMarkingVirtualCell.o \
-UMakeConvexHull.o 
+UMakeConvexHull.o \
+UOutputSu2.o
 
 OBJS_f90d3 = \
 main.o 
@@ -176,6 +178,10 @@ StructVar_Mod.o: \
 UMakeConvexHull.o: \
     UMakeConvexHull.f90 \
     FrequentOperation.o \
+    LoopVar_Mod.o \
+    StructVar_Mod.o
+UOutputSu2.o: \
+    UOutputSu2.f90 \
     LoopVar_Mod.o \
     StructVar_Mod.o
 

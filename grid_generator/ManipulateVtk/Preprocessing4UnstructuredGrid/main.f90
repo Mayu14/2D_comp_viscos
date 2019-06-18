@@ -21,8 +21,6 @@ program Preprocessing4UnstructuredGrid
     integer :: MultipleConvertMode = 0, i1, i2, i34, i1234
     integer :: i, length, status, access
     character(:), allocatable :: arg
-    character(len=16), allocatable :: cUAR(:), cPAR(:), cMR(:), cSCN(:)
-    integer :: iUAR, iPAR, iMR, iSCN
     intrinsic :: command_argument_count, get_command_argument
 
     do i = 0, command_argument_count()
@@ -45,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 0    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 3    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
@@ -61,38 +59,28 @@ program Preprocessing4UnstructuredGrid
         stop
         call main_process(UG, cInPath, cOutPath, cFileName)
     else if(MultipleConvertMode == 2) then
-        cInPath = "/mnt/g/Toyota/Data/grid_vtk/valid/vtk/"
-        cOutPath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
-        allocate(cUAR(3), cPAR(3), cMR(4), cSCN(3))
-        cUAR(1) = "_10"
-        cUAR(2) = "_15"
-        cUAR(3) = "_20"
-        cPAR(1) = "_200"
-        cPAR(2) = "_400"
-        cPAR(3) = "_800"
-        cMR(1) = "_0005"
-        cMR(2) = "_0010"
-        cMR(3) = "_0050"
-        cMR(4) = "_0100"
-        cSCN(1) = "_0100"
-        cSCN(2) = "_0200"
-        cSCN(3) = "_0250"
-        do iUAR = 1, 3
-            do iPAR = 3, 1, -1!1, 3
-                !do iMR = 4, 1, -1!1, 4
-                iMR = 2
-                    !do iSCN = 3, 1, -1!1, 3
-                    iSCN = 2
-                        cFileName = "NACA0012"//trim(adjustl(cUAR(iUAR)))//trim(adjustl(cPAR(iPAR)))//trim(adjustl(cMR(iMR)))//trim(adjustl(cSCN(iSCN)))
-                        if(access(trim(adjustl(cOutPath))//trim(adjustl(cFileName))//trim(adjustl(".mayu")), " ") /= 0) then
-                            write(6,*) trim(adjustl(cFileName))
-                            call main_process(UG, cInPath, cOutPath, cFileName)
-                            call deallocate_UG
-                        end if
-                    !end do
-                !end do
+        cInPath = "/mnt/d/Toyota/Data/temp/NACA4_vtk_HD_100_closed/"
+        cOutPath = "/mnt/d/Toyota/Data/temp/NACA4_mayu_HD_100_closed/"
+        do i1 = 1, 9
+            do i2 = 1, 9
+                do i34 = 12, 88, 4
+                    write(cWing, '("NACA", i1, i1, i2.2)') i1, i2, i34
+                    cFileName = trim(adjustl(cWing))
+                    if(access(trim(adjustl(cOutPath))//trim(adjustl(cFileName))//trim(adjustl(".mayu")), " ") /= 0) then
+                        write(6,*) trim(adjustl(cFileName))
+                        call main_process(UG, cInPath, cOutPath, cFileName)
+                        call deallocate_UG
+                    end if
+                end do
             end do
         end do
+
+    else if(MultipleConvertMode == 3)then
+        cInPath = "/mnt/d/Toyota/Data/temp/NACA5_vtk_HD_100_closed/"
+        cOutPath = "/mnt/d/Toyota/Data/temp/NACA5_su2_HD_100_closed/"
+        cFileName = "NACA12116"
+        call main_process4su2(UG, cInPath, cOutPath, cFileName)
+        call deallocate_UG
 
     else
         cInPath = "/mnt/g/Toyota/Data/grid_vtk/NACA5_vtk_HD_course_rev2_true/"
@@ -317,5 +305,55 @@ contains
         return
     end subroutine deallocate_UG
 
+    subroutine main_process4su2(UG, cInPath, cOutPath, cFileName)
+        implicit none
+        type(UnstructuredGrid), intent(inout) :: UG
+        character(len=256), intent(inout) :: cFileName, cInPath, cOutPath
+    !vtkの読み込み
+        call UReadRegionVTK(UG, cInPath, cFileName)
+
+    !共有辺の抽出
+        call UMakeEdgeNumber(UG)
+
+    !ここでとりあえず必要なデータが全部揃うのでデータ格納用配列を全部割り当て
+        call AllocVariables_P4U
+
+    !各種幾何学的量を求める
+    !座標の中心
+        call UCalcElementCenter(UG)
+
+    !セル体積
+        !call UCalcCellVolume(UG)
+
+    !界面面積
+        !call UCalcEdgeArea(UG)
+
+    !要素中心から界面までの距離ベクトル
+        call UCalcWidthCell2Edge(UG)
+
+    !要素界面における法線ベクトルの計算
+        call UCalcNormalVector(UG)
+
+    !Inscribed Circle Raduis !need to Volume and Area
+        !call UCalcInscribedCircleOfCell(UG)
+
+    !並べ替えの基準に用いる仮の仮想セル中心を求める
+        call UDataPointOfVirtualCell(1) !Preprocess
+
+    !仮想セルの並べ替え(外周部から内周部へ)
+        call UReSortVirtualCell(UG)
+
+    !実際の仮想セル中心を計算する
+        call UDataPointOfVirtualCell(2) !MainProcess
+
+    !仮想セルの属性付け
+        call UMarkingVirtualCell(UG)
+
+        call UOutputSU2(UG, cOutPath, cFileName)
+
+        print *, "SU2 Grid Data Generated!"
+
+        return
+    end subroutine main_process4su2
 end program
 
