@@ -896,9 +896,9 @@ def makeGridLoop():
                 print(fname)
                 make_grid(fname, type=3, naca4=naca4, path = path, size=50)
         
-def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", center_x = 0.08, center_y = 0.08):
+def output_coords_csv(fname = "NACA", type = 3, size = 100, naca4 = "0411", center_x = 0.08, center_y = 0.08):
     if type == 3:
-        path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv_HD_closed\\"
+        path = "G:\\Toyota\\Data\\grid_vtk\\NACA4_csv_HD_100_closed\\"
         for i1 in range(10):
             for i2 in range(10):
                 for i34 in range(1,100):
@@ -909,15 +909,15 @@ def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", cent
                     new_z_eq = np.concatenate([z_u, z_l[1:z_l.shape[0] - 1]])
                     z1 = get_equidistant_curve(new_z_eq, high_dens = False)
                     fname = "NACA" +  naca4
-                    
+
                     np.savetxt(path + fname + "_x.csv", np.real(z1), delimiter=",")
                     np.savetxt(path + fname + "_y.csv", np.imag(z1), delimiter = ",")
-    
+
     elif type == 4:
-        path = "G:\\Toyota\\Data\\grid_vtk\\NACA5_csv_HD_closed\\"
+        path = "G:\\Toyota\\Data\\grid_vtk\\NACA5_csv_HD_100_closed\\"
 
         mid_int2 = [10, 20, 30, 40, 50, 21, 31, 41, 51]
-        for int1 in range(1,6):
+        for int1 in range(1,7):
             for int23 in mid_int2:
                 for i45 in range(1, 100):
                     naca5 = str(int1) + str(int23) + str(i45).zfill(2)
@@ -934,4 +934,4 @@ def output_coords_csv(fname = "NACA", type = 3, size = 200, naca4 = "0411", cent
 if __name__ == '__main__':
     # main()
     # makeGridLoop()
-    output_coords_csv(type = 3)
+    output_coords_csv(type = 4)
