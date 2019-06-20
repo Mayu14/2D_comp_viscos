@@ -1,6 +1,31 @@
 # coding: utf-8
 import os
-from job_manager import run_unix
+import subprocess
+def run_unix(cmd):
+    """
+    |で区切られたコマンドに対応可能なように変更した
+    :param cmd: (character) linuxのシェルコマンド
+    :return: コマンドの画面出力
+    """
+    cmd_list = cmd.split("|")
+    proc_list = []
+    i = 0
+    for cmd in cmd_list:
+        if i == 0:
+            stdin = None
+        else:
+            stdin = proc_list[i - 1].stdout
+        proc_list.append(
+            subprocess.Popen(cmd.split(), stdin=stdin,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+        i += 1
+
+    out, err = proc_list[i - 1].communicate()
+    if err:
+        print(err.strip().decode("utf8"))
+        exit()
+
+    return out.strip().decode("utf8")
 
 def prepare_directory(workingpath):
     dir_list = ["ResultU", "ResultC", "ResultR", "Complete/vtk", "Complete/dat", "Resume", "dummy"]
@@ -35,6 +60,7 @@ def update_JPCalcCaseAutoFill_f90(case_list, first=False,
         f.write(s3 + 'UConf%UseResume = 1\n' + s3 + 'UConf%UseMUSCL = 1\n')
         f.write(s3 + 'allocate(UConf%ResumeInFlowVars(5), UConf%ResumeOutFlowVars(5))\n')
         f.write(s3 + 'UConf%ResumeInFlowVars = 0.0d0\n' + s3 + 'UConf%ResumeInFlowVars(1) = 1.0d0\n')
+        f.write(s3 + 'UConf%ResumeInFlowVars(5) = 1.0d0\n')
         for i in range(len(case_list)):
             mach = case_list[i][1].split("__")[2][2:]
             f.write(s3)
@@ -50,7 +76,7 @@ def update_JPCalcCaseAutoFill_f90(case_list, first=False,
             else:
                 f.write(s4 + 'UConf%ResumeFileName = trim(adjustl("' + case_list[i][4] + '"))\n')
             f.write(s4 + 'UConf%ResumeInFlowVars(2) = ' + mach + 'd0\n')
-        f.write(s3 + "end if\n" + s3 + 'UConf%ResumeOutFlowVars = UConf%ResumeOutFlowVars\n')
+        f.write(s3 + "end if\n" + s3 + 'UConf%ResumeOutFlowVars = UConf%ResumeInFlowVars\n')
         f.write(s2 + "return\n" + s1 + "end subroutine grid_change\nend subroutine JPCalcCaseAutoFill\n")
 
 def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSolver2_2018/",
@@ -70,7 +96,7 @@ def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_visc
     if debug:
         body += "CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full\n"
     else:
-        body += "CFLAGS = -qopenmp -O4\n"
+        body += "CFLAGS = -xhost -qopenmp -O4\n"
     
     fname = makefile_path + "Makefile"
     
@@ -140,7 +166,7 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
         f.write(last)
 
 
-def auto_throwing_job(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen_job", program_name = "EulerSolver2", make_script="make.sh", first=False):
+def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen_job", program_name = "EulerSolver2", make_script="make.sh", first=False):
     """
     ジョブを自動で投げるためのプログラム
     :param parallel: (int) スパコン上のジョブ並列数
@@ -172,4 +198,4 @@ if __name__ == '__main__':
          '30.0d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA0012__AoA30.0__Ma0.80__Re50000__case5__Resume.vtk'],
         ['/mnt/g/Toyota/Data/grid_vtk/valid/mayu/NACA21092.mayu', 'NACA21092__AoA23.5__Ma0.30__Re4000__case5', 'case5',
          '23.5d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA21092__AoA23.5__Ma0.30__Re4000__case5__Resume.vtk']]
-    auto_throwing_job(parallel, case_list, qsubname, jobname, program_name = "ES2", first = True)
+    job_throwing(parallel, case_list, qsubname, jobname, program_name = "ES2", first = True)

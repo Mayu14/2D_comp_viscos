@@ -1,33 +1,6 @@
-# -- coding: utf-8 --
-import subprocess
+# -- coding: utf-8 -
 import os
-from auto_throwing_job import auto_throwing_job
-
-def run_unix(cmd):
-    """
-    |で区切られたコマンドに対応可能なように変更した
-    :param cmd: (character) linuxのシェルコマンド
-    :return: コマンドの画面出力
-    """
-    cmd_list = cmd.split("|")
-    proc_list = []
-    i = 0
-    for cmd in cmd_list:
-        if i == 0:
-            stdin = None
-        else:
-            stdin = proc_list[i - 1].stdout
-        proc_list.append(
-            subprocess.Popen(cmd.split(), stdin=stdin,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE))
-        i += 1
-
-    out, err = proc_list[i - 1].communicate()
-    if err:
-        print(err.strip().decode("utf8"))
-        exit()
-
-    return out.strip().decode("utf8")
+from auto_throwing_job import job_throwing, run_unix
 
 def get_fnamelist(path="", sortby_size=True):
     """
@@ -125,7 +98,7 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                             # qsub書き換え・ジョブ投入
                             program_name = auto_rename(program_name = "ES2_start")
                             jobname = "sN" + naca
-                            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name, first = True)
+                            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, first = True)
 
     else:
         import shutil
@@ -162,12 +135,31 @@ def count_fnumber(path=""):
 
 
 
-def main(parallel = 280, first=False):
+def main(parallel = 280, first=False, debug=False):
     #"""
-    workingpath = "/work/A/FMa/FMa037/Case5/"
-    resumepath = "/work/A/FMa/FMa037/Case5/Resume/"
-    gridpath = "/work/A/FMa/FMa037/mayu_grid/"
-    #"""
+    if not debug:
+        workingpath = "/work/A/FMa/FMa037/Case5/"
+        resumepath = "/work/A/FMa/FMa037/Case5/Resume/"
+        gridpath = "/work/A/FMa/FMa037/mayu_grid/"
+    else:
+        parallel = 40
+        workingpath = "/work/A/FMa/FMa037/SD_test/"
+        resumepath = "/work/A/FMa/FMa037/SD_test/Resume/"
+        gridpath = "/work/A/FMa/FMa037/mayu_SD/"
+        aoa_min = 0.0
+        aoa_max = 50.0 - 1.25
+        aoa_pattern = 40
+        ma_min = 0.80
+        ma_max = ma_min
+        ma_pattern = 1
+        re_min = "infinity"
+        re_max = re_min
+        re_pattern = 1
+        case_list = make_case_list(parallel, workingpath, gridpath, first=first, case="SD_test", aoa_min=aoa_min,
+                                   aoa_max=aoa_max, aoa_pattern=aoa_pattern, ma_min=ma_min, ma_max=ma_max,
+                                   ma_pattern=ma_pattern, re_min=re_min, re_max=re_max, re_pattern=re_pattern)
+        print(case_list)
+        exit()
     # workingpath = "/mnt/d/Toyota/github/2D_comp_viscos/"
     # resumepath = workingpath + "flow_solver/EulerSolver2_2018"
     # gridpath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
@@ -194,7 +186,7 @@ def main(parallel = 280, first=False):
             # qsub書き換え・ジョブ投入
             jobname = "re_" + str(fnumber)
             program_name = auto_rename()
-            auto_throwing_job(parallel, case_list, jobname = jobname, program_name = program_name)
+            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name)
 
 if __name__ == '__main__':
-    main()
+    main(first=True, debug=True)
