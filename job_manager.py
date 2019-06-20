@@ -1,6 +1,6 @@
 # -- coding: utf-8 -
 import os
-from auto_throwing_job import job_throwing, run_unix
+from auto_throwing_job import job_throwing, run_unix, run_unix_one_liner
 
 def get_fnamelist(path="", sortby_size=True, head_search=""):
     """
@@ -10,13 +10,17 @@ def get_fnamelist(path="", sortby_size=True, head_search=""):
     :param head_search: 検索条件(先頭一致のみ＆ワイルドカードは省いてok)
     :return: ファイル名のリスト
     """
-    if not head_search == "":
-        head_search += "*"
+
     if sortby_size:
         cmd = "ls -lS " + path + head_search
     else:
         cmd = "ls -lt " + path + head_search
-    flist = run_unix(cmd).split("\n")
+    
+    if not head_search == "":
+        cmd += "*"
+        flist = run_unix_one_liner(cmd).split("\n")
+    else:
+        flist = run_unix(cmd).split("\n")
     fnamelist = []
     for line in flist:
         line = line.split()

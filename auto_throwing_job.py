@@ -27,6 +27,12 @@ def run_unix(cmd):
 
     return out.strip().decode("utf8")
 
+def run_unix_one_liner(cmd):
+    return subprocess.Popen(cmd, shell = True,
+                            stdout = subprocess.PIPE,
+                            stderr = subprocess.PIPE)
+
+
 def prepare_directory(workingpath):
     dir_list = ["ResultU", "ResultC", "ResultR", "Complete/vtk", "Complete/dat", "Resume", "dummy"]
     for dir in dir_list:
