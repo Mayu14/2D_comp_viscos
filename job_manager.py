@@ -10,10 +10,12 @@ def get_fnamelist(path="", sortby_size=True, search=""):
     :param search: 検索条件(ワイルドカードは省いてok)
     :return: ファイル名のリスト
     """
+    if not search == "":
+        search = "*" + search + "*"
     if sortby_size:
-        cmd = "ls -lS " + path + "*" + search + "*"
+        cmd = "ls -lS " + path + search
     else:
-        cmd = "ls -lt " + path + "*" + search + "*"
+        cmd = "ls -lt " + path + search
     flist = run_unix(cmd).split("\n")
     fnamelist = []
     for line in flist:
@@ -165,7 +167,7 @@ def main(parallel = 280, first=False, debug=False):
         re_pattern = 1
         case_list = make_case_list(parallel, workingpath, gridpath, first=first, case="SD_test", aoa_min=aoa_min,
                                    aoa_max=aoa_max, aoa_pattern=aoa_pattern, ma_min=ma_min, ma_max=ma_max,
-                                   ma_pattern=ma_pattern, re_min=re_min, re_max=re_max, re_pattern=re_pattern)
+                                   ma_pattern=ma_pattern, re_min=re_min, re_max=re_max, re_pattern=re_pattern, debug = debug)
         print(case_list)
         exit()
     # workingpath = "/mnt/d/Toyota/github/2D_comp_viscos/"
