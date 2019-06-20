@@ -2,20 +2,20 @@
 import os
 from auto_throwing_job import job_throwing, run_unix
 
-def get_fnamelist(path="", sortby_size=True, search=""):
+def get_fnamelist(path="", sortby_size=True, head_search=""):
     """
     フォルダ内のファイル名のリストを返す
     :param path:    調べるフォルダ
     :param sortby_size: ファイルサイズ順に並べるときTrue, Falseでタイムスタンプ順
-    :param search: 検索条件(ワイルドカードは省いてok)
+    :param head_search: 検索条件(先頭一致のみ＆ワイルドカードは省いてok)
     :return: ファイル名のリスト
     """
-    if not search == "":
-        search = "*" + search + "*"
+    if not head_search == "":
+        head_search += "*"
     if sortby_size:
-        cmd = "ls -lS " + path + search
+        cmd = "ls -lS " + path + head_search
     else:
-        cmd = "ls -lt " + path + search
+        cmd = "ls -lt " + path + head_search
     flist = run_unix(cmd).split("\n")
     fnamelist = []
     for line in flist:
@@ -88,7 +88,7 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
         if not debug:
             fname_list = get_fnamelist(path=gridpath)
         else:
-            fname_list = get_fnamelist(path = gridpath, search = "NACA0012")
+            fname_list = get_fnamelist(path = gridpath, head_search = "NACA0012")
         for fname in fname_list:
             naca = fname.split(".")[0][4:]  # "NACAxxxxx.mayu"拡張子と頭文字外す
             for i in range(re_pattern):
