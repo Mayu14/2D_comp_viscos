@@ -25,7 +25,7 @@ subroutine JobParallelNS(UConf)
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
     double precision :: time_start, time_step, time_elapsed, time_specified, residual
-    time_specified = 702000.0d0
+    time_specified = 70200.0d0
     !$ time_start = omp_get_wtime()
 ! 初期化
     UCC%ConvergeCondition = Converge_Method

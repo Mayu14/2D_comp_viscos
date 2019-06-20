@@ -895,4 +895,3 @@ ConstantVar_Mod.o: \
 InputCUV.o: \
     InputCUV.f90 \
     StructVar_Mod.o
-
