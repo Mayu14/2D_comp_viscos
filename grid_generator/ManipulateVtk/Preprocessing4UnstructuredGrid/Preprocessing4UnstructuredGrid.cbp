@@ -89,6 +89,9 @@
 		<Unit filename="source/UMarkingVirtualCell.f90">
 			<Option weight="2" />
 		</Unit>
+		<Unit filename="source/UOutputSu2.f90">
+			<Option weight="1" />
+		</Unit>
 		<Unit filename="source/UOutputUnStrGrid.f90">
 			<Option weight="1" />
 		</Unit>
@@ -103,6 +106,7 @@
 			<code_completion />
 			<debugger />
 			<lib_finder disable_auto="1" />
+			<fortran_project />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

@@ -43,7 +43,7 @@ program Preprocessing4UnstructuredGrid
         if (status /= 0) print *, 'Error', status, 'on argument', i
     end do
 
-    MultipleConvertMode = 3    ! このオプションを使う場合は以下のelse内を書き換えて使う
+    MultipleConvertMode = 0    ! このオプションを使う場合は以下のelse内を書き換えて使う
 
     UG%GM%Dimension = 2
     if(MultipleConvertMode == 0) then
@@ -59,8 +59,8 @@ program Preprocessing4UnstructuredGrid
         stop
         call main_process(UG, cInPath, cOutPath, cFileName)
     else if(MultipleConvertMode == 2) then
-        cInPath = "/mnt/d/Toyota/Data/temp/NACA4_vtk_HD_100_closed/"
-        cOutPath = "/mnt/d/Toyota/Data/temp/NACA4_mayu_HD_100_closed/"
+        cInPath = "/mnt/d/Toyota/Data/temp/NACA4_vtk_SD_100_closed/"
+        cOutPath = "/mnt/d/Toyota/Data/temp/NACA4_mayu_SD_100_closed/"
         do i1 = 1, 9
             do i2 = 1, 9
                 do i34 = 12, 88, 4
@@ -76,7 +76,7 @@ program Preprocessing4UnstructuredGrid
         end do
 
     else if(MultipleConvertMode == 3)then
-        cInPath = "/mnt/d/Toyota/Data/temp/NACA5_vtk_HD_100_closed/"
+        cInPath = "/mnt/d/Toyota/Data/temp/NACA5_vtk_SD_100_closed/"
         cOutPath = "/mnt/d/Toyota/Data/temp/NACA5_su2_HD_100_closed/"
         cFileName = "NACA12116"
         call main_process4su2(UG, cInPath, cOutPath, cFileName)

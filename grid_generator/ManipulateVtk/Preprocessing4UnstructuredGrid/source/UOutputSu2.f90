@@ -17,7 +17,7 @@ subroutine UOutputSu2(UG, cPath, cFileName)
     implicit none
     type(UnstructuredGrid), intent(in) :: UG
     character(len=256), intent(inout) :: cFileName, cPath
-    integer :: iInner, iOuter
+    integer :: iInner, iOuter, iStart, iEnd
     integer, allocatable :: vEdge_farfield(:), vEdge_obj(:)
     !write(6,*) "Please input filename of the Computed Grid Data"
     !read(5,*) cFileName
@@ -30,23 +30,23 @@ subroutine UOutputSu2(UG, cPath, cFileName)
         write(1,"('%')")
         write(1,"('% Problem dimension')")
         write(1,"('%')")
-        write(1,"('NDIME= ',(1x,i1))") 2
+        write(1,"('NDIME= ',(i1))") 2
         write(1,"('%')")
         write(1,"('% Inner element connectivity')")
         write(1,"('%')")
-        write(1,"('NELEM= ',(1x,i7))") UG%GI%RealCells
+        write(1,"('NELEM= ',(i7))") UG%GI%RealCells
 
         do iCell=1, UG%GI%RealCells
-            write(1,"(4(1x,i7))") 5,(UG%Tri%Point(iCell,iLoop)-1,iLoop=1,3) !Adjusted Point Number
+            write(1,"(i1,3(1x,i7))") 5,(UG%Tri%Point(iCell,iLoop)-1,iLoop=1,3) !Adjusted Point Number
         end do
 
         write(1,"('%')")
         write(1,"('% Node coordinates')")
         write(1,"('%')")
-        write(1,"('NPOIN= ',(1x,i7))") UG%GI%Points
+        write(1,"('NPOIN= ',(i7))") UG%GI%Points
 
         do iPoint=1, UG%GI%Points
-            write(1,*) UG%CD%Point(iPoint,1), UG%CD%Point(iPoint,2), iPoint-1
+            write(1,"(2(f19.16,1x),i7)") UG%CD%Point(iPoint,1), UG%CD%Point(iPoint,2), iPoint-1
         end do
 
         write(1,"('%')")
@@ -68,19 +68,25 @@ subroutine UOutputSu2(UG, cPath, cFileName)
             end if
         end do
 
-
         write(1,"('NMARK = 2')")
         write(1,"('MARKER_TAG= airfoil')")
-        write(1,"('MARKER_ELEMS= ',(1x,i7))") UG%GM%BC%iWallTotal
-        do iInner = 1, UG%GM%BC%iWallTotal
-            write(1,"(3(1x,i7))") 3, UG%Line%Point(vEdge_farfield(iInner), 1), UG%Line%Point(vEdge_farfield(iInner), 2)
+        write(1,"('MARKER_ELEMS= ',(i7))") (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells
+        iStart = 0
+        iEnd = (UG%GI%AllCells - UG%GI%RealCells) - UG%GI%OutlineCells - 1
+        do iInner = iStart, iEnd - 1
+            write(1,"(i1,2(1x,i7))") 3, iInner + 1, iInner
         end do
+        write(1,"(i1,2(1x,i7))") 3, iStart, iEnd
 
+        iStart = iEnd +1
+        iEnd = iEnd + UG%GI%OutlineCells
         write(1,"('MARKER_TAG= farfield')")
-        write(1,"('MARKER_ELEMS= ',(1x,i7))") UG%GI%OutlineCells
-        do iOuter = 1, UG%GI%OutlineCells
-            write(1,"(3(1x,i7))") 3, UG%Line%Point(vEdge_obj(iOuter), 1), UG%Line%Point(vEdge_obj(iOuter), 2)
+        write(1,"('MARKER_ELEMS= ',(i7))") UG%GI%OutlineCells
+        do iOuter = iStart, iEnd-1
+            !write(1,"(i1,2(1x,i7))") 3, UG%Line%Point(vEdge_farfield(iOuter), 1) - 1, UG%Line%Point(vEdge_farfield(iOuter), 2) - 1
+            write(1,"(i1,2(1x,i7))") 3, iOuter, iOuter+1
         end do
+        write(1,"(i1,2(1x,i7))") 3, iEnd, iStart
 
     close(1)
 
