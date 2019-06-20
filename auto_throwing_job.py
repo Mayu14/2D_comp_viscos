@@ -28,9 +28,11 @@ def run_unix(cmd):
     return out.strip().decode("utf8")
 
 def run_unix_one_liner(cmd):
-    return subprocess.Popen(cmd, shell = True,
+    proc = subprocess.Popen(cmd, shell = True,
                             stdout = subprocess.PIPE,
                             stderr = subprocess.PIPE)
+    out, err = proc.communicate()
+    return out
 
 
 def prepare_directory(workingpath):
@@ -120,7 +122,7 @@ def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_visc
     # clock skew detected 対策
     run_unix("sleep 5")
 
-def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", sync = "n"):
+def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", sync = "n", program_path="flow_solver/EulerSolver2_2018/bin/Debug/"):
     """
     qsubスクリプトを生成する
     :param fname: qsubスクリプト名
@@ -164,7 +166,7 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
     body = "#$ -jc " + jobclass + "\n#$ -N " + jobname + "\n#$ -l h_rt=" + time + "\n#$ -pe OpenMP " + str(
         parallel) + "\n#$ -sync " + sync + "\n"
     footer = ". /etc/profile.d/modules.sh\nmodule load intel/2018.2.046\n"
-    last = "./" + program + " " + comargs
+    last = "./" + program_path + program + " " + comargs
     with open(fname, "w") as f:
         f.write(header)
         f.write(body)

@@ -94,7 +94,7 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
         else:
             fname_list = get_fnamelist(path = gridpath, head_search = "NACA0012")
         for fname in fname_list:
-            naca = fname.split(".")[0][4:]  # "NACAxxxxx.mayu"拡張子と頭文字外す
+            naca = fname.replace(gridpath, "").split(".")[0][4:]  # "NACAxxxxx.mayu"拡張子と頭文字外す
             for i in range(re_pattern):
                 if type(re_min) == type("infty"):   # 文字の場合は数式使わない
                     reynolds = re_min
