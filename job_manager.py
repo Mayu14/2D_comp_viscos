@@ -2,17 +2,18 @@
 import os
 from auto_throwing_job import job_throwing, run_unix
 
-def get_fnamelist(path="", sortby_size=True):
+def get_fnamelist(path="", sortby_size=True, search=""):
     """
     フォルダ内のファイル名のリストを返す
     :param path:    調べるフォルダ
     :param sortby_size: ファイルサイズ順に並べるときTrue, Falseでタイムスタンプ順
+    :param search: 検索条件(ワイルドカードは省いてok)
     :return: ファイル名のリスト
     """
     if sortby_size:
-        cmd = "ls -lS " + path
+        cmd = "ls -lS " + path + "*" + search + "*"
     else:
-        cmd = "ls -lt " + path
+        cmd = "ls -lt " + path + "*" + search + "*"
     flist = run_unix(cmd).split("\n")
     fnamelist = []
     for line in flist:
@@ -36,7 +37,7 @@ def auto_rename(program_name = "ES2"):
 def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/mayu_grid/",
                    first=False, case = "Case5",
                    aoa_min=0.0, aoa_max=39.0, aoa_pattern=14, ma_min=0.15, ma_max=1.80, ma_pattern=12,
-                   re_min=10000, re_max=1000000,re_pattern=5):
+                   re_min=10000, re_max=1000000,re_pattern=5, debug=False):
     """フォルダ構成のイメージ
     /workingpath/ES2
     /workingpath/Resume/*
@@ -67,7 +68,11 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
 
     resumepath = workingpath + "Resume/"
     runningpath = workingpath + "Running/"
-
+    if not os.path.exists(resumepath):
+        os.mkdir(resumepath)
+    if not os.path.exists(runningpath):
+        os.mkdir(runningpath)
+        
     if first:   # 初回のみ
         del_aoa = (aoa_max - aoa_min) / aoa_pattern
         del_mach = (ma_max - ma_min) / ma_pattern
@@ -78,7 +83,10 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
 
         length = 0
         case_list = []
-        fname_list = get_fnamelist(path=gridpath)
+        if not debug:
+            fname_list = get_fnamelist(path=gridpath)
+        else:
+            fname_list = get_fnamelist(path = gridpath, search = "NACA0012")
         for fname in fname_list:
             naca = fname.split(".")[0][4:]  # "NACAxxxxx.mayu"拡張子と頭文字外す
             for i in range(re_pattern):

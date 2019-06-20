@@ -181,7 +181,7 @@ def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen
     update_JPCalcCaseAutoFill_f90(case_list, first)
     
     # makefile書き換え&make
-    update_makefile(program_name, makefile_path = "", debug = False)
+    update_makefile(program_name, debug = False)
     
     run_unix("./" + make_script) # cd /home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSover2_2018/; make
     # qsub書き換え・ジョブ投入
