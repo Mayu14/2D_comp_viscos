@@ -4,7 +4,7 @@ import cv2
 import glob
 import pandas as pd
 
-def main(fname_list, img_path, size):
+def main(fname_list, img_path, size, type=4):
     """
 
     :param fname_list:  画像ファイルのファイル名リスト
@@ -59,10 +59,16 @@ def main(fname_list, img_path, size):
             del df_s1
             
             # strstep = str(step).zfill(3)
-            dir = "NACA4\\"
+
+            if type == 4:
+                dir = "NACA4\\"
+                header = "train"
+            elif type == 5:
+                dir = "NACA5\\"
+                header = "test"
             shape = "_" + str(shape0).zfill(3) + "_" + str(shape1).zfill(3)
 
-            np.savez_compressed(source + dir + "train" + shape, x_train_img=x_train_img, x_train_param=x_train_param, y_train=y_train)
+            np.savez_compressed(source + dir + header + shape, x_train_img=x_train_img, x_train_param=x_train_param, y_train=y_train)
             
         
     total_data = len(fname_list)
@@ -70,7 +76,10 @@ def main(fname_list, img_path, size):
     data_length = read_img_and_drop_channel(fname_list[0]).reshape(-1).shape[0]
 
     source = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
-    fpath_lift = "NACA4\\s1122_e9988_s4_a014.csv"
+    if type == 4:
+        fpath_lift = "NACA4\\s1122_e9988_s4_a014.csv"
+    elif type == 5:
+        fpath_lift = "NACA5\\s21011_e25190_s1_a014.csv"
     
     name = ("naca4", "angle", "lift_coef", "drag_coef")
     data_type = {"naca4": int, "angle": float, "lift_coef": float, "drag_coef": float}
@@ -111,7 +120,7 @@ def auto_job(type=4, size=512):
     img_path = save_path + dir + "cnn\\image\\" + str(size) + "\\"
     flist = glob.glob(img_path + "*.png")
 
-    main(flist, img_path, size=size)
+    main(flist, img_path, size=size, type=type)
 
 
 def test():
@@ -120,4 +129,5 @@ def test():
     main(fname_list, "", csv_name)
 
 if __name__ == '__main__':
-    auto_job(type=4, size=512)
+    auto_job(type=5, size=512)
+    
