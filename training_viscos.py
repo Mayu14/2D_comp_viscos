@@ -2,10 +2,11 @@
 # 単純な関数のデータを与えて元のデータを予測させてみる
 # 学習用データが(TesraK80の)メモリに乗らないため,Generatorを使ってバッチごとにデータをロードさせる感じで
 # 20万件のデータを200件ずつ取り出す
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, model_from_json
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.layers import LeakyReLU, PReLU, Input
+from keras.regularizers import l1, l2, l1_l2
 from keras.callbacks import EarlyStopping, TensorBoard, ModelCheckpoint
 from keras.utils import plot_model
 import keras.backend.tensorflow_backend as KTF
@@ -83,7 +84,7 @@ def getNewestModel(model, dirname):
 def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, preprocess="",
                          criteria_method="nearest_centroid", shape_data=200, total_data=200000, resnet=False,
                          highway=False, densenet=False, useBN = True, useDrop = True, dor = 0.3, bottle_neck=False,
-                         before_activate=False):
+                         before_activate=False, regularilze=True, regularizer=[None], activator="leakyrelu"):
     if int(case_number) / 1000 == 0:
         head = "fourierSr"
     elif int(case_number) / 1000 == 1:
@@ -130,9 +131,36 @@ def get_case_number_beta(case_number, dense_list, rr, sr, skiptype, cluster, pre
         cm += "_BotNec"
     if before_activate == False:
         cm += "_AfterAct"
-
+    if not regularilze:
+        cm += "_nonRegularize"
+    if regularizer[0] == "l1":
+        cm += "_Lasso" + str(regularizer[1])
+    elif regularizer[0] == "l2":
+        cm += "_Ridge" + str(regularizer[1])
+    elif regularizer[0] == "l1_l2":
+        cm += "_Elastic" + str(regularizer[1]) + "_" + str(regularizer[2])
+    if not activator == "leakyrelu":
+        cm += activator
+        
     case_num = head + "_" + mid1 + "_" + mid2 + "_" + mid3 + "_" + tail + "_" + tail2 + preprocess + cm
     return case_num.replace("fourierSr_200000_less_angle_new_", "f_")
+
+def set_regularizer(regularizer):
+    if regularizer[0] == "l1":
+        kernel_regularizer = l1(regularizer[1])
+    elif regularizer[0] == "l2":
+        kernel_regularizer = l2(regularizer[1])
+    elif regularizer == "l1_l2":
+        kernel_regularizer = l1_l2(regularizer[1], regularizer[2])
+    else:
+        kernel_regularizer = None
+    return kernel_regularizer
+
+def set_activator(activator):
+    if activator == "leakyrelu":
+        return LeakyReLU
+    elif activator == "prelu":
+        return PReLU
 
 def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test, case_number, case_type=3, env="Lab", validate=True, gpu_mem_usage=0.45):
     # r_rate = [1, 2, 4, 8]
@@ -150,9 +178,10 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
     gr = 16
     # dr = [[12, 24, 48, 96, 192, 384]]
     dense_lists = []
-    min_layer = 4
+    min_layer = 3
     #max_layer = 4
-    units_pattern = [128, 256, 512, 1024]
+    #"""
+    units_pattern = [256, 512, 1024]
     from itertools import product
     for i in range(min_layer, min_layer+1):
         p = product(units_pattern, repeat = i)
@@ -160,16 +189,18 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             v = list(v)
             flag = True
             for j in range(min_layer - 1):
-                if v[0] != 1024:
+                if v[0] <= 1024:
                     flag = False
-                if v[min_layer-1] != 128:
-                    flag = False
+
                 if v[j] < v[j+1]:
                     flag = False
                 
             if flag:
                 dense_lists.append(v)
-            
+    #"""
+    
+    dense_lists.append([1024, 1024, 512, 256, 256, 256, 256])
+    
     j = 3
     for dense_list in dense_lists:
     # for j in range(3, 15):
@@ -193,9 +224,15 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
             # dr.append([1024]*(j+1))
         criteria_method = "farthest_from_center"
         useBN_list = [False]#[True, False, True, False, True, False, True, False]
-        useDrop = False#True
+        useDrop = False
+        regularize = True
         before_activate = False
+        
         dor_list = [0.0]#[0.4, 0.3, 0.2, 0.1, 0.0]
+        activation = "prelu"
+        regularizers = [[None]]#, ["l2", 0.001], ["l1_l2", 0.001, 0.001]]
+        # regularizer = ["l2", 0.001]#None
+        # kernel_regularizer = set_regularizer(regularizer)
         resnet = False
         high_way = False
         dense_net = False
@@ -205,7 +242,11 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
 
         # for dense_list in dr:
         # for reduct in range(40):
-        for dor in dor_list:
+        # for dor in dor_list:
+        dor = dor_list[0]
+        for regularizer in regularizers:
+            kernel_regularizer = set_regularizer(regularizer)
+            activator = set_activator(activation)
             # cluster = 500 * (reduct + 1)
             cluster = 22680
             # for rr in r_rate:
@@ -226,8 +267,6 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                 else:
                     high_way = False
 
-
-
                 if rr == 1:
                     s_odd = 0   # 全部読みだす
                 elif fname_shape_train.find("fourier") != -1:
@@ -247,7 +286,7 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                         # case_num = get_case_number(source, env, case_number)
                         case_num = get_case_number_beta(case_number, dense_list, rr, sr, s_skiptype, cluster, preprocess, criteria_method,
                                                         resnet=resnet, highway=high_way, densenet=dense_net, useBN = useBN, useDrop = useDrop, dor = dor,
-                                                        bottle_neck=bottle_neck, before_activate=before_activate)
+                                                        bottle_neck=bottle_neck, before_activate=before_activate, regularilze = regularize, regularizer=regularizer, activator = activation)
                         log_name = "learned\\" + case_num + "_tb_log.hdf5"
                         json_name = "learned\\" + case_num + "_mlp_model_.json"
                         weight_name = "learned\\" + case_num + "_mlp_weight.h5"
@@ -267,92 +306,113 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     # model = Sequential()
                     if case_type == 3:
                         # ここ書き換えポイント
-                        X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
+                        if regularize:
+                            X_train, y_train, scalar = read_csv_type3(source, fname_lift_train, fname_shape_train, shape_odd = s_odd, read_rate = rr, skip_rate=sr, total_data = 0, return_scalar = True)
+                        else:
+                            X_train, y_train = read_csv_type3(source, fname_lift_train, fname_shape_train,
+                                                                      shape_odd = s_odd, read_rate = rr, skip_rate = sr,
+                                                                      total_data = 0, regularize = regularize)
 
                         if data_reduction_test:
                             X_train, y_train = data_reduction(X_train, y_train, reduction_target = cluster, output_csv = False, preprocess = preprocess, criteria_method = criteria_method)
 
-                        x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
-                                                        total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+                        if regularize:
+                            x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
+                                                            total_data = 0, shape_odd=s_odd, read_rate = rr, scalar = scalar)
+                        else:
+                            x_test, y_test = read_csv_type3(source, fname_lift_test, fname_shape_test,
+                                                            total_data = 0, shape_odd = s_odd, read_rate = rr,
+                                                            regularize=False)
 
-                        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.05)
-
-                    input_vector_dim = X_train.shape[1]
-
-                    def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False):#, units_list = None):
-                        # leaky_relu = LeakyReLU()
-                        # input layer
-                        MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
-                                       dropout_rate=dor, dropout_timing = "final", gate_bias=-3, growth_rate = 32)
-
-                        x = Dense(units = dense_list[0])(inputs)
-                        # mid layer
-                        for i in range(1, len(dense_list)):
-                            leaky_relu = LeakyReLU
-                            if dense_net:
-                                x = MLP.denseblock(inputs=x, Activator=leaky_relu,
-                                                   weight_layer_number=weight_layer_list[i])
-                                x = Dense(units=dense_list[i])(x)
-                            else:
-                                if bottle_neck:
-                                    units_list = [dense_list[i], max(int(dense_list[i]/2), 2), dense_list[i]]
-                                else:
-                                    units_list = [dense_list[i]*weight_layer_list[i]]
-                                if resnet:
-                                    x = MLP.residual(inputs = x, Activator = leaky_relu,
-                                                     weight_layer_number=weight_layer_list[i], units_list=units_list)
-                                else:
-                                    if highwaynet:
-                                        x = MLP.highway(inputs = x, Activator = leaky_relu,
-                                                        weight_layer_number=weight_layer_list[i], units_list=units_list)
-                                    else:
-                                        x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu())
-
-                        return x
+                        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.175)
                     
-                    def simplest_net(inputs, units_list=[2048,1024,256]):
-                        x = Dense(units = units_list[0], kernel_initializer = "he_normal", input_shape = (input_vector_dim, ))(inputs)
-                        x = LeakyReLU()(x)
-                        for i in range(1, len(units_list)):
-                            x = Dense(units = units_list[i], kernel_initializer = "he_normal")(x)
+                    if not os.path.exists(source + json_name):
+                        input_vector_dim = X_train.shape[1]
+    
+                        def simple_network(dense_list, inputs, resnet = False, highwaynet = False, dense_net = False):#, units_list = None):
+                            # leaky_relu = LeakyReLU()
+                            # input layer
+                            MLP = MLPLayer(activate_before_fc=before_activate, batch_normalization=useBN, dropout=useDrop,
+                                           dropout_rate=dor, dropout_timing = "final", gate_bias=-3, growth_rate = 32)
+    
+                            x = Dense(units = dense_list[0])(inputs)
+                            # mid layer
+                            for i in range(1, len(dense_list)):
+                                leaky_relu = activator
+                                if dense_net:
+                                    x = MLP.denseblock(inputs=x, Activator=leaky_relu,
+                                                       weight_layer_number=weight_layer_list[i])
+                                    x = Dense(units=dense_list[i])(x)
+                                else:
+                                    if bottle_neck:
+                                        units_list = [dense_list[i], max(int(dense_list[i]/2), 2), dense_list[i]]
+                                    else:
+                                        units_list = [dense_list[i]*weight_layer_list[i]]
+                                    if resnet:
+                                        x = MLP.residual(inputs = x, Activator = leaky_relu,
+                                                         weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                    else:
+                                        if highwaynet:
+                                            x = MLP.highway(inputs = x, Activator = leaky_relu,
+                                                            weight_layer_number=weight_layer_list[i], units_list=units_list)
+                                        else:
+                                            x = MLP.fully_connected(units=dense_list[i], inputs=x, Activator=leaky_relu(), kernel_regularizer = kernel_regularizer)
+    
+                            return x
+                        
+                        def simplest_net(inputs, units_list=[2048,1024,256]):
+                            x = Dense(units = units_list[0], kernel_initializer = "he_normal", input_shape = (input_vector_dim, ))(inputs)
                             x = LeakyReLU()(x)
-                        return x
-
-                    with tf.name_scope("inference") as scope:
-                        inputs = Input(shape = (input_vector_dim,))
-
-                        x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
-                        # x = simplest_net(inputs, units_list)
-                        """
-                        x = Dense(units = dense_net_list[0])(inputs)
-                        # x = Activation(LeakyReLU())(x)
-                        x = LeakyReLU()(x)
-                        """
-                        """
-                        for i in range(1, len(dense_net_list)):
-                            dense_block =
-                            x = Dense(units = dense_list[0])(x)
-                            leaky_relu = LeakyReLU()
-                            # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                            x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
-                        """
-
-                        # output layer
-                        predictions = Dense(units = 2, activation = None)(x)
-
-                    model = Model(inputs = inputs, outputs = predictions)
-
-                    if j < 8:   #大きなモデルだとエラーが出る？
-                        fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_num + ".png"
-                        plot_model(model, to_file=fname, show_shapes=True)
-
-                    save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
-                    baseSaveDir = source + "learned\\"
-                    es_cb = EarlyStopping(monitor='val_loss', patience=5, verbose=0, mode='auto')
+                            for i in range(1, len(units_list)):
+                                x = Dense(units = units_list[i], kernel_initializer = "he_normal")(x)
+                                x = LeakyReLU()(x)
+                            return x
+    
+                        with tf.name_scope("inference") as scope:
+                            inputs = Input(shape = (input_vector_dim,))
+    
+                            x = simple_network(dense_list, inputs, resnet = resnet, highwaynet = high_way, dense_net=dense_net)#, units_list=units_list)
+                            # x = simplest_net(inputs, units_list)
+                            """
+                            x = Dense(units = dense_net_list[0])(inputs)
+                            # x = Activation(LeakyReLU())(x)
+                            x = LeakyReLU()(x)
+                            """
+                            """
+                            for i in range(1, len(dense_net_list)):
+                                dense_block =
+                                x = Dense(units = dense_list[0])(x)
+                                leaky_relu = LeakyReLU()
+                                # x = residual(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                                x = highway(inputs=x, Activator=leaky_relu, batch_normalization=True, dropout=True)
+                            """
+    
+                            # output layer
+                            predictions = Dense(units = 2, activation = None)(x)
+    
+                        model = Model(inputs = inputs, outputs = predictions)
+    
+                        if j < 8:   #大きなモデルだとエラーが出る？
+                            fname = "G:\\Toyota\\Data\\Compressible_Invicid\\fig_post\\" + "model_" + case_num + ".png"
+                            plot_model(model, to_file=fname, show_shapes=True)
+                    
+                        save_my_log(source, case_number, fname_lift_train, fname_shape_train, model.summary())
+                        epoch = 10000
+                        es_cb = EarlyStopping(monitor = 'val_loss', patience = 5000, verbose = 0, mode = 'auto')
+                        
+                    else:
+                        model = model_from_json(open(source + json_name).read())
+                        model.load_weights(source + weight_name)
+                        epoch = 10
+                        es_cb = EarlyStopping(monitor = 'val_loss', patience = 500, verbose = 0, mode = 'auto')
+                        
+                    # baseSaveDir = source + "learned\\"
+                    baseSaveDir = "D:\\Toyota\\Data\\temp\\" + "checkpoints\\"
+                    
                     chkpt = baseSaveDir + 'MLP_.{epoch:02d}-{val_loss:.2f}.hdf5'
                     cp_cb = ModelCheckpoint(filepath=chkpt, monitor="val_loss", verbose=0, save_best_only=True, mode='auto')
                     tb_cb = TensorBoard(log_dir=source + log_name, histogram_freq=0, write_grads=True)
-
+                    
                     model.compile(loss="mean_squared_error",
                                   optimizer='Adam',
                                   metrics=["mae"])
@@ -368,32 +428,45 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     if validate:
                         valid_steps, valid_batches = batch_iter(x_test, y_test, batch_size)
                     #"""
+                    print("fit")
                     history = model.fit(x=X_train, y=y_train,
-                                        batch_size=batch_size, epochs=500,
-                                        validation_split=0.1,
+                                        batch_size=batch_size, epochs=epoch,
+                                        verbose=0,
+                                        # validation_split=0.1,
+                                        validation_data=[X_valid, y_valid],
                                         callbacks=[tb_cb, es_cb, cp_cb])#"""
-
+                    print("fit complete")
                     model = getNewestModel(model, baseSaveDir)
+                    json_string = model.to_json()
+                    open(source + json_name, 'w').write(json_string)
+                    model.save_weights(source + weight_name)
+                    
+                    if not os.path.exists(baseSaveDir + "fig_post\\" + case_num + ".png"):
+                        fig = plt.figure()
+                        ax = fig.add_subplot(1, 1, 1)
+                        ax.plot(history.history['loss'], marker=".", label = 'loss')
+                        ax.plot(history.history['val_loss'], marker='.', label='val_loss')
+                        ax.set_title('model loss')
+                        ax.grid(True)
+                        ax.set_xlabel('epoch')
+                        ax.set_ylabel('loss')
+                        ax.legend(loc='best')
+                        plt.savefig(baseSaveDir + "fig_post\\" + case_num + ".png")
+                        plt.close()
 
-                    fig = plt.figure()
-                    ax = fig.add_subplot(1, 1, 1)
-                    ax.plot(history.history['loss'], marker=".", label = 'loss')
-                    ax.plot(history.history['val_loss'], marker='.', label='val_loss')
-                    ax.set_title('model loss')
-                    ax.grid(True)
-                    ax.set_xlabel('epoch')
-                    ax.set_ylabel('loss')
-                    ax.legend(loc='best')
-
+                    score_valid = model.evaluate(X_valid, y_valid, verbose = 0)
+                    score_test = model.evaluate(x_test, y_test, verbose = 0)
+                    print(score_valid)
+                    print(score_test)
+                    
                     y_valid_pred = model.predict(X_valid)
                     r2_valid = r2_score(y_valid, y_valid_pred)
                     y_test_pred = model.predict(x_test)
                     r2_test = r2_score(y_test, y_test_pred)
 
-                    plt.savefig(baseSaveDir + "\\fig_post" + case_num + ".png")
-                    plt.close()
+                    
                     print(r2_valid, r2_test)
-                    log = [r2_valid, r2_test]
+                    log = [r2_valid, r2_test, score_valid[0], score_valid[1], score_test[0], score_test[1]]
                     log.extend(case_num.split("_"))
                     with open(baseSaveDir + "log.csv", "a") as f:
                         writer = csv.writer(f, lineterminator='\n')
@@ -426,9 +499,6 @@ def main(fname_lift_train, fname_shape_train, fname_lift_test, fname_shape_test,
                     make_scatter_plot(y_test, y_predict, "CL(Exact)", "CL(Predict)", path="G:\\Toyota\\Data\\Incompressible_Invicid\\fig\\", fname=case_num)
                     """
 
-                json_string = model.to_json()
-                open(source + json_name, 'w').write(json_string)
-                model.save_weights(source + weight_name)
                 KTF.set_session(old_session)
 
 
