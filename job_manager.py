@@ -40,7 +40,7 @@ def auto_rename(program_name = "ES2"):
     return program_name
     
     
-def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/mayu_grid/",
+def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/mayu_SD/",
                    first=False, case = "Case5",
                    aoa_min=0.0, aoa_max=39.0, aoa_pattern=14, ma_min=0.15, ma_max=1.80, ma_pattern=12,
                    re_min=10000, re_max=1000000,re_pattern=5, debug=False):
@@ -172,7 +172,7 @@ def main(parallel = 280, first=False, debug=False):
         case_list = make_case_list(parallel, workingpath, gridpath, first=first, case="SD_test", aoa_min=aoa_min,
                                    aoa_max=aoa_max, aoa_pattern=aoa_pattern, ma_min=ma_min, ma_max=ma_max,
                                    ma_pattern=ma_pattern, re_min=re_min, re_max=re_max, re_pattern=re_pattern, debug = debug)
-        print(case_list)
+        print(case_list[:,1])
         exit()
     # workingpath = "/mnt/d/Toyota/github/2D_comp_viscos/"
     # resumepath = workingpath + "flow_solver/EulerSolver2_2018"
