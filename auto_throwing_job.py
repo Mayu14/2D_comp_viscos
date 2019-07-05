@@ -163,10 +163,17 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
     
     jobclass, time = set_jobclass_and_time(parallel, mpi)
     header = "#!/bin/bash\n###UGEオプション####\n#$ -P GR06APR18\n#$ -cwd\n"
-    body = "#$ -jc " + jobclass + "\n#$ -N " + jobname + "\n#$ -l h_rt=" + time + "\n#$ -pe OpenMP " + str(
+    if mpi:
+        pe = " impi_pslots "
+    else:
+        pe = " OpenMP "
+    body = "#$ -jc " + jobclass + "\n#$ -N " + jobname + "\n#$ -l h_rt=" + time + "\n#$ -pe" + pe + str(
         parallel) + "\n#$ -sync " + sync + "\n"
     footer = ". /etc/profile.d/modules.sh\nmodule load intel/2018.2.046\n"
-    last = "./" + program_path + program + " " + comargs
+    run = ""
+    if mpi:
+        run = "mpirun "
+    last = run + "./" + program_path + program + " " + comargs
     with open(fname, "w") as f:
         f.write(header)
         f.write(body)
