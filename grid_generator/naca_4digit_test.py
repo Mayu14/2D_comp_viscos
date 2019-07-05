@@ -4,17 +4,32 @@ import matplotlib.pyplot as plt
 
 
 class Naca_4_digit(object):
-    def __init__(self, int_4, attack_angle_deg, resolution, auto_normalize = True, monotonization = True,
-                 quasi_equidistant = True,
-                 length_adjust = False, from5digit = False, closed_te = True):
+    def __init__(self, int_4, attack_angle_deg, resolution, auto_normalize = True, monotonization = False,
+                 quasi_equidistant = True, length_adjust = False, closed_te = True, position="[0,1]",
+                 from5digit = False):
+        """
+        
+        :param int_4: NACA翼の4桁の型番
+        :param attack_angle_deg: 迎角
+        :param resolution: 返される点列の解像度
+        :param auto_normalize: 長さの正規化の有無(NACA6192などは[0,1]に収まらないため)
+        :param monotonization: 上側点・下側点がそれぞれx方向に単調増加になるような並べかえを実施(非推奨)
+        :param quasi_equidistant: 近似的にx方向等間隔な点列を得る
+        :param length_adjust:
+        :param closed_te: NACA翼の後縁を閉じるオプション
+        :param position:    [0,1]:[0,1]x[0,1]区間に配置，start_0:翼後縁にある[x,y]の始点を[0,0]に固定
+        :param from5digit: NACA5桁翼を入力する場合の分岐
+        """
         if from5digit == False:
             self.m = float(int_4[0]) / 100  # maximum camber
             self.p = float(int_4[1]) / 10  # position of the maximum camber
             self.t = float(int_4[2:4]) / 100  # maximum thickness
             self.load_setting(attack_angle_deg, resolution, quasi_equidistant, length_adjust)
-            self.closed = closed_te
             self.__y_c()
             self.__dyc_dx()
+
+        self.closed = closed_te
+        self.position = position
         self.__y_t()
         self.theta = np.arctan(self.dyc_dx)
         self.get_surface()
@@ -22,12 +37,22 @@ class Naca_4_digit(object):
         
         if auto_normalize:
             self.normalize()
+            
+        if self.position == "start_0":
+            self.set_zero_center()
         
+        self.monotonized = monotonization
         if monotonization:
             self.monotonize()
         
         if quasi_equidistant == True:
             self.get_quasi_equidistant_line()
+    
+    def set_zero_center(self):
+        self.x_u -= 1.0
+        self.x_l -= 1.0
+        self.y_u -= 0.5
+        self.y_l -= 0.5
     
     def load_setting(self, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False):
         self.use_quasi_equidistant = quasi_equidistant
@@ -173,10 +198,12 @@ class Naca_4_digit(object):
                 rot_l = expMat.dot(rot_l)
                 rot_u = expMat.dot(rot_u)
         
-        self.x_l = rot_l[0] + 0.5
-        self.y_l = rot_l[1] + 0.5
-        self.x_u = rot_u[0] + 0.5
-        self.y_u = rot_u[1] + 0.5
+        center = 0.5
+
+        self.x_l = rot_l[0] + center
+        self.y_l = rot_l[1] + center
+        self.x_u = rot_u[0] + center
+        self.y_u = rot_u[1] + center
     
     def plot(self):
         plt.xlim([0, 1])
@@ -223,9 +250,13 @@ class Naca_4_digit(object):
                 return np.concatenate([z_u_reverse, z_l, z_u_reverse[0].reshape(-1)])
     
     def one_stroke_ccw(self):
-        self.ccw_x = np.concatenate([self.x_u[::-1], self.x_l])
-        self.ccw_y = np.concatenate([self.y_u[::-1], self.y_l])
+        if self.monotonized:
+            print("one_stroke cannot use with monotonized")
+            exit()
     
+        self.ccw_x = np.concatenate([self.x_u[::-1], self.x_l[1:]])
+        self.ccw_y = np.concatenate([self.y_u[::-1], self.y_l[1:]])
+
     def one_stroke_cw(self):
         self.one_stroke_ccw()
         self.cw_x = self.ccw_x[::-1]
@@ -233,8 +264,10 @@ class Naca_4_digit(object):
 
 
 class Naca_5_digit(Naca_4_digit):
-    def __init__(self, int_5, attack_angle_deg, resolution, quasi_equidistant = True, length_adjust = False,
-                 from5digit = True, closed_te = True):
+    def __init__(self, int_5, attack_angle_deg, resolution, auto_normalize = True, monotonization = False,
+                 quasi_equidistant = True, length_adjust = False, closed_te = True, position="[0,1]",
+                 from5digit = True):
+        
         """
 
         :param int_5:   1st: 1~6, 2nd and 3rd [10,20,30,40,50,21,31,41,51], 4th and 5th [01~99]
@@ -256,8 +289,10 @@ class Naca_5_digit(Naca_4_digit):
         self.__y_c()
         self.__dyc_dx()
         self.closed = closed_te
-        super(Naca_5_digit, self).__init__(int_5, attack_angle_deg, resolution, quasi_equidistant = quasi_equidistant,
-                                           length_adjust = length_adjust, from5digit = True)
+        super(Naca_5_digit, self).__init__(int_5, attack_angle_deg, resolution, auto_normalize = auto_normalize,
+                                           monotonization = monotonization, quasi_equidistant = quasi_equidistant,
+                                           length_adjust = length_adjust, closed_te = closed_te,
+                                           position = position, from5digit = True)
     
     def __y_c(self):
         x_lt_m_nr = lambda m, k1, x: k1 / 6.0 * (x ** 3 - 3.0 * m * x ** 2 + m ** 2 * (3.0 - m) * x)
@@ -350,10 +385,13 @@ def main():
     # naca.plot()
     # naca.plot_quasi_equidistant_shape()
     naca = Naca_5_digit(int_5 = "21001", attack_angle_deg = deg, resolution = 100, quasi_equidistant = True,
-                        length_adjust = True)
-    
-    naca.plot()
-    naca.plot_quasi_equidistant_shape()
+                        length_adjust = True, position = "start_0")
+
+    #naca.plot()
+    plt.plot(naca.x_u, naca.y_u)
+    plt.plot(naca.x_l, naca.y_l)
+    plt.show()
+    #naca.plot_quasi_equidistant_shape()
 
 
 if __name__ == '__main__':
