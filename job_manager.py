@@ -29,10 +29,10 @@ def get_fnamelist(path="", sortby_size=True, head_search=""):
 
     return fnamelist
 
-def auto_rename(program_name = "ES2"):
+def auto_rename(program_name = "ES2", program_path=""):
     i = 1
     while i > 0:
-        if os.path.exists(program_name + str(i).zfill(6)):
+        if os.path.exists(program_path + program_name + str(i).zfill(6)):
             i += 1
         else:
             program_name += str(i).zfill(6)
@@ -40,7 +40,7 @@ def auto_rename(program_name = "ES2"):
     return program_name
     
     
-def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/mayu_SD/",
+def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="/work/A/FMa/FMa037/new_mayu/",
                    first=False, case = "Case5",
                    aoa_min=0.0, aoa_max=39.0, aoa_pattern=14, ma_min=0.15, ma_max=1.80, ma_pattern=12,
                    re_min=10000, re_max=1000000,re_pattern=5, debug=False):
@@ -110,9 +110,9 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                             # f90ファイル書き換え
                             # makefile書き換え&make
                             # qsub書き換え・ジョブ投入
-                            program_name = auto_rename(program_name = "ES2_start")
+                            program_name = auto_rename(program_name = "ES2_start", program_path = workingpath)
                             jobname = "sN" + naca
-                            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, first = True)
+                            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, first = True, program_path = workingpath)
 
     else:
         import shutil
@@ -154,7 +154,7 @@ def main(parallel = 280, first=False, debug=False):
     if not debug:
         workingpath = "/work/A/FMa/FMa037/Case5/"
         resumepath = "/work/A/FMa/FMa037/Case5/Resume/"
-        gridpath = "/work/A/FMa/FMa037/mayu_grid/"
+        gridpath = "/work/A/FMa/FMa037/new_mayu/"
     else:
         parallel = 40
         workingpath = "/work/A/FMa/FMa037/SD_test/"
@@ -199,8 +199,9 @@ def main(parallel = 280, first=False, debug=False):
             # makefile書き換え&make
             # qsub書き換え・ジョブ投入
             jobname = "re_" + str(fnumber)
-            program_name = auto_rename()
-            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name)
+            program_name = auto_rename(program_path = workingpath)
+            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, program_path = workingpath)
 
 if __name__ == '__main__':
-    main(first=True, debug=True)
+    parallel = 2880
+    main(parallel = parallel, first=True, debug=False)
