@@ -25,7 +25,7 @@ subroutine JobParallelNS(UConf)
     double precision, allocatable :: obj_velocity(:)
     type(AeroCharacteristics) :: UAC
     double precision :: time_start, time_step, time_elapsed, time_specified, residual
-    time_specified = 70200.0d0
+    time_specified = 70000.0d0
     !$ time_start = omp_get_wtime()
 ! 初期化
     UCC%ConvergeCondition = Converge_Method
@@ -43,19 +43,19 @@ subroutine JobParallelNS(UConf)
     call JPUConserve2Primitive(UG, UCC)
 
     if (UConf%UseResume /= 1) then
-        write(6,*) "Velocity correction"
+        !write(6,*) "Velocity correction"
         allocate(obj_velocity(3))
         obj_velocity(:) = - UG%GM%BC%InFlowVariable(2:4)
         call RelativeCoordinateTransform(UG, UCC, obj_velocity)
     end if
 
-    write(6,*) UG%GM%BC%InFlowVariable
-    write(6,*) UG%GM%BC%OutFlowVariable
+    !write(6,*) UG%GM%BC%InFlowVariable
+    !write(6,*) UG%GM%BC%OutFlowVariable
 
     call CheckNaN(UConf, UCC)   !
     allocate(UAC%coefficient(2, IterationNumber))
 
-    if(DetailedReport > 0) then
+    if(DetailedReport > -1) then
         call show_setting(UConf)
     end if
 
@@ -66,7 +66,7 @@ subroutine JobParallelNS(UConf)
         do iStep = (iTry-1)*OutputInterval + iStartStep, iTry*OutputInterval
             if(DetailedReport > 2) then
                 if(mod(iStep, 100) == 0) then
-                    write(6,*) iStep, "/", OutputInterval*IterationNumber, " th iteration"
+                    write(6,*) time_elapsed, "sec. ", iStep, "/", OutputInterval*IterationNumber, " th iteration"
                 end if
             end if
 
@@ -209,7 +209,7 @@ contains
                 RetryFlag = 0
                 CheckNaNInterval = max(ceiling(float(CheckNaNInterval) / 2.0), 1)
                 if(DetailedReport > 1) then
-                    write(6,*) "NaN detected."
+                    write(6,*) "NaN detected.", UConf%my_rank
                     write(6,*) "CFL Number ", CourantFriedrichsLewyCondition*2, " -> ", CourantFriedrichsLewyCondition
                     write(6,*) "Check interval ", CheckNaNInterval
                     write(6,*) ""
@@ -234,6 +234,8 @@ contains
             type(Configulation), intent(in) :: UConf
             write(6,*) "--Setting--"
             write(6,*) "Detailed Report :", DetailedReport
+            write(6,*) UConf%my_rank, UConf%cFileName
+
             if(UConf%UseFluxMethod == 0) then
                 write(6,*) "Inviscid Flux: Roe"
             else if(UConf%UseFluxMethod == 1) then

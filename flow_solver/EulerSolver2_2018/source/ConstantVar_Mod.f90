@@ -22,8 +22,8 @@ implicit none
     double precision :: FixedTimeStep
     double precision :: DefaultTimeStep
     integer :: OutputInterval !結果の出力間隔  ! switch=5,6においては内部反復の回数
-    integer :: CheckNaNInterval = 50 !NaNになってないか確認する間隔
-    integer :: CheckNaNInterval_default = 50 !NaNになってないか確認する間隔
+    integer :: CheckNaNInterval = 1 !NaNになってないか確認する間隔
+    integer :: CheckNaNInterval_default = 1 !NaNになってないか確認する間隔
     integer :: IterationNumber !計算の反復回数 ! switch=5,6においては外部反復の最大値
     integer :: CoreNumberOfCPU = 1
     integer :: GridNumber = 1!重合格子法にて使用する格子の数
