@@ -65,7 +65,7 @@ def update_JPCalcCaseAutoFill_f90(case_list, first=False,
         f.write(main_program)
         f.write(
             s1 + "subroutine grid_change(UConf)\n" + s2 + "implicit none\n" + s2 + "type(Configulation), intent(inout) :: UConf\n")
-        f.write(s3 + 'UConf%UseResume = 1\n' + s3 + 'UConf%UseMUSCL = 1\n')
+        f.write(s3 + 'UConf%UseResume = 1\n' + s3 + 'UConf%UseMUSCL = 0\n')
         f.write(s3 + 'allocate(UConf%ResumeInFlowVars(5), UConf%ResumeOutFlowVars(5))\n')
         f.write(s3 + 'UConf%ResumeInFlowVars = 0.0d0\n' + s3 + 'UConf%ResumeInFlowVars(1) = 1.0d0\n')
         f.write(s3 + 'UConf%ResumeInFlowVars(5) = 1.0d0\n')
@@ -88,7 +88,7 @@ def update_JPCalcCaseAutoFill_f90(case_list, first=False,
         f.write(s2 + "return\n" + s1 + "end subroutine grid_change\nend subroutine JPCalcCaseAutoFill\n")
 
 def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSolver2_2018/",
-                    debug = False, compiler = "mpiifort"):
+                    debug = False, mpi=True, compiler = "mpiifort", program_path="/work/A/FMa/FMa037/Case5/"):
     """
     Makefileを書き換える
     :param program_name:    出力されるプログラムの名称
@@ -98,13 +98,14 @@ def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_visc
     :return: None
     """
     # makefile_path = "/mnt/d/Toyota/github/2D_comp_viscos/flow_solver/EulerSolver2_2018/"  # debug
-    
-    body = "EXE = " + program_name + "\n"
+    body = "EXE_DIR = ../../../../.." + program_path + "\n"
+    body += "EXE = " + program_name + "\n"
     body += "FC = " + compiler + "\nLD =  " + compiler + "\nIDIR =\n"
     if debug:
         body += "CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full\n"
     else:
-        body += "CFLAGS = -xhost -qopenmp -O4\n"
+        body += "CFLAGS = -fast -qopenmp -O3\n"
+
     
     fname = makefile_path + "Makefile"
     
@@ -181,7 +182,7 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
         f.write(last)
 
 
-def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen_job", program_name = "EulerSolver2", make_script="make.sh", first=False):
+def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen_job", program_name = "EulerSolver2", make_script="make.sh", first=False, program_path=""):
     """
     ジョブを自動で投げるためのプログラム
     :param parallel: (int) スパコン上のジョブ並列数
@@ -196,11 +197,11 @@ def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen
     update_JPCalcCaseAutoFill_f90(case_list, first)
     
     # makefile書き換え&make
-    update_makefile(program_name, debug = False)
+    update_makefile(program_name, debug = False, program_path=program_path)
     
     run_unix("./" + make_script) # cd /home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSover2_2018/; make
     # qsub書き換え・ジョブ投入
-    generate_qsub(qsubname, jobname, parallel, program_name)
+    generate_qsub(qsubname, jobname, parallel, program_name, program_path=program_path)
     run_unix("qsub " + qsubname)
 
 
@@ -213,4 +214,4 @@ if __name__ == '__main__':
          '30.0d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA0012__AoA30.0__Ma0.80__Re50000__case5__Resume.vtk'],
         ['/mnt/g/Toyota/Data/grid_vtk/valid/mayu/NACA21092.mayu', 'NACA21092__AoA23.5__Ma0.30__Re4000__case5', 'case5',
          '23.5d0', '/mnt/d/Toyota/github/2D_comp_viscos/Running/NACA21092__AoA23.5__Ma0.30__Re4000__case5__Resume.vtk']]
-    job_throwing(parallel, case_list, qsubname, jobname, program_name = "ES2", first = True)
+    job_throwing(parallel, case_list, qsubname, jobname, program_name = "ES2", first = True, program_path = "")
