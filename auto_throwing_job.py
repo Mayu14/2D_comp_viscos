@@ -98,7 +98,7 @@ def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_visc
     :return: None
     """
     # makefile_path = "/mnt/d/Toyota/github/2D_comp_viscos/flow_solver/EulerSolver2_2018/"  # debug
-    body = "EXE_DIR = ../../../../.." + program_path + "\n"
+    body = "EXE_DIR = ../../../../../.." + program_path + "\n"
     body += "EXE = " + program_name + "\n"
     body += "FC = " + compiler + "\nLD =  " + compiler + "\nIDIR =\n"
     if debug:
