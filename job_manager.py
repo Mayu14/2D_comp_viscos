@@ -93,6 +93,8 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
             fname_list = get_fnamelist(path=gridpath)
         else:
             fname_list = get_fnamelist(path = gridpath, head_search = "NACA0012")
+        total = len(fname_list) * re_pattern * ma_pattern * aoa_pattern
+        length_total = 0
         for fname in fname_list:
             naca = fname.replace(gridpath, "").split(".")[0][4:]  # "NACAxxxxx.mayu"拡張子と頭文字外す
             for i in range(re_pattern):
@@ -106,13 +108,18 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                         angle = aoa_min + del_aoa * (k - 1)
                         case_list.append(get_case_name(naca, mach, reynolds, angle, case, gridpath, workingpath))
                         length += 1
-                        if length == parallel:
+                        length_total += 1
+                        if (length == parallel) or (length_total == total):
+                            if (length_total == total):
+                                parallel = len(case_list)
                             # f90ファイル書き換え
                             # makefile書き換え&make
                             # qsub書き換え・ジョブ投入
                             program_name = auto_rename(program_name = "ES2_start", program_path = workingpath)
                             jobname = "sN" + naca
                             job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, first = True, program_path = workingpath)
+                            length = 0
+                            case_list = []
 
     else:
         import shutil
