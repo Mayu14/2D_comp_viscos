@@ -104,7 +104,7 @@ def update_makefile(program_name, makefile_path = "/home/FMa/FMa037/2D_comp_visc
     if debug:
         body += "CFLAGS = -check uninit -check pointers -check bounds -qopenmp -stand f90 -fp-stack-check -O0 -traceback -warn all -ftrapuv -debug full\n"
     else:
-        body += "CFLAGS = -fast -qopenmp -O3\n"
+        body += "CFLAGS = -xhost -qopenmp -O3\n"
 
     
     fname = makefile_path + "Makefile"
@@ -174,7 +174,7 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
     run = ""
     if mpi:
         run = "mpirun "
-    last = run + "./" + program_path + program + " " + comargs
+    last = run + "." + program_path + program + " " + comargs
     with open(fname, "w") as f:
         f.write(header)
         f.write(body)
