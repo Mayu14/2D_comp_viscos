@@ -80,8 +80,17 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
         os.mkdir(runningpath)
         
     if first:   # 初回のみ
-        del_aoa = (aoa_max - aoa_min) / aoa_pattern
-        del_mach = (ma_max - ma_min) / ma_pattern
+        if aoa_pattern > 1:
+            aoam1 = aoa_pattern - 1
+        else:
+            aoam1 = 1
+        del_aoa = (aoa_max - aoa_min) / aoam1
+        
+        if ma_pattern > 1:
+            ma_m1 = ma_pattern - 1
+        else:
+            ma_m1 = ma_pattern
+        del_mach = (ma_max - ma_min) / ma_m1
         if re_pattern != 1:
             rat_re = (re_max / re_min) ** (1.0 / (re_pattern - 1))
         else:
@@ -186,8 +195,8 @@ def main(parallel = 280, first=False, debug=False):
     # gridpath = "/mnt/g/Toyota/Data/grid_vtk/valid/mayu/"
     if first:
         aoa_min = 0.0
-        aoa_max = 39.0
-        aoa_pattern = 14
+        aoa_max = 36.0
+        aoa_pattern = 10
         ma_min = 0.75
         ma_max = ma_min
         ma_pattern = 1
@@ -210,5 +219,5 @@ def main(parallel = 280, first=False, debug=False):
             job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, program_path = workingpath)
 
 if __name__ == '__main__':
-    parallel = 2880
+    parallel = 2000
     main(parallel = parallel, first=True, debug=False)
