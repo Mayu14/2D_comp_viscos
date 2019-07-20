@@ -174,8 +174,8 @@ def generate_qsub(fname, jobname, parallel, program, mpi = True, comargs = "", s
     run = ""
     if mpi:
         run = "mpirun "
-    last = run + "." + program_path + program + " " + comargs
-    with open(fname, "w") as f:
+    last = run + "./" + program + " " + comargs
+    with open(program_path + fname, "w") as f:
         f.write(header)
         f.write(body)
         f.write(footer)
@@ -202,7 +202,7 @@ def job_throwing(parallel, case_list, qsubname="auto_qsub.sh", jobname="auto_gen
     run_unix("./" + make_script) # cd /home/FMa/FMa037/2D_comp_viscos/flow_solver/EulerSover2_2018/; make
     # qsub書き換え・ジョブ投入
     generate_qsub(qsubname, jobname, parallel, program_name, program_path=program_path)
-    run_unix("qsub " + qsubname)
+    run_unix("qsub " + program_path + qsubname)
 
 
 if __name__ == '__main__':
