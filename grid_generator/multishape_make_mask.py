@@ -5,7 +5,8 @@ from grid_generator.naca_4digit_test import Naca_4_digit as N4d  # use only test
 from grid_generator.naca_4digit_test import Naca_5_digit as N5d  # use only test
 from PIL import Image
 from grid_generator.mask_maker import VPmask as MM
-
+import skfmm
+import cv2
 
 # 標準物体形状は[0, 1]×[0, 1]領域に描画されるものとする
 # 即ち，広義の物体形状をmax(xmax - xmin, ymax - ymin)にて規格化したのち，原点が(0.5, 0.5)となるよう平行移動したものを標準物体形状と定める
@@ -167,13 +168,13 @@ def main():
     print(y_l)
     """
 
-def make_dataset(type=4, grid_resolution = 2 ** 9):
+def make_dataset(type=4, grid_resolution = 2 ** 9, sdf=False):
     def concat_u_and_l(naca):
         x = np.concatenate([naca.x_u, naca.x_l[::-1]])
         y = np.concatenate([naca.y_u, naca.y_l[::-1]])
         return [x], [y]
 
-    def main_process(naca4, path, grid_resolution, NACA=N4d):
+    def main_process(naca4, path, grid_resolution, NACA=N4d, sdf=False):
         attack_angle_deg = 0
         naca = NACA(naca4, attack_angle_deg, grid_resolution)
         x, y = concat_u_and_l(naca)
@@ -183,9 +184,16 @@ def make_dataset(type=4, grid_resolution = 2 ** 9):
         s.mask2pict()
         """
         canvas = [grid_resolution, grid_resolution]
-        mask = MM(x, y, canvas, deform="Fit", start_point="rt")
         fname = path + naca4
-        mask.save_img(fname)
+
+        if sdf:
+            imglim = [[-0.1, 1.1], [-0.1, 1.1]]
+            mask = MM(x, y, canvas, default_canvas = canvas, deform = "None", start_point = "rb", imglim = imglim)
+            mask.save_sdf(fname, save_contour = True)
+            
+        else:
+            mask = MM(x, y, canvas, deform="Fit", start_point="rt")
+            mask.save_img(fname)
         
     
     path = "G:\\Toyota\\Data\\Compressible_Invicid\\training_data\\"
@@ -195,8 +203,11 @@ def make_dataset(type=4, grid_resolution = 2 ** 9):
             for i2 in range(0,10):
                 for i34 in range(1, 100):
                     naca4 = str(i1) + str(i2) + str(i34).zfill(2)
-                    main_process(naca4, path, grid_resolution)
+                    print(naca4)
+                    main_process(naca4, path, grid_resolution, sdf = sdf)
                     
+                    
+                        
     elif type == 5:
         path += "NACA5\\cnn\\image\\" + str(grid_resolution) + "\\"
         mid_int2 = [10, 20, 30, 40, 50, 21, 31, 41, 51]
@@ -204,11 +215,14 @@ def make_dataset(type=4, grid_resolution = 2 ** 9):
             for int23 in mid_int2:
                 for i45 in range(1, 100):
                     naca5 = str(int1) + str(int23) + str(i45).zfill(2)
-                    main_process(naca5, path, grid_resolution, NACA=N5d)
+                    main_process(naca5, path, grid_resolution, NACA=N5d, sdf = sdf)
     
     
 if __name__ == '__main__':
     # main()
-    for j in range(4, 10):
+    # for j in range(9, 10):
         # for i in range(4,6):
-        make_dataset(type = 5, grid_resolution=2**j)
+    sdf = True
+    for i in range(5, 6):
+        make_dataset(type = i, grid_resolution=2**10, sdf=sdf)
+        
