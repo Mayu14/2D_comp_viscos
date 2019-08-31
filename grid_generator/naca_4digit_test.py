@@ -28,6 +28,7 @@ class Naca_4_digit(object):
             self.__y_c()
             self.__dyc_dx()
 
+        self.name = int_4
         self.closed = closed_te
         self.position = position
         self.__y_t()
@@ -262,6 +263,45 @@ class Naca_4_digit(object):
         self.cw_x = self.ccw_x[::-1]
         self.cw_y = self.ccw_y[::-1]
 
+    def generate_obj(self, out_name, z_shift = 1):
+        def load_header():
+            header = '# Wavefront OBJ file\n# Regions:\n#\t0\taerofoil\n#\n'
+            header += '# points\t: ' + str(2 * self.pts_total) + '\n'
+            header += '# faces\t:' + str(self.pts_total) + '\n#\n'
+            return header
+
+        def write_line(label, rec1, rec2='', rec3=''):
+            return label + ' ' + str(rec1) + ' ' + str(rec2) + ' ' + str(rec3)  + '\n'
+
+        def get_tri_vertices(i):
+            i += 1  # obj`s face is started by number 1
+            if i != self.pts_total:
+                p2 = i + 1
+            else:
+                p2 = 1
+            return i, p2, i + self.pts_total, p2 + self.pts_total
+
+        self.one_stroke_ccw()
+        self.pts_total = self.ccw_x.shape[0]
+        body = load_header()
+        write_line(label='o', rec1=self.name)
+        z_half = z_shift / 2
+        self.ccw_y -= 0.5
+        for j in range(2):
+            for i in range(self.pts_total):
+                body += write_line(label='v', rec1=self.ccw_x[i], rec2=self.ccw_y[i], rec3=j*z_shift - z_half)
+        self.ccw_y += 0.5
+        body += write_line(label='g', rec1='WALL10')
+        for i in range(self.pts_total):
+            p1, p2, p3, p4 = get_tri_vertices(i)
+            body += write_line(label='f', rec1=p1, rec2=p2, rec3=p3)
+            body += write_line(label='f', rec1=p4, rec2=p3, rec3=p2)
+        if not ('.obj' in out_name):
+            out_name += '.obj'
+
+        with open(out_name, 'w') as f:
+            f.write(body)
+
 
 class Naca_5_digit(Naca_4_digit):
     def __init__(self, int_5, attack_angle_deg, resolution, auto_normalize = True, monotonization = False,
@@ -378,9 +418,10 @@ class Naca_5_digit(Naca_4_digit):
                 exit()
 
 
+
 def main():
     deg = 0.0
-    naca = Naca_4_digit(int_4 = "0012", attack_angle_deg = deg, resolution = 100, quasi_equidistant = True,
+    naca = Naca_4_digit(int_4 = "3612", attack_angle_deg = deg, resolution = 100, quasi_equidistant = True,
                         length_adjust = True)
     # naca.plot()
     # naca.plot_quasi_equidistant_shape()
