@@ -3,10 +3,12 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import skfmm
 
 class VPmask(object):
     def __init__(self, x, y, canvas_size, start_point="lb", imglim=None, deform="None", obj_margin=4,
-                 default_canvas=[1024,1024], outerframe_margin=3, line_width=0.5):
+                 default_canvas=[1024,1024], outerframe_margin=3, line_width=0.5,
+                 sdf_canvas=[1024,1024]):
         """
         物体表面のx,yの座標の配列を入力し，rgb配列に変換する(x,yは一筆書きできるように整列済みであるとする)
         :param x:   (list as [ndarray x-coords obj1, ndarray x-coords obj2, ... ])    # object surface points coordinates of x
@@ -27,8 +29,9 @@ class VPmask(object):
 
 
         self.canvas_size = default_canvas
+        self.sdf_canvas = sdf_canvas
         self.__set_canvas__(canvas_size)
-
+        
         self.obj_margin = obj_margin
         self.outerframe_margin = outerframe_margin
 
@@ -68,7 +71,7 @@ class VPmask(object):
     def __set_canvas__(self, canvas_size):
         for i in range(2):
             if self.canvas_size[i] < canvas_size[i]:
-                self.canvas_size[i] = int(1.2 * canvas_size[i])
+                self.canvas_size[i] = canvas_size[i]
         self.final_canvas = canvas_size
 
 
@@ -193,10 +196,11 @@ class VPmask(object):
 
         # *** 領域塗りつぶしと結果の表示
         # cv2.floodFill( img, mask, (120,120), (0,0,0))   # 1st:img, 2nd:mask 3rd:seed point 4th:new value
-
+        
         # cv2.floodFill(self.img, mask, (int(sz[0]/2), int(sz[1]/2)), (0,0,0))
         # cv2.floodFill(self.img, mask, (self.internal_point[0][0], self.internal_point[0][1]), (0,0,0))
         cv2.floodFill(img, mask, (self.start_points[0], self.start_points[1]), (0, 0, 0))    # 物体じゃない側を塗りつぶす
+
         # cv2.imshow("canny",mask)
         # self.img = 255 - self.img   # reverse
         xy_min = self.outerframe_margin
@@ -204,11 +208,18 @@ class VPmask(object):
         y_max = (img.shape[1]) - xy_min
         return img[xy_min:x_max, xy_min:y_max, 0]
 
-    def resize(self, interpolate = cv2.INTER_LANCZOS4):
-        width = self.final_canvas[0]
-        height = self.final_canvas[1]
-        self.mask = cv2.resize(self.mask, (width, height), interpolation=interpolate)
-        self.img = cv2.resize(self.img, (width, height), interpolation=interpolate)
+    def resize(self, interpolate = cv2.INTER_LANCZOS4, sdf=False):
+        if sdf:
+            width = self.sdf_canvas[0]
+            height = self.sdf_canvas[1]
+            if (width != width) or (height != height):
+                self.sdf = cv2.resize(self.sdf, (width, height), interpolation=interpolate)
+        else:
+            width = self.final_canvas[0]
+            height = self.final_canvas[1]
+            if (width != self.canvas_size[0]) or (height != self.canvas_size[1]):
+                self.mask = cv2.resize(self.mask, (width, height), interpolation=interpolate)
+                self.img = cv2.resize(self.img, (width, height), interpolation=interpolate)
 
     def show_mask(self):
         cv2.imshow("mask", self.mask)
@@ -223,7 +234,37 @@ class VPmask(object):
             fname_without_extension += "__" + str(self.aspect_ratio) + "__"
         fname = fname_without_extension + "." + format
         cv2.imwrite(fname, self.img)
-
+    
+    def get_sdf(self):
+        """
+        maskのSigned Distance Fieldを与える．(※事前にresizeすると極端に精度が悪化するため，deform="None", default_canvas = canvas_sizeとすること)
+        :return:
+        """
+        dx = 1.0#/max(self.canvas_size[0], self.canvas_size[1])  # 1pxあたりの長さ(長さ1に正規化したものとして考える(実際はobj_margin分だけずれている点に注意))
+        try:
+            self.sdf = skfmm.distance(-self.mask+255, dx = dx)
+            self.sdf[self.sdf == 0.0] = -skfmm.distance(self.mask, dx = dx)[self.sdf == 0.0]
+            self.sdf = self.sdf[::-1]   # cv2のimageはmatplotlibのcontourと逆順に読み取る
+        except ValueError:
+            self.sdf = None
+        
+    def save_sdf(self, fname_without_extension, save_contour=False, imgformat="png"):
+        #self.show_mask()
+        self.get_sdf()
+        if type(self.sdf) != type(None):
+            self.resize(sdf = True)
+            fname = fname_without_extension + "_sdf_" + str(self.sdf_canvas[0]) + "_" + str(self.sdf_canvas[1])
+            if save_contour:
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                mappable = ax.contourf(self.sdf, levels=30, cmap="jet_r")
+                fig.colorbar(mappable)
+                plt.savefig(fname + "." + imgformat)
+                plt.close()
+            np.save(file = fname, arr = self.sdf)
+        else:
+            print(fname_without_extension)
+            
 def test_independent():
     x=[]
     y=[]
@@ -301,7 +342,8 @@ if __name__ == '__main__':
     size = 512
     canvas = [size,size]
     #imglim = [[-1.1,1.1],[-1.1,1.1]]
-    mask = VPmask(x, y, canvas, deform="Fit", obj_margin=4, start_point="rt")
+    margin = 100
+    mask = VPmask(x, y, canvas, deform="None", obj_margin=margin, start_point="rt")
     mask.show_img()
     # main()
 
