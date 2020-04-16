@@ -125,8 +125,9 @@ def make_case_list(parallel, workingpath="/work/A/FMa/FMa037/Case5/", gridpath="
                             # makefile書き換え&make
                             # qsub書き換え・ジョブ投入
                             program_name = auto_rename(program_name = "ES2_start", program_path = workingpath)
+                            qsub_name = auto_rename(program_name="auto_job", program_path=workingpath)
                             jobname = "sN" + naca
-                            job_throwing(parallel, case_list, jobname = jobname, program_name = program_name, first = True, program_path = workingpath)
+                            job_throwing(parallel, case_list, qsubname=qsub_name, jobname = jobname, program_name = program_name, first = True, program_path = workingpath)
                             length = 0
                             case_list = []
 
