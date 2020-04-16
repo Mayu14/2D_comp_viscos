@@ -1,0 +1,117 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+left  -2.4;
+right  10;
+bottom  -4.4;
+top  4.4;
+back  -0.2;
+front  0.2;
+vertices
+(
+    ($left $bottom $back)
+    ( $right   $bottom $back)
+    ( $right    $top $back)
+    ($left  $top $back)
+    ($left $bottom  $front)
+    ( $right   $bottom  $front)
+    ( $right    $top  $front)
+    ($left  $top  $front)
+);
+
+xMesh	36;
+yMesh	24;
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) ($xMesh $yMesh 1) simpleGrading (
+	(
+		(0.35 0.5 1)
+		(0.65 0.5 4)
+	)
+	(
+		(0.3 0.2 0.25)
+		(0.4 0.6 1)
+		(0.3 0.2 4)
+	)	 
+	1)
+);
+
+edges
+(
+//	arc 0 3 (-4.8 0 $back)
+//	arc 4 7 (-4.8 0 $front)
+);
+
+boundary
+(
+    topAndBottom
+    {
+        type patch;
+	inGroups (freestream);
+        faces
+        (
+            (3 7 6 2)
+            (1 5 4 0)
+        );
+    }
+
+    inlet
+    {
+        type patch;
+	inGroups (freestream);
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+
+    outlet
+    {
+        type patch;
+	inGroups (freestream);
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
+
+    symFront
+    {
+        type symmetryPlane;
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
+
+    symBack
+    {
+        type symmetryPlane;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //
