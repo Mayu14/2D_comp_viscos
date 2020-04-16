@@ -27,7 +27,12 @@ def run_unix(cmd):
     return out.strip().decode("utf8")
 
 def gen_casename(shape, angle, mach, reynolds):
-    return shape + "_aoa" + str(angle) + "_ma" + str(mach) + "_re" + str(reynolds)
+    if not mach == "incomp":
+        ma = mach
+    else:
+        ma = "Inf"
+    return shape + "_aoa" + str(angle) + "_ma" + str(ma) + "_re" + str(reynolds)
+    
 
 def gen_if_block(casename, i):
     block = "if "
@@ -37,56 +42,76 @@ def gen_if_block(casename, i):
     block += "\tdirectory = '" + casename + "'\n"
     return block
 
-def gen_if_block_all(offset, split, old_style=False):
-    reynoldsList = [1000, 10000]
-    machList = [0.5, 0.8, 1.1, 1.4]
+def gen_if_block_all(offset, split, old_style=False, incomp="", from_csv=False, csvName="no_finish.csv"):
     shapeHeader = 'NACA'
-    angleList = [-5.0, 0.0, 5.0, 10.0, 15.0, 20.0]
     ifblock = ""
     i = 0
-    if old_style:
-        for i1 in range(1, 10, 3):
-            for i2 in range(1, 10, 3):
-                for i34 in range(12, 100, 20):
-                    int_4 = str(i1) + str(i2) + str(i34)
-                    shape = shapeHeader + int_4
-                    for angle in angleList:
-                        for reynolds in reynoldsList:
-                            for mach in machList:
-                                if ((i >= offset) and (i < split + offset)):
-                                    case = gen_casename(shape, angle, mach, reynolds)
-                                    ifblock += gen_if_block(case, i - offset)
-                                i += 1
+    if not from_csv:
+        if not incomp == "incomp":
+            reynoldsList = [1000, 10000]
+            machList = [0.5, 0.8, 1.1, 1.4]
+        else:
+            reynoldsList = [100, 1000, 10000, 100000]
+            machList = ["incomp"]
+            
+        angleList = [-5.0, 0.0, 5.0, 10.0, 15.0, 20.0]
 
+        if old_style:
+            for i1 in range(1, 10, 3):
+                for i2 in range(1, 10, 3):
+                    for i34 in range(12, 100, 20):
+                        int_4 = str(i1) + str(i2) + str(i34)
+                        shape = shapeHeader + int_4
+                        for angle in angleList:
+                            for reynolds in reynoldsList:
+                                for mach in machList:
+                                    if ((i >= offset) and (i < split + offset)):
+                                        case = gen_casename(shape, angle, mach, reynolds)
+                                        ifblock += gen_if_block(case, i - offset)
+                                    i += 1
+    
+        else:
+            i3_list = [12, 22, 32, 42, 52, 62, 72, 82]
+            naca45 = [True, False]
+    
+            for naca4 in naca45:
+                if naca4:
+                    i2_len = 1
+                    i1_list = [0, 2, 5, 7, 9]
+                    i2_list = [0, 1, 3, 4, 6, 7]
+                else:
+                    i2_len = 2
+                    i1_list = [1, 2, 3, 4, 5]
+                    i2_list = [10, 21, 30, 41, 50]
+    
+                for i1 in i1_list:
+                    for i2 in i2_list:
+                        if ((i1 == 0) and (i2 == 0)) or (i1 != 0):
+                            for i34 in i3_list:
+                                int_4 = str(i1) + str(i2).zfill(i2_len) + str(i34)
+                                shape = shapeHeader + int_4
+                                for angle in angleList:
+                                    for reynolds in reynoldsList:
+                                        for mach in machList:
+                                            if ((i >= offset) and (i < split + offset)):
+                                                case = gen_casename(shape, angle, mach, reynolds)
+                                                ifblock += gen_if_block(case, i - offset)
+                                            i += 1
     else:
-        i3_list = [12, 22, 32, 42, 52, 62, 72, 82]
-        naca45 = [True, False]
-
-        for naca4 in naca45:
-            if naca4:
-                i2_len = 1
-                i1_list = [0, 2, 5, 7, 9]
-                i2_list = [0, 1, 3, 4, 6, 7]
-            else:
-                i2_len = 2
-                i1_list = [1, 2, 3, 4, 5]
-                i2_list = [10, 21, 30, 41, 50]
-
-            for i1 in i1_list:
-                for i2 in i2_list:
-                    if ((i1 == 0) and (i2 == 0)) or (i1 != 0):
-                        for i34 in i3_list:
-                            int_4 = str(i1) + str(i2).zfill(i2_len) + str(i34)
-                            shape = shapeHeader + int_4
-                            for angle in angleList:
-                                for reynolds in reynoldsList:
-                                    for mach in machList:
-                                        if ((i >= offset) and (i < split + offset)):
-                                            case = gen_casename(shape, angle, mach, reynolds)
-                                            ifblock += gen_if_block(case, i - offset)
-                                        i += 1
-
-
+        import csv
+        with open(csvName) as f:
+            reader = csv.reader(f)
+            for row in reader:
+                shape = shapeHeader + row[0]
+                angle = float(row[1])
+                mach = row[2]
+                reynolds = int(row[3])
+                case = gen_casename(shape, angle, mach, reynolds)
+                print(case)
+                exit()
+                ifblock += gen_if_block(case, i)
+                i += 1
+                
     ifblock += 'end if\n'
     return ifblock
 
@@ -124,8 +149,9 @@ program runOF
     shm = "snappyHexMesh -overwrite > log.snappyHexMesh 2>&1; "
     exm = "extrudeMesh > log.extrudeMesh 2>&1; "
     crp = "createPatch -overwrite > log.createPatch 2>&1; "
-    rcf = "rhoCentralFoam > log.rhoCentralFoam 2>&1; "
-
+    """
+    
+    program_mid_12 = """
     command = trim(adjustl(chd))//trim(adjustl(bmd))//trim(adjustl(shm))//trim(adjustl(exm))//trim(adjustl(crp))
     if (access(trim(adjustl(directory))//"/log.extrudeMesh", " ") /= 0) then
         call execute_command_line(trim(adjustl(command)), wait=.true., exitstat=exitstat, cmdstat=cmdstat, cmdmsg=cmdmsg)
@@ -135,16 +161,12 @@ program runOF
 
     rcf_timeout = set_timeout(rcf, time_remaining)
     command = trim(adjustl(chd))//trim(adjustl(rcf_timeout))"""
-    if mach == 0.5:
-        dir = '480'
-    elif mach == 0.8:
-        dir = '300'
-    elif mach == 1.1:
-        dir = '215'
-    elif mach == 1.4:
-        dir = '170'
-    else:
-        dir = '170'
+    rcf = '\trcf = "rhoSimpleFoam > log.rhoSimpleFoam 2>&1; "\n'
+
+    dir = '50000'
+    if mach == "incomp":
+        rcf = '\trcf = "simpleFoam > log.simpleFoam 2>&1; "\n'
+
     restartcheck = '\nif (access(trim(adjustl(directory))//"/' + dir + '/U", " ") /= 0) then\n'
     program_mid2 = """
         call execute_command_line(trim(adjustl(command)), wait=.true., exitstat=exitstat, cmdstat=cmdstat, cmdmsg=cmdmsg)
@@ -183,6 +205,11 @@ contains
         else if (dumping_ratio * maxCo < epsilon) then	!異常終了した場合(発散など)
             exit_status  = 2
         else if (exitstat /= 0) then	!異常終了した場合(発散など)
+            exit_status  = 2
+        """
+    rewrite = ""
+    if not (mach == "incomp"):
+        rewrite = """
             ! ここにcontrolDictの書き直し部分を追加すべし (directoryはこのための引数)
             call reWriteMaxCo(directory, my_rank, dumping_ratio * maxCo)
             ! rhoCentralFoamのみ再走させて
@@ -195,7 +222,9 @@ contains
                 ! 異常終了してないか確認
             write(6,*) exitstat, time_remaining_copy
             exit_status = re_run(exit_status, chd, rcf, directory, time_remaining_copy, my_rank, dumping_ratio * maxCo)
-
+            """
+        
+    program_mid23 = """
         else
             exit_status = 0	!正常終了時
         end if
@@ -271,8 +300,8 @@ contains
 
 end program runOF
     """
-    ifblock = gen_if_block_all(offset, split)
-    program = program_head + program_offset + program_mid + restartcheck + program_mid2 + ifblock + program_tail
+    ifblock = gen_if_block_all(offset, split, incomp = mach)
+    program = program_head + program_offset + program_mid + rcf + program_mid_12 + restartcheck + program_mid2 + rewrite + program_mid23 + ifblock + program_tail
     fname = path + get_program_name(split, offset) + '.f90'
 
     with open(fname, 'w') as f:
@@ -293,6 +322,7 @@ def throw_qsub(split, offset):
         para = '#$ -pe impi_pslots ' + str(split) + "\n"
     else:
         jobclass = "#$ -jc single"
+        para = ""
     name = '#$ -N OF' + str(offset).zfill(5) + "\n"
     qsub_tail = """
 . /etc/profile.d/modules.sh
@@ -326,20 +356,28 @@ def compile(split, offset, path='', run=False):
         cmd += '; ./' + p_name
     run_unix(cmd)
 
-def main(total=19200):
-    split = 1#960
+def main(total=19200, incomp=False):
+    mach = 0.5
+    if incomp:
+        mach = "incomp"
+    split = 960#1
     split_num = int(total / split)
     for i in range(split_num):
         offset = i * split
-        gen_fsource(offset, split)
+        gen_fsource(offset, split, mach = "incomp")
         compile(split, offset)
         throw_qsub(split, offset)
 
 if __name__ == '__main__':
-    total = 19200
+    incomp = True
+    if not incomp:
+        total = 19200
+    else:
+        total = 9600
+    # total = 178 #
     #qsub = throw_qsub(split, offset)
     #compile(split, offset)
     #exit()
     #gen_fsource(offset=0, split=240)
     #exit()
-    main()
+    main(total, incomp)
