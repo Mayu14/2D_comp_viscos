@@ -10,7 +10,7 @@ def common(cp=False):
     fname_head = "NACA0012_01__"
     # fname_head = "NACA0012_02_VALIDATE_M080_A01_25"
     # fname_head = "NACA0012_02_VALIDATE_M050_A02_00"
-    case = "exact_plus"
+    case = "m05"
     # path = "D:\\Toyota\\Downloads\\" + case + "\\ResultC\\"
     path = "G:\\Toyota\\validQ\\" + case + "\\ResultC\\"
     # path = "D:\\Toyota\\Data\\validR\\" + case + "\\ResultC\\"
@@ -44,7 +44,7 @@ def dat2csv(end = 101):
     np.savetxt(csvname, ac, delimiter=",")
     exit()
 
-def dat2csv_cp(end=100, gif=False):
+def dat2csv_cp(end=100, gif=True, csv=True, fin=False):
     path, fname_head, fname_tail, case = common(cp=True)
     step = end
     if gif:
@@ -69,16 +69,28 @@ def dat2csv_cp(end=100, gif=False):
             plt.ylim([1.5, -1.5])
             line, = plt.plot(cp[:, 0], cp[:, 1], ".", color="blue")
             ims.append([line])
-        else:
+        
+        if csv:
             csvname = path + "new_" + fname_head + str(end).zfill(3) + ".csv"
             np.savetxt(csvname, cp, delimiter=",")
 
     if gif:
         ani = animation.ArtistAnimation(fig, ims)
-        ani.save(case + ".gif", writer="imagemagick")
-        ani.save(case + ".mp4", writer="ffmpeg")
+        ani.save(case.replace("\\", "_") + ".gif", writer="imagemagick")
+        ani.save(case.replace("\\", "_") + ".mp4", writer="ffmpeg")
         # plt.show()
-
+    
+    if fin:
+        fin_path = path.replace("ResultC\\", "") + "Complete\\dat\\"
+        fname = fin_path + fname_head + "final.dat"
+        cp = []
+        with open(fname, "r") as f:
+            for line in f:
+                cp.append(line.split())
+            cp.pop()
+        cp = np.array(cp, dtype = float)
+        csvname = fin_path + "new_" + fname_head + "final.csv"
+        np.savetxt(csvname, cp, delimiter = ",")
 
 def test():
     import sklearn.mixture
@@ -91,8 +103,9 @@ if __name__ == '__main__':
     c = 0.0019
     d = 0.24715
     # test()
-    end = 301
-    dat2csv_cp(end = end, gif = True)
+    end = 102
+    fin = False
+    dat2csv_cp(end = end, gif = True, fin = fin)
     dat2csv(end=end)
     
     
