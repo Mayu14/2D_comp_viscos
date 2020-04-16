@@ -51,16 +51,16 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                 i34digit = 12
                     if(UConf%CalcEnv == 0) then
                         !write(UConf%cGridName, '("NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 研究室PC用
-                        write(UConf%cGridName, '("NACA0012_03_2000_0018_0100.mayu")')! valid
+                        write(UConf%cGridName, '("NACA0012.mayu")')! valid
                         !write(UConf%cGridName, '("NACA0012_20_400_0050_0200.mayu")')! valid
                     else if(UConf%CalcEnv == 1) then
                         !write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA", i1, i1, i2.2, ".mayu")') i1digit, i2digit, i34digit ! 東北大スパコン用
                         write(UConf%cGridName, '("/work/A/FMa/FMa037/mayu_grid/NACA0012_20_800_0010_0200.mayu")')! 東北大スパコン用 valid
                     end if
-                    !do iAngleDeg = 39, 0, -3
-                        iAngleDeg = 1.25d0
-                        dAngleDeg = 1.25d0
-
+                    do iAngleDeg = 1, 20
+                        !iAngleDeg = 1.25d0 *2.0d0
+                        dAngleDeg = 1.25d0 * dble(iAngleDeg)
+                        write(UConf%cCaseName,'("SD",i2.2)') iAngleDeg
                         !UConf%dAttackAngle = dPi * dble(iAngleDeg) / 180.0d0
                         UConf%dAttackAngle = dPi * dAngleDeg / 180.0d0
 
@@ -107,7 +107,7 @@ subroutine JPCalcCaseAutoFill(UConf, PETOT)
                         else
                             call JobParallelNS(UConf)
                         end if
-                    !end do
+                    end do
                 !end do
             !end do
         !end do
