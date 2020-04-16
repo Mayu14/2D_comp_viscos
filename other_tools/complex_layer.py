@@ -45,7 +45,7 @@ class MLPLayer():
         else:
             print('Invalid value is assigned to "self.dropout_timing"')
 
-    def fully_connected(self, units, inputs, Activator):
+    def fully_connected(self, units, inputs, Activator, kernel_regularizer=None):
         """
         :param units: 出力の素子数
         :param inputs: (tensor) 入力テンソル
@@ -65,7 +65,7 @@ class MLPLayer():
             fx = Dropout(rate=self.dropout_rate)(fx)
 
         fx = Dense(units, activation=None, use_bias=True, kernel_initializer='he_normal',
-                   bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None,
+                   bias_initializer='zeros', kernel_regularizer=kernel_regularizer, bias_regularizer=None,
                    activity_regularizer=None, kernel_constraint=None, bias_constraint=None)(fx)
 
         if self.activate_before_fc == False:
