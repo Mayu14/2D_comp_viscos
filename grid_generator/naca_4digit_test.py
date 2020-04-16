@@ -46,7 +46,7 @@ class Naca_4_digit(object):
         if monotonization:
             self.monotonize()
         
-        if quasi_equidistant == True:
+        if quasi_equidistant:
             self.get_quasi_equidistant_line()
     
     def set_zero_center(self):
@@ -206,12 +206,19 @@ class Naca_4_digit(object):
         self.x_u = rot_u[0] + center
         self.y_u = rot_u[1] + center
     
-    def plot(self):
-        plt.xlim([0, 1])
-        plt.ylim([0, 1])
-        plt.plot(self.x_u, self.y_u)
-        plt.plot(self.x_l, self.y_l)
-        plt.show()
+    def plot(self, normalize=True, savefig=False, savepath=""):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, aspect="equal")
+        if normalize:
+            ax.set_xlim([0, 1])
+            ax.set_ylim([0, 1])
+        ax.plot(self.x_u, self.y_u)
+        ax.plot(self.x_l, self.y_l)
+        if not savefig:
+            plt.show()
+        else:
+            plt.savefig(savepath)
+        plt.close()
     
     def get_quasi_equidistant_line(self):
         new_resolution = self.new_resolution
@@ -302,6 +309,27 @@ class Naca_4_digit(object):
         with open(out_name, 'w') as f:
             f.write(body)
 
+    def generate_svg(self, out_name):
+        def load_header(x_min=-0.1, x_max=1.2, y_min=-1.1, y_max=1.2, pixel = 1200):
+            header = '<?xml version="1.0" encoding="utf-8"?>\n'
+            viewBox = str(x_min) + " " + str(y_min) + " " + str(x_max) + " " + str(y_max)
+            header += '<svg version="1.1" id="layer1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+            header += 'width="' + str(pixel) + 'px" height="' + str(pixel) + 'px" viewBox="' + viewBox + '">\n'
+            return header
+
+        def svg_poly_format(x, y):
+            return str(x) + " " + str(y) + " "
+
+        self.one_stroke_ccw()
+        header = load_header()
+        body = '<path d="M'
+        for i, xi in enumerate(self.ccw_x):
+            body += svg_poly_format(xi, -self.ccw_y[i])
+
+        tail = 'z" />\n</svg>\n'
+        svg = header + body + tail
+        with open(out_name, "w") as f:
+            f.write(svg)
 
 class Naca_5_digit(Naca_4_digit):
     def __init__(self, int_5, attack_angle_deg, resolution, auto_normalize = True, monotonization = False,
@@ -418,12 +446,77 @@ class Naca_5_digit(Naca_4_digit):
                 exit()
 
 
+class SuperFormula(Naca_4_digit):
+    def __init__(self, a, b, m1, m2, n1, n2, n3, attack_angle_deg, resolution, position="[0,1]"):
+        def get_name(variableList):
+            def block(name, value):
+                return name + str(value) + "_"
+            namelist = ["a", "b", "m1", "m2", "n1", "n2", "n3", "aoa"]
+            name = ""
+            for i, var in enumerate(variableList):
+                name += block(namelist[i], var)
+            return name
+            
+        def polar2cartesian(r, phi):
+            return r * np.cos(phi), r * np.sin(phi)
+        
+        def rotate_xy(nx, ny, rad):
+            return nx * np.cos(rad) + ny * np.sin(rad), -nx * np.sin(rad) + ny * np.cos(rad)
+        
+        super(SuperFormula, self).__init__("0012", attack_angle_deg, resolution,
+                                           auto_normalize = False, quasi_equidistant = False, position = position)
+        
+        self.name = get_name([a, b, m1, m2, n1, n2, n3, attack_angle_deg])
+        print(self.name)
+        rad = attack_angle_deg / 180.0 * np.pi
+        phi = np.linspace(0, 2*np.pi, self.resolution*100)
+        r = (np.abs(np.cos(m1 * phi / 4) / a) ** n2 + np.abs(np.sin(m2 * phi / 4) / b) ** n3 ) ** (-1.0/n1)
+        theta = np.linspace(0-rad, 2*np.pi-rad, self.resolution*100)
+        x, y = polar2cartesian(r, theta)
+        plt.plot(x,y)
+        # x__ = x * np.cos(rad) + y * np.sin(rad)
+        # y__ = x * (- np.sin(rad)) + y * np.cos(rad)
+        # plt.plot(x__, y__)
+        plt.show()
+        exit()
+        max_dif = lambda x: np.max(x) - np.min(x)
+        max_length = max(max_dif(x), max_dif(y))
+        nx = (x - np.average(x)) / max_length
+        ny = (y - np.average(y)) / max_length
+        nx_u = np.sort(nx[ny >= 0.0])
+        ny_u = ny[ny >= 0.0][np.argsort(nx[ny >= 0.0])]
+        nx_l = np.sort(nx[ny < 0.0])
+        ny_l = ny[ny < 0.0][np.argsort(nx[ny < 0.0])]
+        
+        rad = self.attack_angle / 180 * np.pi
+        self.x_u, self.y_u = rotate_xy(nx_u, ny_u, rad)
+        self.x_l, self.y_l = rotate_xy(nx_l, ny_l, rad)
+        
+        ave = lambda x1, x2: (np.sum(x1) + np.sum(x2)) / (x1.shape[0] + x2.shape[0])
+        axul = ave(self.x_u, self.x_l)
+        ayul = ave(self.y_u, self.y_l)
+        
+        if self.position == "[0,1]":
+            self.x_u += - axul + 0.5
+            self.y_u += - ayul + 0.5
+            self.x_l += - axul + 0.5
+            self.y_l += - ayul + 0.5
 
 def main():
     deg = 0.0
-    naca = Naca_4_digit(int_4 = "3612", attack_angle_deg = deg, resolution = 100, quasi_equidistant = True,
+    # sf = SuperFormula(a=2,b=1,m1=2,m2=2,n1=1,n2=2,n3=3,attack_angle_deg = deg,resolution = 100)
+    # sf.plot()
+    # sf.generate_obj(sf.name + ".obj")
+    # sf.generate_svg(sf.name + ".svg")
+    # exit()
+    # naca = Naca_4_digit(int_4 = "9782", attack_angle_deg = deg, resolution = 1000, quasi_equidistant = False, length_adjust = True)
+    naca = Naca_4_digit(int_4 = "0012", attack_angle_deg = 1.0, resolution = 1000, quasi_equidistant = False,
                         length_adjust = True)
-    # naca.plot()
+    # naca.generate_svg("sample.svg")
+    naca.generate_obj(out_name = "NACA0012_Valid0100")
+
+    naca.plot()
+    exit()
     # naca.plot_quasi_equidistant_shape()
     naca = Naca_5_digit(int_5 = "21001", attack_angle_deg = deg, resolution = 100, quasi_equidistant = True,
                         length_adjust = True, position = "start_0")
@@ -434,6 +527,32 @@ def main():
     plt.show()
     #naca.plot_quasi_equidistant_shape()
 
+def sf_sample_plot():
+    sf = SuperFormula(a = 3, b = 5, m1 = 4, m2 = 4, n1 = 3, n2 = 13, n3 = 8, attack_angle_deg = 10,
+                      resolution = 100)
+    
+    plt.plot(sf.x_u[1250:], sf.y_u[1250:])
+    plt.plot(sf.x_l[1250:], sf.y_l[1250:])
+    plt.show()
+    exit()
+    sf.plot()
+    exit()
+    from itertools import product
+    deg = 0
+    dir = "G:\\Toyota\\Data\\grid_vtk\\superformula\\sample\\"
+    aList = 1/2 * np.arange(5)[1:]
+    bList = 1/2 * np.arange(5)[1:]
+    m1List = 1/2 * np.arange(5)[1:]
+    m2List = 1/2 * np.arange(5)[1:]
+    n1List = 1/2 * np.arange(5)[1:]
+    n2List = 1/2 * np.arange(5)[1:]
+    n3List = 1/2 * np.arange(5)[1:]
+    for a,b,m1,m2,n1,n2,n3 in product(aList,bList,m1List,m2List,n1List,n2List,n3List):
+        sf = SuperFormula(a = a, b = b, m1 = m1, m2 = m2, n1 = n1, n2 = n2, n3 = n3, attack_angle_deg = deg, resolution = 100)
+        sf.plot(normalize = False, savefig = True, savepath = dir + "{0}.png".format(sf.name))
 
 if __name__ == '__main__':
+    main()
+    sf_sample_plot()
+    exit()
     main()
